@@ -16,6 +16,7 @@ import Lesson1 from './courses/javascript/Lesson1';
 
 // English Lessons
 import EnglishLesson1 from './courses/english/lessons/Lesson1';
+import EnglishLesson2 from './courses/english/lessons/Lesson2';
 
 // Coming Soon Component
 import ComingSoon from './components/common/ComingSoon';
@@ -112,6 +113,13 @@ export const routesConfig = [
         component: EnglishLesson1,
         showInNav: true,
         lessonId: 1
+      },
+      {
+        path: 'lesson2',
+        name: 'Parts of Speech (Ny Sokajin-teny)',
+        component: EnglishLesson2,
+        showInNav: true,
+        lessonId: 2
       }
     ]
   },
