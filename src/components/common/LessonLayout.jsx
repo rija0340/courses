@@ -25,7 +25,7 @@ const LessonLayout = ({ children, courseTitle, courseDescription, lessons }) => 
 
       {/* Sidebar */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-80 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        fixed lg:static inset-y-0 left-0 z-50 w-72 sm:w-80 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="p-4 sm:p-6 bg-yellow-500 text-white">

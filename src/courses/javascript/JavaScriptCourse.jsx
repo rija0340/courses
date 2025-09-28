@@ -6,7 +6,7 @@ const JavaScriptCourse = () => {
 };
 
 const CourseOverview = () => (
-  <div className="max-w-4xl">
+  <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 lg:px-6 overflow-x-hidden">
     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-4 sm:mb-6">Aperçu du Cours JavaScript</h1>
     <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 lg:p-8">
       <p className="text-base sm:text-lg text-gray-600 mb-4 sm:mb-6 leading-relaxed">

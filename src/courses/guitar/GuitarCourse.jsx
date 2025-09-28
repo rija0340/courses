@@ -24,7 +24,7 @@ const GuitarCourse = () => {
 
       {/* Sidebar */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-80 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        fixed lg:static inset-y-0 left-0 z-50 w-72 sm:w-80 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="p-4 sm:p-6 bg-purple-500 text-white">
@@ -79,7 +79,7 @@ const GuitarCourse = () => {
 };
 
 const CourseOverview = () => (
-  <div className="max-w-4xl">
+  <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 lg:px-6 overflow-x-hidden">
     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-4 sm:mb-6">Aperçu du Cours de Guitare</h1>
     <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 lg:p-8 text-center">
       <div className="text-4xl sm:text-5xl lg:text-6xl mb-3 sm:mb-4 lg:mb-6">🎸</div>

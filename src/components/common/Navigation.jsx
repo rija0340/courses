@@ -37,10 +37,11 @@ const Navigation = () => {
           {/* Logo */}
           <Link
             to="/"
-            className="text-xl sm:text-2xl font-bold text-blue-400 hover:text-blue-300 transition-colors"
+            className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-400 hover:text-blue-300 transition-colors truncate"
             onClick={closeMenu}
           >
-            Plateforme d'Apprentissage
+            <span className="hidden sm:inline">Plateforme d'Apprentissage</span>
+            <span className="sm:hidden">Plateforme</span>
           </Link>
 
           {/* Desktop Navigation */}

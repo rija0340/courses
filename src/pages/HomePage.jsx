@@ -4,13 +4,13 @@ import { Link } from 'react-router-dom';
 const HomePage = () => {
   const courses = [
     {
-      id: 'javascript',
-      name: 'JavaScript',
-      description: 'Apprenez les fondamentaux et concepts avancés de JavaScript',
+      id: 'Programmation',
+      name: 'Programmation',
+      description: 'Apprenez des themes sur la programmation',
       icon: '⚡',
       color: 'bg-yellow-500',
-      lessons: 5,
-      path: '/programmation/javascript'
+      lessons: 1,
+      path: '/programmation/'
     },
     {
       id: 'english',
@@ -21,15 +21,15 @@ const HomePage = () => {
       lessons: 0,
       path: '/anglais'
     },
-    {
-      id: 'guitar',
-      name: 'Guitare',
-      description: 'Maîtrisez les techniques de jeu de guitare',
-      icon: '🎸',
-      color: 'bg-purple-500',
-      lessons: 0,
-      path: '/guitare'
-    }
+    // {
+    //   id: 'guitar',
+    //   name: 'Guitare',
+    //   description: 'Maîtrisez les techniques de jeu de guitare',
+    //   icon: '🎸',
+    //   color: 'bg-purple-500',
+    //   lessons: 0,
+    //   path: '/guitare'
+    // }
   ];
 
   return (

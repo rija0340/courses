@@ -106,22 +106,22 @@ export const routesConfig = [
       // Future English lessons can be added here
     ]
   },
-  {
-    path: '/guitare',
-    name: 'Guitare',
-    icon: '🎸',
-    component: GuitarCourse,
-    showInNav: true,
-    children: [
-      {
-        path: '',
-        name: 'Accueil Guitare',
-        component: GuitarCourse,
-        showInNav: true
-      }
-      // Future Guitar lessons can be added here
-    ]
-  }
+  // {
+  //   path: '/guitare',
+  //   name: 'Guitare',
+  //   icon: '🎸',
+  //   component: GuitarCourse,
+  //   showInNav: true,
+  //   children: [
+  //     {
+  //       path: '',
+  //       name: 'Accueil Guitare',
+  //       component: GuitarCourse,
+  //       showInNav: true
+  //     }
+  //     // Future Guitar lessons can be added here
+  //   ]
+  // }
 ];
 
 // Helper function to get navigation items

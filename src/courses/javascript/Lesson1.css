@@ -91,6 +91,8 @@
   overflow-x: auto;
   border-left: 4px solid #4299e1;
   line-height: 1.5;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .code-block code {
@@ -185,6 +187,8 @@
   overflow-x: auto;
   font-family: 'Fira Code', 'Courier New', monospace;
   margin: 10px 0;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 code {
@@ -208,30 +212,40 @@ li {
   .lesson-container {
     padding: 10px;
   }
-  
+
   .lesson-header {
     padding: 20px;
   }
-  
+
   .lesson-title {
     font-size: 2rem;
   }
-  
+
   .lesson-content {
     padding: 20px;
   }
-  
+
   .code-block {
     font-size: 12px;
     padding: 10px;
+    word-break: break-all;
   }
-  
+
   .tip-box {
     flex-direction: column;
   }
-  
+
   .tip-box .tip-icon {
     margin-right: 0;
     margin-bottom: 10px;
+  }
+
+  .data-types-table {
+    font-size: 12px;
+  }
+
+  .data-types-table th,
+  .data-types-table td {
+    padding: 8px 10px;
   }
 }

@@ -2,9 +2,9 @@ import React from 'react';
 
 const CodeBlock = ({ children, language = 'javascript' }) => {
   return (
-    <div className="my-3 sm:my-4">
-      <pre className="bg-gray-900 text-green-400 p-3 sm:p-4 rounded-lg overflow-x-auto text-xs sm:text-sm font-mono">
-        <code>{children}</code>
+    <div className="my-3 sm:my-4 w-full overflow-x-hidden">
+      <pre className="bg-gray-900 text-green-400 p-2 sm:p-3 lg:p-4 rounded-lg text-xs sm:text-sm font-mono whitespace-pre-wrap break-words overflow-x-auto max-w-full">
+        <code className="break-words">{children}</code>
       </pre>
     </div>
   );
@@ -12,10 +12,10 @@ const CodeBlock = ({ children, language = 'javascript' }) => {
 
 const TipBox = ({ children }) => {
   return (
-    <div className="bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 my-4 sm:my-6 rounded-r-lg">
-      <div className="flex items-start">
-        <div className="text-xl sm:text-2xl mr-2 sm:mr-3 flex-shrink-0">💡</div>
-        <div className="text-blue-800 text-sm sm:text-base">{children}</div>
+    <div className="bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 my-4 sm:my-6 rounded-r-lg w-full overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row items-start">
+        <div className="text-xl sm:text-2xl mb-2 sm:mb-0 sm:mr-2 lg:mr-3 flex-shrink-0">💡</div>
+        <div className="text-blue-800 text-sm sm:text-base break-words">{children}</div>
       </div>
     </div>
   );
@@ -23,19 +23,19 @@ const TipBox = ({ children }) => {
 
 const ExerciseBox = ({ children }) => {
   return (
-    <div className="bg-yellow-50 border border-yellow-300 p-4 sm:p-6 my-6 sm:my-8 rounded-lg">
-      <h3 className="text-lg sm:text-xl font-bold text-yellow-800 mb-3 sm:mb-4 flex items-center">
-        <span className="mr-2 text-xl sm:text-2xl">🎯</span>
-        Exercice simple
+    <div className="bg-yellow-50 border border-yellow-300 p-3 sm:p-4 lg:p-6 my-4 sm:my-6 lg:my-8 rounded-lg w-full overflow-x-hidden">
+      <h3 className="text-base sm:text-lg lg:text-xl font-bold text-yellow-800 mb-2 sm:mb-3 lg:mb-4 flex items-center break-words">
+        <span className="mr-2 text-lg sm:text-xl lg:text-2xl flex-shrink-0">🎯</span>
+        <span>Exercice simple</span>
       </h3>
-      <div className="text-yellow-900 text-sm sm:text-base">{children}</div>
+      <div className="text-yellow-900 text-sm sm:text-base break-words">{children}</div>
     </div>
   );
 };
 
 const Lesson1 = () => {
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 lg:px-6 overflow-x-hidden">
       <header className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-3 sm:mb-4 leading-tight">Leçon 1: Bases de JavaScript (Côté client)</h1>
         <div className="bg-gradient-to-r from-yellow-100 to-yellow-50 p-4 sm:p-6 rounded-lg border-l-4 border-yellow-500">
@@ -175,7 +175,7 @@ console.log(age, name);`}</CodeBlock>
           <p className="mb-2 sm:mb-3">Déclarez une variable <code className="bg-gray-100 px-2 py-1 rounded text-xs sm:text-sm">age</code> avec votre âge (<code className="bg-gray-100 px-2 py-1 rounded text-xs sm:text-sm">let</code>).</p>
           <p className="mb-2 sm:mb-3">Affichez les deux dans la console avec <code className="bg-gray-100 px-2 py-1 rounded text-xs sm:text-sm">console.log</code>.</p>
           <p className="mb-2"><strong>✅ Résultat attendu dans la console :</strong></p>
-          <pre className="bg-gray-100 p-2 sm:p-3 rounded text-xs sm:text-sm overflow-x-auto">{`"Marie"
+          <pre className="bg-gray-100 p-2 sm:p-3 rounded text-xs sm:text-sm overflow-x-auto whitespace-pre-wrap break-words">{`"Marie"
 28`}</pre>
         </ExerciseBox>
       </main>
