@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation, Link } from 'react-router-dom';
+import EnglishLesson1 from './lessons/Lesson1';
 
 const EnglishCourse = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const location = useLocation();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -10,6 +12,20 @@ const EnglishCourse = () => {
 
   const closeSidebar = () => {
     setIsSidebarOpen(false);
+  };
+
+  // Define English lessons for the sidebar
+  const englishLessons = [
+    {
+      path: 'lesson1',
+      name: 'The Alphabet & Basic Sounds',
+      lessonId: 1
+    }
+    // Additional lessons will be added here in the future
+  ];
+
+  const isActiveLesson = (lessonPath) => {
+    return location.pathname === `/anglais/${lessonPath}`;
   };
 
   return (
@@ -45,8 +61,32 @@ const EnglishCourse = () => {
         </div>
         
         <div className="p-3 sm:p-4 overflow-y-auto h-full">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">Bientôt Disponible</h3>
-          <p className="text-sm sm:text-base text-gray-600">Les leçons d'anglais sont en cours de préparation pour vous !</p>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">Leçons</h3>
+          <nav className="space-y-1">
+            <Link
+              to="/anglais"
+              className={`block px-3 py-2 rounded-md text-sm transition-colors ${
+                location.pathname === '/anglais'
+                  ? 'bg-green-100 text-green-800 border-r-2 border-green-500'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              Accueil Anglais
+            </Link>
+            {englishLessons.map((lesson) => (
+              <Link
+                key={lesson.lessonId}
+                to={`/anglais/${lesson.path}`}
+                className={`block px-3 py-2 rounded-md text-sm transition-colors ${
+                  isActiveLesson(lesson.path)
+                    ? 'bg-green-100 text-green-800 border-r-2 border-green-500'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                {lesson.name}
+              </Link>
+            ))}
+          </nav>
         </div>
       </div>
 
@@ -71,6 +111,7 @@ const EnglishCourse = () => {
         <div className="p-4 sm:p-6 lg:p-8">
           <Routes>
             <Route index element={<CourseOverview />} />
+            <Route path="lesson1" element={<EnglishLesson1 />} />
           </Routes>
         </div>
       </div>
@@ -81,15 +122,30 @@ const EnglishCourse = () => {
 const CourseOverview = () => (
   <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 lg:px-6 overflow-x-hidden">
     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-4 sm:mb-6">Aperçu du Cours d'Anglais</h1>
-    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 lg:p-8 text-center">
-      <div className="text-4xl sm:text-5xl lg:text-6xl mb-3 sm:mb-4 lg:mb-6">📚</div>
-      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-3 sm:mb-4">Bientôt Disponible !</h2>
-      <p className="text-base sm:text-lg text-gray-600 mb-4 sm:mb-6">
-        Nous travaillons à créer des leçons d'anglais complètes pour vous.
-      </p>
-      <p className="text-sm sm:text-base text-gray-500">
-        Ce cours couvrira la grammaire, le vocabulaire, la compréhension écrite et bien plus encore.
-      </p>
+    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 lg:p-8">
+      <div className="text-center mb-6 sm:mb-8">
+        <div className="text-4xl sm:text-5xl lg:text-6xl mb-3 sm:mb-4 lg:mb-6">📚</div>
+        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-3 sm:mb-4">Cours d'Anglais</h2>
+        <p className="text-base sm:text-lg text-gray-600">
+          Apprenez les bases de l'anglais, de l'alphabet aux phrases simples.
+        </p>
+      </div>
+      
+      <div className="border-t border-gray-200 pt-6 sm:pt-8">
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Leçons Disponibles</h3>
+        <div className="space-y-3">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-800">Lesson 1: The Alphabet & Basic Sounds</h4>
+            <p className="text-sm sm:text-base text-blue-700 mt-1">Apprenez les 26 lettres de l'alphabet anglais et leurs sons de base.</p>
+            <Link 
+              to="/anglais/lesson1" 
+              className="inline-block mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm sm:text-base"
+            >
+              Commencer la leçon
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 );

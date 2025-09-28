@@ -14,6 +14,9 @@ import GuitarCourse from './courses/guitar/GuitarCourse';
 // JavaScript Lessons
 import Lesson1 from './courses/javascript/Lesson1';
 
+// English Lessons
+import EnglishLesson1 from './courses/english/lessons/Lesson1';
+
 // Coming Soon Component
 import ComingSoon from './components/common/ComingSoon';
 
@@ -102,8 +105,14 @@ export const routesConfig = [
         name: 'Accueil Anglais',
         component: EnglishCourse,
         showInNav: true
+      },
+      {
+        path: 'lesson1',
+        name: 'The Alphabet & Basic Sounds',
+        component: EnglishLesson1,
+        showInNav: true,
+        lessonId: 1
       }
-      // Future English lessons can be added here
     ]
   },
   // {
