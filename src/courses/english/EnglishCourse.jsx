@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Routes, Route, useLocation, Link } from 'react-router-dom';
 import EnglishLesson1 from './lessons/Lesson1';
+import EnglishLesson2 from './lessons/Lesson2';
 
 const EnglishCourse = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -20,6 +21,11 @@ const EnglishCourse = () => {
       path: 'lesson1',
       name: 'The Alphabet & Basic Sounds',
       lessonId: 1
+    },
+    {
+      path: 'lesson2',
+      name: 'Parts of Speech (Ny Sokajin-teny)',
+      lessonId: 2
     }
     // Additional lessons will be added here in the future
   ];
@@ -112,6 +118,7 @@ const EnglishCourse = () => {
           <Routes>
             <Route index element={<CourseOverview />} />
             <Route path="lesson1" element={<EnglishLesson1 />} />
+            <Route path="lesson2" element={<EnglishLesson2 />} />
           </Routes>
         </div>
       </div>
@@ -139,6 +146,16 @@ const CourseOverview = () => (
             <p className="text-sm sm:text-base text-blue-700 mt-1">Apprenez les 26 lettres de l'alphabet anglais et leurs sons de base.</p>
             <Link 
               to="/anglais/lesson1" 
+              className="inline-block mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm sm:text-base"
+            >
+              Commencer la leçon
+            </Link>
+          </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-800">Lesson 2: Parts of Speech (Ny Sokajin-teny)</h4>
+            <p className="text-sm sm:text-base text-blue-700 mt-1">Découvrez les 9 parties du discours en anglais et leur fonction.</p>
+            <Link 
+              to="/anglais/lesson2" 
               className="inline-block mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm sm:text-base"
             >
               Commencer la leçon
