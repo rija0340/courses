@@ -18,6 +18,9 @@ import Lesson3 from './courses/javascript/Lesson3';
 import Lesson4 from './courses/javascript/Lesson4';
 import Lesson5 from './courses/javascript/Lesson5';
 import Lesson6 from './courses/javascript/Lesson6';
+import Lesson7 from './courses/javascript/Lesson7';
+import Lesson8 from './courses/javascript/Lesson8';
+import Lesson9 from './courses/javascript/Lesson9';
 
 // English Lessons
 import EnglishLesson1 from './courses/english/lessons/Lesson1';
@@ -97,11 +100,33 @@ export const routesConfig = [
           },
           {
             path: 'lesson6',
-            name: 'Modules et Bonnes Pratiques',
+            name: 'Gestion des événements (écouteurs, propagation, objets d\'événement)',
             component: Lesson6,
             showInNav: true,
             lessonId: 6
-          }
+          },
+          {
+            path: 'lesson7',
+            name: 'Asynchronisme (callbacks, Promises, async/await)',
+            component: Lesson7,
+            showInNav: true,
+            lessonId: 7
+          },
+          {
+            path: 'lesson8',
+            name: 'API Fetch (requêtes HTTP, gestion des réponses)',
+            component: Lesson8,
+            showInNav: true,
+            lessonId: 8
+          },
+          {
+            path: 'lesson9',
+            name: 'Manipulation du DOM avancée (création dynamique, fragments, performance)',
+            component: Lesson9,
+            showInNav: true,
+            lessonId: 9
+          },
+          
         ]
       }
     ]
