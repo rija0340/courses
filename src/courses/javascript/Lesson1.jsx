@@ -1,14 +1,5 @@
 import React from 'react';
-
-const CodeBlock = ({ children, language = 'javascript' }) => {
-  return (
-    <div className="my-3 sm:my-4 w-full overflow-x-hidden">
-      <pre className="bg-gray-900 text-green-400 p-2 sm:p-3 lg:p-4 rounded-lg text-xs sm:text-sm font-mono whitespace-pre-wrap break-words overflow-x-auto max-w-full">
-        <code className="break-words">{children}</code>
-      </pre>
-    </div>
-  );
-};
+import CodeBlock from '../../components/SyntaxHighlighter';
 
 const TipBox = ({ children }) => {
   return (
@@ -64,6 +55,10 @@ const Lesson1 = () => {
 </body>
 </html>`}
           </CodeBlock>
+          <CodeBlock language="javascript" showLineNumbers={true} highlightLines="1">
+            {`let sum = 10 + 5; // 15`}
+          </CodeBlock>
+          
 
           <p className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base">Ou dans un fichier externe (recommandé) :</p>
           <CodeBlock language="html">{`<script src="script.js"></script>`}</CodeBlock>
@@ -78,11 +73,11 @@ const Lesson1 = () => {
           <p className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base">Utilisées pour stocker des données.</p>
 
           <h4 className="text-base sm:text-lg font-semibold text-gray-700 mb-2"><code className="bg-gray-100 px-2 py-1 rounded text-xs sm:text-sm">let</code> : variable modifiable (la plus couramment utilisée)</h4>
-          <CodeBlock>{`let age = 25;
+          <CodeBlock language="javascript">{`let age = 25;
 age = 26; // allowed`}</CodeBlock>
 
           <h4 className="text-base sm:text-lg font-semibold text-gray-700 mb-2"><code className="bg-gray-100 px-2 py-1 rounded text-xs sm:text-sm">const</code> : variable constante (ne peut pas être réassignée)</h4>
-          <CodeBlock>{`const name = "Alice";
+          <CodeBlock language="javascript">{`const name = "Alice";
 // name = "Bob"; → Erreur !`}</CodeBlock>
 
           <h4 className="text-base sm:text-lg font-semibold text-gray-700 mb-2"><code className="bg-gray-100 px-2 py-1 rounded text-xs sm:text-sm">var</code> : ancienne méthode (à éviter aujourd'hui)</h4>
@@ -134,28 +129,28 @@ age = 26; // allowed`}</CodeBlock>
 
           <TipBox>
             <strong>💡 Astuce :</strong> utilisez <code className="bg-gray-100 px-2 py-1 rounded text-xs sm:text-sm">typeof</code> pour connaître le type :
-            <CodeBlock>{`console.log(typeof "text"); // "string"`}</CodeBlock>
+            <CodeBlock language="javascript">{`console.log(typeof "text"); // "string"`}</CodeBlock>
           </TipBox>
         </section>
 
         <section className="bg-white p-4 sm:p-6 rounded-lg shadow-sm" id="4-opérateurs">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">4. Opérateurs</h2>
           <h4 className="text-base sm:text-lg font-semibold text-gray-700 mb-2">Arithmétiques : +, -, *, /, % (modulo)</h4>
-          <CodeBlock>{`let sum = 10 + 5; // 15`}</CodeBlock>
+          <CodeBlock language="javascript">{`let sum = 10 + 5; // 15`}</CodeBlock>
 
           <h4 className="text-base sm:text-lg font-semibold text-gray-700 mb-2">Comparaison : ==, ===, !=, !==, >, &lt;, etc.</h4>
-          <CodeBlock>{`5 === 5;   // true (égalité stricte : valeur + type)
+          <CodeBlock language="javascript">{`5 === 5;   // true (égalité stricte : valeur + type)
 5 == "5";  // true (mais à éviter → préférez ===)`}</CodeBlock>
 
           <h4 className="text-base sm:text-lg font-semibold text-gray-700 mb-2">Logiques : && (ET), || (OU), ! (NON)</h4>
-          <CodeBlock>{`true && false; // false
+          <CodeBlock language="javascript">{`true && false; // false
 true || false; // true`}</CodeBlock>
         </section>
 
         <section className="bg-white p-4 sm:p-6 rounded-lg shadow-sm" id="5-afficher-déboguer">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">5. Affichage / Débogage</h2>
           <p className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base"><code className="bg-gray-100 px-2 py-1 rounded text-xs sm:text-sm">console.log()</code> : affiche dans la console du navigateur (outil essentiel !)</p>
-          <CodeBlock>{`console.log("Ceci est un message");
+          <CodeBlock language="javascript">{`console.log("Ceci est un message");
 console.log(age, name);`}</CodeBlock>
           <p className="text-gray-600 text-sm sm:text-base">Ouvrez la console avec F12 ou Ctrl+Shift+J (Chrome/Firefox).</p>
         </section>

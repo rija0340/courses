@@ -13,6 +13,11 @@ import GuitarCourse from './courses/guitar/GuitarCourse';
 
 // JavaScript Lessons
 import Lesson1 from './courses/javascript/Lesson1';
+import Lesson2 from './courses/javascript/Lesson2';
+import Lesson3 from './courses/javascript/Lesson3';
+import Lesson4 from './courses/javascript/Lesson4';
+import Lesson5 from './courses/javascript/Lesson5';
+import Lesson6 from './courses/javascript/Lesson6';
 
 // English Lessons
 import EnglishLesson1 from './courses/english/lessons/Lesson1';
@@ -64,31 +69,38 @@ export const routesConfig = [
           },
           {
             path: 'lesson2',
-            name: 'Variables et Types de Données',
-            component: () => ComingSoon({ lesson: 'Variables et Types de Données' }),
+            name: 'Fonctions et Portée',
+            component: Lesson2,
             showInNav: true,
             lessonId: 2
           },
           {
             path: 'lesson3',
-            name: 'Fonctions',
-            component: () => ComingSoon({ lesson: 'Fonctions' }),
+            name: 'Tableaux et Objets',
+            component: Lesson3,
             showInNav: true,
             lessonId: 3
           },
           {
             path: 'lesson4',
-            name: 'Tableaux et Objets',
-            component: () => ComingSoon({ lesson: 'Tableaux et Objets' }),
+            name: 'Manipulation du DOM',
+            component: Lesson4,
             showInNav: true,
             lessonId: 4
           },
           {
             path: 'lesson5',
-            name: 'Manipulation du DOM',
-            component: () => ComingSoon({ lesson: 'Manipulation du DOM' }),
+            name: 'Événements et Programmation Asynchrone',
+            component: Lesson5,
             showInNav: true,
             lessonId: 5
+          },
+          {
+            path: 'lesson6',
+            name: 'Modules et Bonnes Pratiques',
+            component: Lesson6,
+            showInNav: true,
+            lessonId: 6
           }
         ]
       }
