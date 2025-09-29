@@ -21,6 +21,12 @@ import Lesson6 from './courses/javascript/Lesson6';
 import Lesson7 from './courses/javascript/Lesson7';
 import Lesson8 from './courses/javascript/Lesson8';
 import Lesson9 from './courses/javascript/Lesson9';
+import Lesson10 from './courses/javascript/Lesson10';
+import Lesson11 from './courses/javascript/Lesson11';
+import Lesson12 from './courses/javascript/Lesson12';
+import Lesson13 from './courses/javascript/Lesson13';
+import Lesson14 from './courses/javascript/Lesson14';
+import Lesson15 from './courses/javascript/Lesson15';
 
 // English Lessons
 import EnglishLesson1 from './courses/english/lessons/Lesson1';
@@ -125,6 +131,48 @@ export const routesConfig = [
             component: Lesson9,
             showInNav: true,
             lessonId: 9
+          },
+          {
+            path: 'lesson10',
+            name: 'Formulaires (validation, gestion des données, événements)',
+            component: Lesson10,
+            showInNav: true,
+            lessonId: 10
+          },
+          {
+            path: 'lesson11',
+            name: 'Stockage client (localStorage, sessionStorage, cookies)',
+            component: Lesson11,
+            showInNav: true,
+            lessonId: 11
+          },
+          {
+            path: 'lesson12',
+            name: 'Modules ES6 (import/export)',
+            component: Lesson12,
+            showInNav: true,
+            lessonId: 12
+          },
+          {
+            path: 'lesson13',
+            name: 'Outils de développement (DevTools, débogage)',
+            component: Lesson13,
+            showInNav: true,
+            lessonId: 13
+          },
+          {
+            path: 'lesson14',
+            name: 'Bonnes pratiques (organisation du code, lisibilité, performance)',
+            component: Lesson14,
+            showInNav: true,
+            lessonId: 14
+          },
+          {
+            path: 'lesson15',
+            name: 'Introduction aux frameworks (optionnel : React, Vue, etc.)',
+            component: Lesson15,
+            showInNav: true,
+            lessonId: 15
           },
           
         ]
