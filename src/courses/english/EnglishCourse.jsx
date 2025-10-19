@@ -30,7 +30,7 @@ const EnglishCourse = () => {
     },
         {
       path: 'lesson3',
-      name: 'Parts of Speech (Ny Sokajin-teny)',
+      name: 'How to Build English Sentences (Fomba Mamorona Teny Amin’ny Anglisy)',
       lessonId: 3
     }
     // Additional lessons will be added here in the future
