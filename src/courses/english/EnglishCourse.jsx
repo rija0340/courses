@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Routes, Route, useLocation, Link } from 'react-router-dom';
 import EnglishLesson1 from './lessons/Lesson1';
 import EnglishLesson2 from './lessons/Lesson2';
+import EnglishLesson3 from './lessons/Lesson3';
 
 const EnglishCourse = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -26,6 +27,11 @@ const EnglishCourse = () => {
       path: 'lesson2',
       name: 'Parts of Speech (Ny Sokajin-teny)',
       lessonId: 2
+    },
+        {
+      path: 'lesson3',
+      name: 'Parts of Speech (Ny Sokajin-teny)',
+      lessonId: 3
     }
     // Additional lessons will be added here in the future
   ];
@@ -119,6 +125,7 @@ const EnglishCourse = () => {
             <Route index element={<CourseOverview />} />
             <Route path="lesson1" element={<EnglishLesson1 />} />
             <Route path="lesson2" element={<EnglishLesson2 />} />
+            <Route path="lesson3" element={<EnglishLesson3 />} />
           </Routes>
         </div>
       </div>

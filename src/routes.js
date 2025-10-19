@@ -31,6 +31,7 @@ import Lesson15 from './courses/javascript/Lesson15';
 // English Lessons
 import EnglishLesson1 from './courses/english/lessons/Lesson1';
 import EnglishLesson2 from './courses/english/lessons/Lesson2';
+import EnglishLesson3 from './courses/english/lessons/Lesson3';
 
 // Coming Soon Component
 import ComingSoon from './components/common/ComingSoon';
@@ -205,6 +206,13 @@ export const routesConfig = [
         component: EnglishLesson2,
         showInNav: true,
         lessonId: 2
+      },
+      {
+        path: 'lesson3',
+        name: 'How to Build English Sentences (Fomba Mamorona Teny Amin’ny Anglisy)',
+        component: EnglishLesson3,
+        showInNav: true,
+        lessonId: 3
       }
     ]
   },
