@@ -92,15 +92,15 @@ const LessonView = () => {
 
   return (
     <div className="max-w-3xl mx-auto px-6 pt-8">
-      <Breadcrumb 
+      <Breadcrumb
         items={[
           { label: course?.title[lang] || courseId, path: `/course/${courseId}` },
           { label: lesson.title[lang] }
-        ]} 
+        ]}
       />
 
       <header className="mb-14">
-        <div className="flex items-center gap-2 text-[#1a73e8] font-medium text-sm tracking-wide mb-3 uppercase">
+        <div className="flex items-center gap-2 text-[#1a73e8] font-medium text-sm tracking-wide mb-3 uppercase mt-4">
            <div className="w-1.5 h-1.5 rounded-full bg-[#1a73e8]"></div>
            Niveau {lesson.level}
         </div>
