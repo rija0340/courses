@@ -1,0 +1,14 @@
+[
+  {
+    "id": "sentence-structure-basics",
+    "title": { "fr": "Construire une phrase en anglais", "mg": "Fananganana fehezanteny anglisy", "en": "Building an English Sentence" },
+    "level": "A1",
+    "description": { "fr": "Apprenez les bases de la structure SVO.", "mg": "Mianara ny fototry ny firafetana SVO.", "en": "Learn the basics of SVO structure." }
+  },
+  {
+    "id": "verb-to-be",
+    "title": { "fr": "Le verbe Être (To Be)", "mg": "Ny matoanteny To Be", "en": "The verb To Be" },
+    "level": "A1",
+    "description": { "fr": "Conjugaison et utilisation du verbe le plus important.", "mg": "Fampihenjana sy fampiasana ny matoanteny manan-danja indrindra.", "en": "Conjugation and use of the most important verb." }
+  }
+]

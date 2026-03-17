@@ -1,0 +1,8 @@
+[
+  {
+    "id": "intro",
+    "title": { "fr": "Introduction à JavaScript", "mg": "Fampidirana amin'ny JavaScript", "en": "Introduction to JavaScript" },
+    "level": "Débutant",
+    "description": { "fr": "Qu'est-ce que JS et comment l'utiliser.", "mg": "Inona no atao hoe JS ary ahoana no fampiasana azy.", "en": "What is JS and how to use it." }
+  }
+]

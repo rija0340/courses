@@ -1,0 +1,46 @@
+{
+  "id": "intro",
+  "level": "Débutant",
+  "title": {
+    "fr": "Introduction à JavaScript",
+    "mg": "Fampidirana amin'ny JavaScript",
+    "en": "Introduction to JavaScript"
+  },
+  "introduction": {
+    "fr": "JavaScript est le langage de programmation du web. Il permet de rendre les pages web interactives.",
+    "mg": "JavaScript no fiteny fanaovana fandaharana amin'ny tranonkala. Mamela ny pejin-tranonkala ho lasa misy fifandraisana.",
+    "en": "JavaScript is the programming language of the web. It allows web pages to be interactive."
+  },
+  "sections": [
+    {
+      "type": "core-concept",
+      "title": {
+        "fr": "Variables",
+        "mg": "Miovaova",
+        "en": "Variables"
+      },
+      "content": [
+        {
+          "text": {
+            "fr": "On utilise ",
+            "mg": "Mampiasa ",
+            "en": "We use "
+          },
+          "items": [
+            { "text": "let", "highlight": "key-term" },
+            { "text": " ou ", "highlight": "none" },
+            { "text": "const", "highlight": "key-term" },
+            { "text": " pour déclarer une variable.", "highlight": "none" }
+          ]
+        }
+      ]
+    }
+  ],
+  "styles": {
+    "key-term": {
+      "color": "#f29900",
+      "fontWeight": "bold"
+    },
+    "none": {}
+  }
+}

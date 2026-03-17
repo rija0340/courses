@@ -1,0 +1,16 @@
+[
+  {
+    "id": "english",
+    "title": { "fr": "Anglais", "mg": "Anglisy", "en": "English" },
+    "description": { "fr": "Maîtrisez la langue internationale.", "mg": "Mahafehy ny teny iraisam-pirenena.", "en": "Master the international language." },
+    "icon": "Languages",
+    "color": "#1a73e8"
+  },
+  {
+    "id": "javascript",
+    "title": { "fr": "JavaScript", "mg": "JavaScript", "en": "JavaScript" },
+    "description": { "fr": "Les bases de la programmation web.", "mg": "Ny fototry ny famolavolana tranonkala.", "en": "The basics of web programming." },
+    "icon": "Code",
+    "color": "#f29900"
+  }
+]

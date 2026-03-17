@@ -1,0 +1,81 @@
+{
+  "id": "verb-to-be",
+  "level": "A1",
+  "title": {
+    "fr": "Le verbe Être (To Be)",
+    "mg": "Ny matoanteny To Be",
+    "en": "The verb To Be"
+  },
+  "introduction": {
+    "fr": "Le verbe 'to be' est le verbe le plus utilisé en anglais. Il décrit un état, une identité ou une caractéristique.",
+    "mg": "Ny matoanteny 'to be' no be mpampiasa indrindra amin'ny teny anglisy. Izy io dia mamaritra toetra, maha-izy azy na marika.",
+    "en": "The verb 'to be' is the most used verb in English. It describes a state, an identity, or a characteristic."
+  },
+  "sections": [
+    {
+      "type": "core-concept",
+      "title": {
+        "fr": "Formes au Présent",
+        "mg": "Amin'ny fotoana ankehitriny",
+        "en": "Present Form"
+      },
+      "content": [
+        {
+          "text": {
+            "fr": "Le verbe 'to be' a 3 formes au présent:",
+            "mg": "Ny matoanteny 'to be' dia misy endrika 3 ankehitriny:",
+            "en": "The verb 'to be' has 3 forms in the present:"
+          },
+          "items": [
+            { "text": " am ", "highlight": "key-term" },
+            { "text": ", ", "highlight": "none" },
+            { "text": " is ", "highlight": "key-term" },
+            { "text": ", ", "highlight": "none" },
+            { "text": " are ", "highlight": "key-term" }
+          ]
+        },
+        {
+          "type": "definition",
+          "term": "I am",
+          "highlight": "important",
+          "definitions": {
+            "fr": "Je suis (Je suis étudiant -> I am a student).",
+            "mg": "Izaho dia (Mpianatra aho -> I am a student).",
+            "en": "I am (I am a student)."
+          }
+        },
+        {
+          "type": "definition",
+          "term": "He / She / It is",
+          "highlight": "important",
+          "definitions": {
+            "fr": "Il / Elle / C' est (Il est grand -> He is tall).",
+            "mg": "Izy / Izy (zavatra) dia (Avo izy -> He is tall).",
+            "en": "He / She / It is (He is tall)."
+          }
+        },
+        {
+          "type": "definition",
+          "term": "You / We / They are",
+          "highlight": "important",
+          "definitions": {
+            "fr": "Tu es / Nous sommes / Ils sont (Vous êtes prêts -> You are ready).",
+            "mg": "Ianao / Isika / Izy ireo dia (Vonona ianareo -> You are ready).",
+            "en": "You / We / They are (You are ready)."
+          }
+        }
+      ]
+    }
+  ],
+  "styles": {
+    "important": {
+      "color": "#1a73e8",
+      "fontWeight": "600"
+    },
+    "key-term": {
+      "color": "#1e8e3e",
+      "fontWeight": "bold"
+    },
+    "none": {}
+  }
+}

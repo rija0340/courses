@@ -1,0 +1,110 @@
+{
+  "id": "sentence-structure-basics",
+  "level": "A2-B1",
+  "title": {
+    "fr": "Construire une phrase en anglais – Les bases",
+    "mg": "Fananganana fehezanteny anglisy – Ny fototra",
+    "en": "Building an English Sentence – The Basics"
+  },
+  "introduction": {
+    "fr": "Pour construire une phrase en anglais, il est essentiel de comprendre ses composants de base et les règles qui régissent leur agencement.",
+    "mg": "Raha hanangana fehezanteny amin'ny teny anglisy ianao, dia zava-dehibe ny mahafantatra ireo singa fototra sy ny fitsipika mifehy azy ireo.",
+    "en": "To build a sentence in English, it is essential to understand its basic components and the rules governing their arrangement."
+  },
+  "sections": [
+    {
+      "type": "core-concept",
+      "title": {
+        "fr": "Les deux piliers de toute phrase",
+        "mg": "Ireo andry roa iorenan'ny fehezanteny",
+        "en": "The Two Pillars of Every Sentence"
+      },
+      "content": [
+        {
+          "text": {
+            "fr": "Toute phrase complète en anglais doit contenir au moins ",
+            "mg": "Ny fehezanteny anglisy feno dia tsy maintsy misy farafahakeliny ",
+            "en": "Every complete sentence in English must contain at least "
+          },
+          "items": [
+            { "text": "un Sujet (Subject)", "highlight": "key-term" },
+            { "text": " & ", "highlight": "none" },
+            { "text": "un Prédicat (Predicate)", "highlight": "key-term" },
+            { "text": ".", "highlight": "none" }
+          ]
+        },
+        {
+          "type": "definition",
+          "term": {
+            "fr": "Subject (Sujet)",
+            "mg": "Subject (Mpanao)",
+            "en": "Subject"
+          },
+          "highlight": "very-important",
+          "definitions": {
+            "fr": "C’est la personne, le lieu ou la chose qui accomplit l'action du verbe.",
+            "mg": "Ilay olona, toerana, na zavatra manao ny asa lazain'ny matoanteny.",
+            "en": "The person, place, or thing that performs the action of the verb."
+          }
+        },
+        {
+          "type": "definition",
+          "term": {
+            "fr": "Predicate (Prédicat)",
+            "mg": "Predicate (Lazaina)",
+            "en": "Predicate"
+          },
+          "highlight": "very-important",
+          "definitions": {
+            "fr": "Décrit l’action ou l’état du sujet. Contient au moins un verbe.",
+            "mg": "Manazava ny asa na ny toetran'ny mpanao. Ahitana matoanteny iray farafahakeliny.",
+            "en": "Describes the action or state of the subject. Contains at least one verb."
+          }
+        }
+      ]
+    },
+    {
+      "type": "rules",
+      "title": {
+        "fr": "Ordre des mots et accord",
+        "mg": "Ny filaharan'ny teny sy ny fifanarahana",
+        "en": "Word Order and Agreement"
+      },
+      "content": [
+        { "text": "Sujet avant le verbe", "highlight": "important" },
+        { "text": " (Ex: I eat). ", "highlight": "none" },
+        { "text": "Le verbe doit ", "highlight": "none" },
+        { "text": "s’accorder avec le sujet", "highlight": "very-important" },
+        { "text": ".", "highlight": "none" }
+      ],
+      "notes": {
+        "fr": "Exception : Dans les ordres (impératif), le sujet 'You' est caché.",
+        "mg": "Fanamarihana: Amin'ny didy, dia tsy voalaza ny 'You' fa hita taratra fotsiny.",
+        "en": "Exception: In commands (imperative), the subject 'You' is understood but omitted."
+      }
+    }
+  ],
+  "styles": {
+    "very-important": {
+      "color": "#e63946",
+      "background": "rgba(230, 57, 70, 0.08)",
+      "border": "2px solid #e63946",
+      "padding": "2px 6px",
+      "borderRadius": "6px",
+      "fontWeight": "bold"
+    },
+    "important": {
+      "color": "#457b9d",
+      "fontWeight": "600",
+      "background": "rgba(69, 123, 157, 0.08)",
+      "padding": "1px 5px",
+      "borderRadius": "4px"
+    },
+    "key-term": {
+      "color": "#2a9d8f",
+      "fontWeight": "bold",
+      "borderBottom": "2px solid #2a9d8f"
+    },
+    "none": {}
+  }
+}
