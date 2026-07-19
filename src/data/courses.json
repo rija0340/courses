@@ -12,5 +12,21 @@
     "description": { "fr": "Les bases de la programmation web.", "mg": "Ny fototry ny famolavolana tranonkala.", "en": "The basics of web programming." },
     "icon": "Code",
     "color": "#f29900"
+  },
+  {
+    "id": "medi-vocabs",
+    "type": "vocabs",
+    "title": { "fr": "MediVocabs", "en": "MediVocabs", "mg": "MediVocabs" },
+    "description": { "fr": "Lexique médical trilingue français-anglais-malgache.", "en": "Trilingual medical lexicon French-English-Malagasy.", "mg": "Rakibolana ara-pitsaboana telo fiteny frantsay-anglisy-malgasy." },
+    "icon": "HeartPulse",
+    "color": "#2563EB"
+  },
+  {
+    "id": "tech-vocabs",
+    "type": "vocabs",
+    "title": { "fr": "TechVocabs", "en": "TechVocabs", "mg": "TechVocabs" },
+    "description": { "fr": "Lexique tech trilingue.", "en": "Trilingual tech lexicon.", "mg": "Rakibolana teknolojia telo fiteny." },
+    "icon": "Cpu",
+    "color": "#10B981"
   }
 ]

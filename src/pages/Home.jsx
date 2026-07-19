@@ -1,9 +1,9 @@
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
-import { Languages, Code } from 'lucide-react';
+import { Languages, Code, HeartPulse, Cpu } from 'lucide-react';
 import { AppContext } from '../App';
 
-const ICONS = { Languages, Code };
+const ICONS = { Languages, Code, HeartPulse, Cpu };
 
 const Home = () => {
   const { lang, dataRegistry } = useContext(AppContext);
@@ -21,7 +21,7 @@ const Home = () => {
           return (
             <Link 
               key={course.id} 
-              to={`/course/${course.id}`}
+              to={course.type === 'vocabs' ? `/vocabs/${course.id}` : `/course/${course.id}`}
               className="group bg-white border border-[#dadce0] rounded-2xl p-6 hover:shadow-md transition-all block"
             >
               <div className="flex items-center gap-4 mb-4">

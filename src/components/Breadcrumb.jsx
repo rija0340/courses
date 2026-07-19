@@ -16,7 +16,14 @@ const Breadcrumb = ({ items }) => {
       {items.map((item, index) => (
         <React.Fragment key={index}>
           <ChevronRight size={16} className="mx-1 text-[#dadce0] shrink-0" />
-          {item.path ? (
+          {item.onClick ? (
+            <button
+              onClick={item.onClick}
+              className="hover:text-[#1a73e8] transition-colors truncate max-w-[200px] shrink-0 p-1 rounded-md hover:bg-[#1a73e8]/5 text-left"
+            >
+              {item.label}
+            </button>
+          ) : item.path ? (
             <Link 
               to={item.path} 
               className="hover:text-[#1a73e8] transition-colors truncate max-w-[200px] shrink-0 p-1 rounded-md hover:bg-[#1a73e8]/5"

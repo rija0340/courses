@@ -4,6 +4,8 @@ import dataRegistry from './data/registry';
 import Home from './pages/Home';
 import CourseView from './pages/CourseView';
 import LessonView from './pages/LessonView';
+import VocabsView from './pages/VocabsView';
+import VocabsAdmin from './pages/VocabsAdmin';
 import Navigation from './components/Navigation';
 
 const AppContext = React.createContext();
@@ -20,6 +22,8 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/course/:courseId" element={<CourseView />} />
             <Route path="/course/:courseId/lesson/:lessonId" element={<LessonView />} />
+            <Route path="/vocabs/:domainId" element={<VocabsView />} />
+            <Route path="/vocabs/:domainId/admin" element={<VocabsAdmin />} />
           </Routes>
         </div>
       </Router>
