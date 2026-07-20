@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useContext, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Search, X, Filter, Image as ImageIcon, Volume2, BookOpen, Eye, HelpCircle, Link2, Check, Languages, MoreHorizontal } from 'lucide-react';
+import { Search, X, Filter, Image as ImageIcon, Volume2, BookOpen, Eye, HelpCircle, Link2, Check, Languages, MoreHorizontal, Sparkles } from 'lucide-react';
 import { AppContext } from '../App';
 import Breadcrumb from '../components/Breadcrumb';
 import { CompactMenu, MenuButton, MenuLink, MenuTrigger } from '../components/CompactMenu';
@@ -13,6 +13,7 @@ import useVocabUrlState from '../hooks/useVocabUrlState';
 import vocabStorage from '../services/vocabStorage';
 import { filterVocabItems } from '../utils/vocabFilters';
 import { VOCAB_GUIDE, getGuideText } from '../data/vocabs/vocabGuideContent';
+import { isPracticeEnabled } from '../practice/config';
 import {
   getPath,
   getDescendantIds,
@@ -298,6 +299,16 @@ export default function VocabsView() {
               <span className="hidden sm:inline">Image</span>
             </button>
           </div>
+
+          {isPracticeEnabled() && (
+            <Link
+              to={`/vocabs/${domainId}/practice/simulation`}
+              className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-[#dadce0] bg-white text-[13px] font-semibold text-[#1a73e8] hover:bg-[#e8f0fe] shrink-0"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden sm:inline">Simulation</span>
+            </Link>
+          )}
 
           {viewMode === 'revision' && (
             <>

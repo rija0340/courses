@@ -13,6 +13,12 @@ export default function useVocabDomain(domainId) {
   useEffect(() => {
     let cancelled = false;
     async function load() {
+      if (!domainId) {
+        setDomain(null);
+        setItems([]);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       setError(null);
       try {

@@ -1,6 +1,27 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import { moveTab, countItemsForTab } from '../../../utils/tabOrder';
+
+function newRowKey() {
+  return `tab-row-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/**
+ * Stable React keys that do NOT depend on tab.id.
+ * Using tab.id as key remounts the row on every keystroke and steals focus.
+ */
+function useStableTabKeys(tabCount) {
+  const keysRef = useRef([]);
+
+  while (keysRef.current.length < tabCount) {
+    keysRef.current.push(newRowKey());
+  }
+  if (keysRef.current.length > tabCount) {
+    keysRef.current = keysRef.current.slice(0, tabCount);
+  }
+
+  return keysRef;
+}
 
 export default function TabEditor({
   tabs,
@@ -9,8 +30,11 @@ export default function TabEditor({
   showReorder = true,
   compact = false
 }) {
+  const list = tabs || [];
+  const keysRef = useStableTabKeys(list.length);
+
   const handleTabChange = (index, field, value) => {
-    const updated = [...tabs];
+    const updated = [...list];
     if (!updated[index]) return;
     if (field === 'id') {
       updated[index] = { ...updated[index], id: value };
@@ -24,24 +48,32 @@ export default function TabEditor({
   };
 
   const addTab = () => {
-    onChange([...(tabs || []), { id: `tab_${Date.now()}`, label: { fr: '', en: '', mg: '' } }]);
+    keysRef.current = [...keysRef.current, newRowKey()];
+    onChange([...list, { id: `tab_${Date.now()}`, label: { fr: '', en: '', mg: '' } }]);
   };
 
   const removeTab = (index) => {
-    onChange(tabs.filter((_, i) => i !== index));
+    keysRef.current = keysRef.current.filter((_, i) => i !== index);
+    onChange(list.filter((_, i) => i !== index));
   };
 
   const reorder = (index, direction) => {
-    onChange(moveTab(tabs, index, direction));
+    const nextTabs = moveTab(list, index, direction);
+    const keys = [...keysRef.current];
+    const target = direction === 'up' ? index - 1 : index + 1;
+    if (target < 0 || target >= keys.length) return;
+    [keys[index], keys[target]] = [keys[target], keys[index]];
+    keysRef.current = keys;
+    onChange(nextTabs);
   };
 
   return (
     <div className="space-y-2">
-      {(tabs || []).map((tab, idx) => {
+      {list.map((tab, idx) => {
         const itemCount = countItemsForTab(items, tab.id);
         return (
           <div
-            key={`${tab.id}-${idx}`}
+            key={keysRef.current[idx]}
             className={`flex flex-wrap sm:flex-nowrap items-center gap-2 bg-[#f8f9fa] rounded-xl ${compact ? 'p-1.5' : 'p-2'}`}
           >
             {showReorder && (
@@ -58,7 +90,7 @@ export default function TabEditor({
                 <button
                   type="button"
                   onClick={() => reorder(idx, 'down')}
-                  disabled={idx === tabs.length - 1}
+                  disabled={idx === list.length - 1}
                   className="w-7 h-5 rounded-md flex items-center justify-center text-[#5f6368] hover:bg-[#e8eaed] disabled:opacity-30"
                   title="Descendre"
                 >
@@ -96,7 +128,7 @@ export default function TabEditor({
           </div>
         );
       })}
-      {(!tabs || tabs.length === 0) && (
+      {list.length === 0 && (
         <p className="text-[13px] text-[#9aa0a6] text-center py-4">Aucun onglet</p>
       )}
       <button

@@ -9,6 +9,7 @@ import VocabsGuide from './pages/VocabsGuide';
 import VocabsAdmin from './pages/VocabsAdmin';
 import VocabsAdminGuide from './pages/VocabsAdminGuide';
 import VocabsGlobalAdmin from './pages/VocabsGlobalAdmin';
+import PracticeSimulation from './pages/PracticeSimulation';
 import Navigation from './components/Navigation';
 
 const AppContext = React.createContext();
@@ -29,6 +30,8 @@ const App = () => {
             <Route path="/vocabs/:domainId/guide" element={<VocabsGuide />} />
             <Route path="/vocabs/:domainId/admin/guide" element={<VocabsAdminGuide />} />
             <Route path="/vocabs/:domainId/admin" element={<VocabsAdmin />} />
+            <Route path="/vocabs/:domainId/practice/simulation" element={<PracticeSimulation />} />
+            <Route path="/practice/simulation" element={<PracticeSimulation />} />
             <Route path="/vocabs/:domainId/*" element={<VocabsView />} />
           </Routes>
         </div>

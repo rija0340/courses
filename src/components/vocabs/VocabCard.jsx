@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Volume2 } from 'lucide-react';
+import { Mic, Volume2 } from 'lucide-react';
 import RevealableLangRow, { LangRow } from './RevealableLangRow';
+import PronunciationPractice from '../../practice/components/PronunciationPractice';
+import { isPracticeEnabled } from '../../practice/config';
+import { speechService } from '../../practice/services/speechService';
 
 const CATEGORY_COLORS = {
   Organe: { bg: '#2563EB', accent: '#2563EB' },
@@ -24,21 +27,27 @@ export default function VocabCard({
   onImageClick
 }) {
   const [playing, setPlaying] = useState(false);
+  const [showPractice, setShowPractice] = useState(false);
 
-  const handleSpeak = (e) => {
+  const handleSpeak = async (e) => {
     e.stopPropagation();
     if (playing) return;
     if (!item.en) return;
-    const utterance = new SpeechSynthesisUtterance(item.en);
-    utterance.lang = 'en-US';
-    utterance.onend = () => setPlaying(false);
     setPlaying(true);
-    speechSynthesis.speak(utterance);
+    try {
+      await speechService.speak(item.en);
+    } finally {
+      setPlaying(false);
+    }
   };
 
   const colors = CATEGORY_COLORS[item.category] || { bg: '#6B7280', accent: '#6B7280' };
   const activeWord = lang === 'en' ? item.en : lang === 'mg' ? item.mg : item.fr;
   const isRevision = mode === 'revision';
+  const canPractice =
+    isPracticeEnabled() &&
+    (item.category === 'Expression' || item.tab === 'expressions') &&
+    !!item.en;
 
   return (
     <div className="group rounded-2xl border border-[#dadce0] bg-white hover:shadow-md transition-all p-5 flex gap-4 items-start">
@@ -69,21 +78,41 @@ export default function VocabCard({
               </div>
             )}
           </div>
-          <button
-            onClick={handleSpeak}
-            title="Écouter la prononciation anglaise"
-            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all ${
-              playing
-                ? 'bg-[#1a73e8] text-white scale-110'
-                : 'bg-[#f1f3f4] hover:bg-[#e8eaed] text-[#5f6368]'
-            }`}
-          >
-            {playing ? (
-              <div className="w-4 h-4 rounded-full bg-white animate-pulse" />
-            ) : (
-              <Volume2 className="w-4 h-4 ml-[1px]" />
+          <div className="flex items-center gap-1.5 shrink-0">
+            {canPractice && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowPractice((v) => !v);
+                }}
+                title="Oral practice"
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                  showPractice
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-[#f1f3f4] hover:bg-[#e8eaed] text-[#5f6368]'
+                }`}
+              >
+                <Mic className="w-4 h-4" />
+              </button>
             )}
-          </button>
+            <button
+              type="button"
+              onClick={handleSpeak}
+              title="Écouter la prononciation anglaise"
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                playing
+                  ? 'bg-[#1a73e8] text-white scale-110'
+                  : 'bg-[#f1f3f4] hover:bg-[#e8eaed] text-[#5f6368]'
+              }`}
+            >
+              {playing ? (
+                <div className="w-4 h-4 rounded-full bg-white animate-pulse" />
+              ) : (
+                <Volume2 className="w-4 h-4 ml-[1px]" />
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="h-px bg-[#dadce0]/60 mb-3" />
@@ -114,6 +143,10 @@ export default function VocabCard({
             {item.category}
           </span>
         </div>
+
+        {canPractice && showPractice && (
+          <PronunciationPractice targetText={item.en} phonetic={item.phonetic} />
+        )}
       </div>
     </div>
   );
