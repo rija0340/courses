@@ -486,6 +486,80 @@ const supabaseProvider = {
     if (error) throw new Error(error.message);
     await this.initDomain(domainId);
   },
+
+  async listDomains() {
+    if (!supabase) return [];
+
+    const { data: domains, error } = await supabase
+      .from('vocab_domains')
+      .select('id, meta, organization, updated_at')
+      .order('id');
+
+    if (error) throw new Error(error.message);
+
+    const { data: items, error: itemsErr } = await supabase
+      .from('vocab_items')
+      .select('domain_id');
+
+    if (itemsErr) throw new Error(itemsErr.message);
+
+    const counts = {};
+    (items || []).forEach(row => {
+      counts[row.domain_id] = (counts[row.domain_id] || 0) + 1;
+    });
+
+    return (domains || []).map(d => ({
+      id: d.id,
+      meta: d.meta,
+      organization: d.organization,
+      itemCount: counts[d.id] || 0,
+      updatedAt: d.updated_at
+    }));
+  },
+
+  async createDomain(domainId, { meta, organization }) {
+    if (!supabase) throw new Error('Supabase non configuré');
+    await requireAuthSession();
+
+    const { data: existing } = await supabase
+      .from('vocab_domains')
+      .select('id')
+      .eq('id', domainId)
+      .maybeSingle();
+
+    if (existing) throw new Error(`Le domaine « ${domainId} » existe déjà`);
+
+    const { error } = await supabase
+      .from('vocab_domains')
+      .insert({
+        id: domainId,
+        meta,
+        organization,
+        updated_at: new Date().toISOString()
+      });
+
+    if (error) throw new Error(error.message);
+    return { id: domainId, meta, organization };
+  },
+
+  async deleteDomain(domainId) {
+    if (!supabase) return;
+    await requireAuthSession();
+
+    const { error: itemsErr } = await supabase
+      .from('vocab_items')
+      .delete()
+      .eq('domain_id', domainId);
+
+    if (itemsErr) throw new Error(itemsErr.message);
+
+    const { error: domainErr } = await supabase
+      .from('vocab_domains')
+      .delete()
+      .eq('id', domainId);
+
+    if (domainErr) throw new Error(domainErr.message);
+  },
 };
 
 export default supabaseProvider;

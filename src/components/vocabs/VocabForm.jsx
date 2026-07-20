@@ -2,23 +2,39 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { X } from 'lucide-react';
 import { flattenTree } from '../../utils/categoryTree';
 
-export default function VocabForm({ item, onSave, onCancel, categories, tabs }) {
+export default function VocabForm({
+  item,
+  onSave,
+  onCancel,
+  categories,
+  tabs,
+  defaultCategoryId = '',
+  defaultTab = '',
+  lockCategory = false,
+  lockTab = false
+}) {
   const isEdit = !!item;
   const [form, setForm] = useState({
     id: '', en: '', fr: '', mg: '',
-    category: 'Organe', tab: 'vocab',
-    categoryId: '', phonetic: ''
+    category: 'Organe', tab: defaultTab || 'vocab',
+    categoryId: defaultCategoryId || '', phonetic: ''
   });
 
   useEffect(() => {
     if (item) {
       setForm({
         id: item.id || '', en: item.en || '', fr: item.fr || '', mg: item.mg || '',
-        category: item.category || 'Organe', tab: item.tab || 'vocab',
-        categoryId: item.categoryId || '', phonetic: item.phonetic || ''
+        category: item.category || 'Organe', tab: item.tab || defaultTab || 'vocab',
+        categoryId: item.categoryId || defaultCategoryId || '', phonetic: item.phonetic || ''
+      });
+    } else {
+      setForm({
+        id: '', en: '', fr: '', mg: '',
+        category: 'Organe', tab: defaultTab || 'vocab',
+        categoryId: defaultCategoryId || '', phonetic: ''
       });
     }
-  }, [item]);
+  }, [item, defaultCategoryId, defaultTab]);
 
   const flatCategories = useMemo(() => flattenTree(categories, 'fr'), [categories]);
 
@@ -85,7 +101,7 @@ export default function VocabForm({ item, onSave, onCancel, categories, tabs }) 
                 ))}
               </datalist>
             </div>
-            <SelectField label="Onglet" value={form.tab} onChange={v => handleChange('tab', v)}>
+            <SelectField label="Onglet" value={form.tab} onChange={v => handleChange('tab', v)} disabled={lockTab && !isEdit}>
               {activeTabs.map(t => (
                 <option key={t.id} value={t.id}>{t.label?.fr || t.id}</option>
               ))}
@@ -99,7 +115,8 @@ export default function VocabForm({ item, onSave, onCancel, categories, tabs }) 
             <select
               value={form.categoryId}
               onChange={e => handleChange('categoryId', e.target.value)}
-              className="w-full h-10 rounded-xl bg-[#f8f9fa] border border-transparent focus:bg-white focus:border-[#1a73e8] px-3 text-[14px] outline-none transition-all"
+              disabled={lockCategory && !isEdit}
+              className="w-full h-10 rounded-xl bg-[#f8f9fa] border border-transparent focus:bg-white focus:border-[#1a73e8] px-3 text-[14px] outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <option value="">— Aucune —</option>
               {flatCategories.map(c => (
@@ -154,14 +171,15 @@ function FormField({ label, value, onChange, placeholder, autoFocus }) {
   );
 }
 
-function SelectField({ label, value, onChange, children }) {
+function SelectField({ label, value, onChange, children, disabled }) {
   return (
     <div>
       <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#9aa0a6] mb-1.5">{label}</label>
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="w-full h-10 rounded-xl bg-[#f8f9fa] border border-transparent focus:bg-white focus:border-[#1a73e8] px-3 text-[14px] outline-none transition-all"
+        disabled={disabled}
+        className="w-full h-10 rounded-xl bg-[#f8f9fa] border border-transparent focus:bg-white focus:border-[#1a73e8] px-3 text-[14px] outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {children}
       </select>

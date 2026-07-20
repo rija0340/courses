@@ -421,6 +421,141 @@ function normalizeItem(raw, index, errors, warnings) {
 }
 
 /**
+ * Detect if JSON is an items-only import (no organization structure).
+ */
+export function isItemsOnlyImport(raw) {
+  if (!isPlainObject(raw) || !Array.isArray(raw.items)) return false;
+  if (!raw.organization) return true;
+  if (!isPlainObject(raw.organization)) return false;
+  const hasTabs = Array.isArray(raw.organization.tabs) && raw.organization.tabs.length > 0;
+  const hasCats = Array.isArray(raw.organization.categories) && raw.organization.categories.length > 0;
+  return !hasTabs && !hasCats;
+}
+
+/**
+ * Compute merge stats for import preview.
+ */
+export function computeImportMergeStats(currentItems, importedItems) {
+  const currentIds = new Set((currentItems || []).map(i => i.id));
+  let added = 0;
+  let updated = 0;
+  (importedItems || []).forEach(item => {
+    if (currentIds.has(item.id)) updated += 1;
+    else added += 1;
+  });
+  return { added, updated, total: (importedItems || []).length };
+}
+
+/**
+ * Build a minimal template with only items[] for adding new words.
+ */
+export function buildItemsOnlyImportTemplate(domain = null) {
+  const firstTab = domain?.organization?.tabs?.[0]?.id || 'vocab';
+  const firstCat = domain?.organization?.categories?.[0]?.id || '';
+  const sampleFromDomain = domain?.items?.[0];
+
+  return {
+    items: [
+      sampleFromDomain
+        ? pickItemFields(sampleFromDomain)
+        : {
+            ...exampleFromFields(ITEM_FIELDS),
+            id: 'nouveau-mot-1',
+            tab: firstTab,
+            categoryId: firstCat || undefined,
+          },
+      {
+        ...exampleFromFields(ITEM_FIELDS),
+        id: 'nouveau-mot-2',
+        en: 'New word',
+        fr: 'Nouveau mot',
+        mg: 'Teny vaovao',
+        category: 'Organe',
+        tab: firstTab,
+        categoryId: firstCat || undefined,
+      },
+    ],
+    _comment: {
+      about: 'Import mots seulement — supprimez _comment avant import',
+      notes: [
+        'Seul le tableau items est requis. Les mots existants sont conservés.',
+        'Même id = mise à jour ; nouvel id = ajout.',
+        'tab et categoryId doivent exister dans le domaine.',
+        'Les images se gèrent via upload admin, pas via JSON.',
+      ],
+    },
+  };
+}
+
+/**
+ * Validate items-only import against current domain.
+ */
+export function validateItemsOnlyImport(raw, currentDomain = null) {
+  const errors = [];
+  const warnings = [];
+
+  if (!isPlainObject(raw)) {
+    return { ok: false, errors: ['Le JSON doit être un objet'], warnings, data: null, importType: 'items_only' };
+  }
+  if (!Array.isArray(raw.items)) {
+    return { ok: false, errors: ['items: tableau requis'], warnings, data: null, importType: 'items_only' };
+  }
+
+  const items = raw.items
+    .map((it, i) => normalizeItem(it, i, errors, warnings))
+    .filter(Boolean);
+
+  const tabIds = new Set((currentDomain?.organization?.tabs || []).map(t => t.id));
+  const catIds = new Set();
+  const walk = (nodes) => {
+    (nodes || []).forEach(n => {
+      catIds.add(n.id);
+      walk(n.children);
+    });
+  };
+  walk(currentDomain?.organization?.categories || []);
+
+  items.forEach((it, i) => {
+    if (it.tab && tabIds.size > 0 && !tabIds.has(it.tab)) {
+      warnings.push(`items[${i}] (${it.id}): tab "${it.tab}" absent du domaine`);
+    }
+    if (it.categoryId && catIds.size > 0 && !catIds.has(it.categoryId)) {
+      warnings.push(`items[${i}] (${it.id}): categoryId "${it.categoryId}" absent de l'arbre`);
+    }
+  });
+
+  if (raw._comment) {
+    warnings.push('_comment: retiré automatiquement');
+  }
+
+  const stats = computeImportMergeStats(currentDomain?.items || [], items);
+
+  return {
+    ok: errors.length === 0,
+    errors,
+    warnings,
+    importType: 'items_only',
+    stats,
+    data: { items },
+  };
+}
+
+/**
+ * Route import validation to full or items-only parser.
+ */
+export function validateImportPayload(raw, currentDomain = null) {
+  if (isItemsOnlyImport(raw)) {
+    return validateItemsOnlyImport(raw, currentDomain);
+  }
+  const result = validateAndNormalizeImport(raw);
+  if (result.ok && result.data) {
+    result.importType = 'full';
+    result.stats = computeImportMergeStats(currentDomain?.items || [], result.data.items);
+  }
+  return result;
+}
+
+/**
  * Validate + normalize an imported domain JSON against the current schema.
  * @returns {{ ok: boolean, errors: string[], warnings: string[], data: object|null }}
  */
@@ -520,4 +655,48 @@ export function buildExportPayload(domain) {
 
 export function templateToPrettyJson(domain = null) {
   return JSON.stringify(buildImportTemplate(domain), null, 2);
+}
+
+/** Reserved slugs that cannot be used as domain ids */
+export const RESERVED_DOMAIN_IDS = ['admin', 'guide'];
+
+export const DEFAULT_VOCAB_TABS = [
+  { id: 'vocab', label: { fr: 'Vocabulaire', en: 'Vocabulary', mg: 'Voaboly' } }
+];
+
+export const VOCAB_TAB_PRESETS = {
+  vocabOnly: DEFAULT_VOCAB_TABS,
+  full: [
+    { id: 'vocab', label: { fr: 'Vocabulaire', en: 'Vocabulary', mg: 'Voaboly' } },
+    { id: 'maladies', label: { fr: 'Maladies', en: 'Illnesses', mg: 'Arety' } },
+    { id: 'expressions', label: { fr: 'Expressions', en: 'Expressions', mg: 'Fitenenana' } }
+  ]
+};
+
+const DOMAIN_ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export function validateDomainId(id) {
+  if (!id || typeof id !== 'string') return 'Identifiant requis';
+  if (!DOMAIN_ID_RE.test(id)) return 'Utilisez des minuscules, chiffres et tirets (ex. juridique-vocabs)';
+  if (RESERVED_DOMAIN_IDS.includes(id)) return `« ${id} » est réservé`;
+  return null;
+}
+
+export function buildDefaultOrganization(tabPreset = 'vocabOnly') {
+  const tabs = VOCAB_TAB_PRESETS[tabPreset] || DEFAULT_VOCAB_TABS;
+  return {
+    tabs: structuredClone(tabs),
+    categories: []
+  };
+}
+
+export function buildDefaultDomainMeta({ title, description, icon = 'BookOpen', color = '#1a73e8' } = {}) {
+  const empty = emptyI18n();
+  return {
+    title: title || { ...empty, fr: 'Nouveau domaine' },
+    description: description || empty,
+    icon,
+    color,
+    type: 'vocabs'
+  };
 }

@@ -81,6 +81,18 @@ const vocabStorage = {
 
   async resetDomain(domainId) {
     return provider.resetDomain(domainId);
+  },
+
+  async listDomains() {
+    return provider.listDomains();
+  },
+
+  async createDomain(domainId, payload) {
+    return provider.createDomain(domainId, payload);
+  },
+
+  async deleteDomain(domainId) {
+    return provider.deleteDomain(domainId);
   }
 };
 

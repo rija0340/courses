@@ -1,12 +1,18 @@
 import React, { useState, useMemo, useContext, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Search, X, Filter, Image as ImageIcon, Type, Volume2 } from 'lucide-react';
+import { Search, X, Filter, Image as ImageIcon, Volume2, BookOpen, Eye, HelpCircle, Link2, Check, Languages, MoreHorizontal } from 'lucide-react';
 import { AppContext } from '../App';
 import Breadcrumb from '../components/Breadcrumb';
+import { CompactMenu, MenuButton, MenuLink, MenuTrigger } from '../components/CompactMenu';
 import VocabCard from '../components/vocabs/VocabCard';
 import CategoryTree from '../components/vocabs/CategoryTree';
+import VocabTabBar from '../components/vocabs/VocabTabBar';
+import FullscreenLightbox from '../components/vocabs/FullscreenLightbox';
 import useVocabDomain from '../hooks/useVocabDomain';
+import useVocabUrlState from '../hooks/useVocabUrlState';
 import vocabStorage from '../services/vocabStorage';
+import { filterVocabItems } from '../utils/vocabFilters';
+import { VOCAB_GUIDE, getGuideText } from '../data/vocabs/vocabGuideContent';
 import {
   getPath,
   getDescendantIds,
@@ -19,13 +25,34 @@ export default function VocabsView() {
   const { lang } = useContext(AppContext);
   const { domain, items, error, loading } = useVocabDomain(domainId);
 
-  const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState('vocab');
-  const [mode, setMode] = useState('text');
-  const [activeCategory, setActiveCategory] = useState(null);
+  const org = domain?.organization;
+  const tabs = useMemo(() => org?.tabs || [], [org]);
+  const meta = domain?.meta;
+  const categories = useMemo(() => org?.categories || [], [org]);
+  const domainReady = !loading && !!domain;
+
+  const {
+    activeCategory,
+    activeTab,
+    viewMode,
+    revisionLang,
+    search,
+    expandedIds: urlExpandedIds,
+    setActiveCategory,
+    setActiveTab,
+    setViewMode,
+    setRevisionLang,
+    setSearch,
+    clearFilters,
+    buildUrl
+  } = useVocabUrlState({ domainId, categories, tabs, ready: domainReady });
+
+  const [revealAll, setRevealAll] = useState(false);
   const [expandedIds, setExpandedIds] = useState([]);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [catImages, setCatImages] = useState({});
+  const [lightbox, setLightbox] = useState(null);
+  const [shareCopied, setShareCopied] = useState(false);
 
   const drawerRef = useRef(null);
   const buttonRef = useRef(null);
@@ -51,12 +78,19 @@ export default function VocabsView() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [mobileDrawerOpen]);
 
-  const org = domain?.organization;
-  const tabs = org?.tabs || [];
-  const meta = domain?.meta;
-  const categories = useMemo(() => org?.categories || [], [org]);
+  useEffect(() => {
+    if (viewMode !== 'revision') setRevealAll(false);
+  }, [viewMode]);
 
-  // Load category images
+  const urlExpandedKey = urlExpandedIds.join(',');
+
+  useEffect(() => {
+    if (urlExpandedIds.length) {
+      setExpandedIds(prev => [...new Set([...urlExpandedIds, ...prev])]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- expand tree from URL path segments
+  }, [urlExpandedKey]);
+
   useEffect(() => {
     async function loadImages() {
       const imgs = {};
@@ -81,40 +115,40 @@ export default function VocabsView() {
 
   const selectCategory = (id) => {
     setActiveCategory(id);
-    // Pas d'auto-fermeture du panneau mobile
   };
 
-  const clearFilters = () => setActiveCategory(null);
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
 
   const counts = useMemo(
     () => countItemsInTree(categories, items),
     [categories, items]
   );
 
-  const filteredItems = useMemo(() => {
-    let result = items;
-    if (activeCategory) {
-      const ids = getDescendantIds(categories, activeCategory);
-      result = result.filter(i => i.categoryId && ids.includes(i.categoryId));
-    }
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter(i =>
-        i.en.toLowerCase().includes(q) ||
-        i.fr.toLowerCase().includes(q) ||
-        i.mg.toLowerCase().includes(q)
-      );
-    } else if (activeTab) {
-      result = result.filter(i => i.tab === activeTab);
-    }
-    return result;
-  }, [items, categories, activeCategory, activeTab, search]);
+  const isTextMode = viewMode === 'lecture' || viewMode === 'revision';
+
+  const filteredItems = useMemo(() => filterVocabItems(items, {
+    categories,
+    activeCategory,
+    activeTab,
+    search
+  }), [items, categories, activeCategory, activeTab, search]);
 
   const getLabel = (obj) => {
     if (!obj) return '';
     if (typeof obj === 'string') return obj;
     return obj[lang] || obj.fr || '';
   };
+
+  const guideT = (obj) => getGuideText(obj, lang);
+  const modeHint = guideT(VOCAB_GUIDE.microHints[viewMode]);
 
   const categoryPath = useMemo(
     () => activeCategory ? getPath(categories, activeCategory) : [],
@@ -133,23 +167,21 @@ export default function VocabsView() {
     return items.filter(item => item.categoryId && ids.includes(item.categoryId));
   }, [items, categories, activeCategory]);
 
-  // Breadcrumb avec catégories cliquables
   const breadcrumbItems = [
     {
       label: getLabel(meta?.title) || domainId,
-      onClick: () => { clearFilters(); }
+      path: buildUrl({ categoryId: null, categoryPath: [] })
     }
   ];
   categoryPath.forEach((node, idx) => {
     const isLast = idx === categoryPath.length - 1;
     breadcrumbItems.push({
       label: getLabel(node.label),
-      ...(isLast
-        ? {}  // dernier = page actuelle, pas cliquable
-        : { onClick: () => setActiveCategory(node.id) }
-      )
+      ...(isLast ? {} : { path: buildUrl({ categoryId: node.id }) })
     });
   });
+
+  const openLightbox = (src, alt) => setLightbox({ src, alt });
 
   if (loading) {
     return (
@@ -228,27 +260,36 @@ export default function VocabsView() {
         <p className="text-xl text-[#5f6368] leading-relaxed">{getLabel(meta?.description)}</p>
       </div>
 
-      {/* === BARRE DE CONTRÔLE COMPACTE === */}
       <div className="flex flex-col gap-3 mb-5">
-        {/* Ligne 1 : Toggle + Search (desktop inline) + Categories */}
-        <div className="flex gap-2 items-center">
-          {/* Toggle Texte/Image */}
+        <div className="flex gap-2 items-center flex-wrap justify-between">
+          <div className="flex gap-2 items-center flex-wrap flex-1 min-w-0">
           <div className="flex gap-[2px] p-[2px] bg-[#f1f3f4] rounded-xl shrink-0">
             <button
-              onClick={() => setMode('text')}
+              onClick={() => setViewMode('lecture')}
               className={`flex items-center gap-1.5 px-3 h-9 rounded-lg text-[13px] font-semibold transition-all ${
-                mode === 'text'
+                viewMode === 'lecture'
                   ? 'bg-white text-[#1a73e8] shadow-sm'
                   : 'text-[#5f6368] hover:text-[#202124]'
               }`}
             >
-              <Type className="w-4 h-4" />
-              <span className="hidden sm:inline">Texte</span>
+              <BookOpen className="w-4 h-4" />
+              <span className="hidden sm:inline">Lecture</span>
             </button>
             <button
-              onClick={() => setMode('image')}
+              onClick={() => setViewMode('revision')}
               className={`flex items-center gap-1.5 px-3 h-9 rounded-lg text-[13px] font-semibold transition-all ${
-                mode === 'image'
+                viewMode === 'revision'
+                  ? 'bg-white text-[#1a73e8] shadow-sm'
+                  : 'text-[#5f6368] hover:text-[#202124]'
+              }`}
+            >
+              <Eye className="w-4 h-4" />
+              <span className="hidden sm:inline">Révision</span>
+            </button>
+            <button
+              onClick={() => setViewMode('image')}
+              className={`flex items-center gap-1.5 px-3 h-9 rounded-lg text-[13px] font-semibold transition-all ${
+                viewMode === 'image'
                   ? 'bg-white text-[#1a73e8] shadow-sm'
                   : 'text-[#5f6368] hover:text-[#202124]'
               }`}
@@ -258,9 +299,57 @@ export default function VocabsView() {
             </button>
           </div>
 
-          {/* Search: desktop inline */}
-          {mode === 'text' && (
-            <div className="hidden md:flex relative flex-1 items-center">
+          {viewMode === 'revision' && (
+            <>
+              <CompactMenu
+                className="sm:hidden shrink-0"
+                trigger={(open) => (
+                  <MenuTrigger icon={Languages} label="Langue de révision" open={open} badge={revisionLang} />
+                )}
+              >
+                {[
+                  { id: 'fr', label: 'Français' },
+                  { id: 'en', label: 'English' },
+                  { id: 'mg', label: 'Malagasy' }
+                ].map(l => (
+                  <MenuButton key={l.id} active={revisionLang === l.id} onClick={() => setRevisionLang(l.id)}>
+                    <span className="w-7 text-[11px] font-bold uppercase text-[#9aa0a6]">{l.id}</span>
+                    {l.label}
+                  </MenuButton>
+                ))}
+              </CompactMenu>
+              <div className="hidden sm:flex gap-[2px] p-[2px] bg-[#f1f3f4] rounded-xl shrink-0">
+                {['fr', 'en', 'mg'].map(code => (
+                  <button
+                    key={code}
+                    onClick={() => setRevisionLang(code)}
+                    className={`px-3 h-9 rounded-lg text-[12px] font-bold uppercase transition-all ${
+                      revisionLang === code
+                        ? 'bg-white text-[#1a73e8] shadow-sm'
+                        : 'text-[#5f6368] hover:text-[#202124]'
+                    }`}
+                  >
+                    {code}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setRevealAll(v => !v)}
+                className={`h-9 px-2.5 sm:px-3 rounded-xl text-[11px] sm:text-[12px] font-semibold transition-all shrink-0 ${
+                  revealAll
+                    ? 'bg-[#E8F0FE] text-[#1967D2]'
+                    : 'bg-white border border-[#dadce0] text-[#5f6368] hover:bg-[#f8f9fa]'
+                }`}
+              >
+                <span className="sm:hidden">{revealAll ? 'Masquer' : 'Révéler'}</span>
+                <span className="hidden sm:inline">{revealAll ? 'Masquer tout' : 'Tout révéler'}</span>
+              </button>
+            </>
+          )}
+
+          {isTextMode && (
+            <div className="hidden md:flex relative flex-1 items-center min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aa0a6]" />
               <input
                 value={search}
@@ -279,7 +368,6 @@ export default function VocabsView() {
             </div>
           )}
 
-          {/* Categories button: mobile */}
           {hasSidebar && (
             <button
               ref={buttonRef}
@@ -302,10 +390,60 @@ export default function VocabsView() {
               )}
             </button>
           )}
+          </div>
+
+          {/* Mobile: guide + share menu */}
+          <CompactMenu
+            className="sm:hidden shrink-0"
+            trigger={(open) => <MenuTrigger icon={MoreHorizontal} label="Guide et partage" open={open} />}
+          >
+            <MenuLink to={`/vocabs/${domainId}/guide`}>
+              <HelpCircle size={15} className="text-[#1a73e8]" />
+              {guideT(VOCAB_GUIDE.seeGuide)}
+            </MenuLink>
+            <MenuButton onClick={handleShare}>
+              {shareCopied ? (
+                <Check size={15} className="text-[#137333]" />
+              ) : (
+                <Link2 size={15} className="text-[#1a73e8]" />
+              )}
+              {shareCopied ? 'Lien copié !' : 'Copier le lien'}
+            </MenuButton>
+          </CompactMenu>
+
+          <Link
+            to={`/vocabs/${domainId}/guide`}
+            className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white border border-[#dadce0] text-[13px] font-semibold text-[#3c4043] hover:bg-[#f8f9fa] transition-all shrink-0"
+            title={guideT(VOCAB_GUIDE.pageTitle)}
+          >
+            <HelpCircle className="w-4 h-4 text-[#1a73e8]" />
+            {guideT(VOCAB_GUIDE.seeGuide)}
+          </Link>
+          <button
+            type="button"
+            onClick={handleShare}
+            className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white border border-[#dadce0] text-[13px] font-semibold text-[#3c4043] hover:bg-[#f8f9fa] transition-all shrink-0"
+            title="Copier le lien de cette page"
+          >
+            {shareCopied ? (
+              <Check className="w-4 h-4 text-[#137333]" />
+            ) : (
+              <Link2 className="w-4 h-4 text-[#1a73e8]" />
+            )}
+            {shareCopied ? 'Copié !' : 'Partager'}
+          </button>
         </div>
 
-        {/* Search: mobile only */}
-        {mode === 'text' && (
+        {modeHint && (
+          <p className="text-[13px] text-[#5f6368] flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span>{modeHint}</span>
+            <Link to={`/vocabs/${domainId}/guide`} className="text-[#1a73e8] font-medium hover:underline shrink-0">
+              {guideT(VOCAB_GUIDE.seeGuide)} →
+            </Link>
+          </p>
+        )}
+
+        {isTextMode && (
           <div className="md:hidden relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aa0a6]" />
             <input
@@ -326,7 +464,6 @@ export default function VocabsView() {
         )}
       </div>
 
-      {/* Mobile categories drawer */}
       {mobileDrawerOpen && (
         <>
           <div className="fixed inset-0 z-[55]" onClick={() => setMobileDrawerOpen(false)} />
@@ -366,31 +503,30 @@ export default function VocabsView() {
         )}
 
         <div className="flex-1 min-w-0">
-          {/* TABS — uniquement dans la zone de contenu */}
-          {mode === 'text' && tabs.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 mb-5">
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`h-10 rounded-lg text-[13px] font-semibold transition-all ${
-                    activeTab === tab.id
-                      ? 'bg-white text-[#202124] shadow-sm ring-1 ring-[#dadce0]'
-                      : 'bg-[#f1f3f4] text-[#5f6368] hover:bg-[#e8eaed] hover:text-[#202124]'
-                  }`}
-                >
-                  {getLabel(tab.label)}
-                </button>
-              ))}
-            </div>
+          {isTextMode && tabs.length > 0 && (
+            <VocabTabBar
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              getLabel={getLabel}
+              guideLink={`/vocabs/${domainId}/guide`}
+              sectionLabel={guideT(VOCAB_GUIDE.tabSectionLabel)}
+            />
           )}
 
-          {/* === Mode TEXT === */}
-          {mode === 'text' && (
+          {isTextMode && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredItems.map(item => (
-                  <VocabCard key={item.id} item={item} lang={lang} />
+                  <VocabCard
+                    key={item.id}
+                    item={item}
+                    lang={lang}
+                    mode={viewMode}
+                    revisionLang={revisionLang}
+                    revealAll={revealAll}
+                    onImageClick={openLightbox}
+                  />
                 ))}
               </div>
 
@@ -406,10 +542,8 @@ export default function VocabsView() {
             </>
           )}
 
-          {/* === Mode IMAGE === */}
-          {mode === 'image' && (
+          {viewMode === 'image' && (
             <div className="space-y-8">
-              {/* Categories / Subcategories Grid */}
               {subcategoriesToRender.length > 0 && (
                 <div>
                   <h3 className="text-[13px] font-bold text-[#9aa0a6] uppercase tracking-wider mb-4 px-1">
@@ -422,9 +556,18 @@ export default function VocabsView() {
                         onClick={() => selectCategory(cat.id)}
                         className="group relative rounded-2xl border border-[#dadce0] bg-white overflow-hidden hover:shadow-md transition-all text-left"
                       >
-                        <div className="aspect-square relative bg-[#f8f9fa] flex items-center justify-center overflow-hidden">
+                        <div
+                          className="aspect-square relative bg-[#f8f9fa] flex items-center justify-center overflow-hidden"
+                          onClick={(e) => {
+                            if (catImages[cat.id]) {
+                              e.stopPropagation();
+                              openLightbox(catImages[cat.id], getLabel(cat.label));
+                            }
+                          }}
+                          role={catImages[cat.id] ? 'button' : undefined}
+                        >
                           {catImages[cat.id] ? (
-                            <img src={catImages[cat.id]} alt={getLabel(cat.label)} className="w-full h-full object-cover" />
+                            <img src={catImages[cat.id]} alt={getLabel(cat.label)} className="w-full h-full object-cover cursor-zoom-in" />
                           ) : (
                             <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-[28px] font-bold text-white shadow-sm bg-[#dadce0]">
                               {(getLabel(cat.label) || '?').charAt(0).toUpperCase()}
@@ -441,7 +584,6 @@ export default function VocabsView() {
                 </div>
               )}
 
-              {/* Vocabulary Items Grid */}
               {activeCategory && activeCategoryItems.length > 0 && (
                 <div>
                   <h3 className="text-[13px] font-bold text-[#9aa0a6] uppercase tracking-wider mb-4 px-1">
@@ -464,9 +606,17 @@ export default function VocabsView() {
                           className="group relative rounded-2xl border border-[#dadce0] bg-white overflow-hidden hover:shadow-md transition-all cursor-pointer text-left flex flex-col justify-between"
                           title="Cliquez pour écouter la prononciation anglaise"
                         >
-                          <div className="aspect-square relative bg-[#f8f9fa] flex items-center justify-center overflow-hidden">
+                          <div
+                            className="aspect-square relative bg-[#f8f9fa] flex items-center justify-center overflow-hidden"
+                            onClick={(e) => {
+                              if (item.image) {
+                                e.stopPropagation();
+                                openLightbox(item.image, activeWord);
+                              }
+                            }}
+                          >
                             {item.image ? (
-                              <img src={item.image} alt={activeWord} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                              <img src={item.image} alt={activeWord} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 cursor-zoom-in" />
                             ) : (
                               <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[24px] font-bold text-[#9aa0a6] bg-[#f1f3f4] group-hover:scale-105 transition-transform duration-300">
                                 {activeWord.charAt(0).toUpperCase()}
@@ -495,23 +645,28 @@ export default function VocabsView() {
                 </div>
               )}
 
-              {/* Diagram */}
               {activeCategory && catImages[activeCategory] && (
                 <div className="mt-6">
                   <p className="text-[13px] font-bold text-[#9aa0a6] uppercase tracking-wider mb-3">
                     Schéma de la catégorie
                   </p>
-                  <div className="rounded-2xl border border-[#dadce0] overflow-hidden bg-white">
+                  <button
+                    type="button"
+                    onClick={() => openLightbox(
+                      catImages[activeCategory],
+                      getLabel(findNodeById(categories, activeCategory)?.label)
+                    )}
+                    className="w-full rounded-2xl border border-[#dadce0] overflow-hidden bg-white cursor-zoom-in hover:shadow-md transition-shadow"
+                  >
                     <img
                       src={catImages[activeCategory]}
                       alt={getLabel(findNodeById(categories, activeCategory)?.label)}
                       className="w-full max-h-[400px] object-contain bg-[#f8f9fa]"
                     />
-                  </div>
+                  </button>
                 </div>
               )}
 
-              {/* Empty state */}
               {subcategoriesToRender.length === 0 && activeCategoryItems.length === 0 && (
                 <div className="py-20 text-center">
                   <div className="w-14 h-14 mx-auto rounded-2xl bg-[#f1f3f4] flex items-center justify-center mb-4">
@@ -525,6 +680,14 @@ export default function VocabsView() {
           )}
         </div>
       </div>
+
+      {lightbox && (
+        <FullscreenLightbox
+          src={lightbox.src}
+          alt={lightbox.alt}
+          onClose={() => setLightbox(null)}
+        />
+      )}
     </div>
   );
 }

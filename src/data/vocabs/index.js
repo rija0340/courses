@@ -43,4 +43,11 @@ export function getAllDomainMetas() {
   }));
 }
 
+/** Static icon/color fallback for seeded domains (before DB meta is loaded). */
+export function getStaticPresentation(domainId) {
+  const entry = domainRegistry[domainId];
+  if (!entry) return null;
+  return { ...entry.meta, title: entry.seed?.meta?.title, description: entry.seed?.meta?.description };
+}
+
 export default domainRegistry;

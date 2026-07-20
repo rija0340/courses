@@ -160,6 +160,50 @@ const localStorageProvider = {
       }
     }
     keysToRemove.forEach(k => localStorage.removeItem(k));
+  },
+
+  async listDomains() {
+    const domains = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith('medi_vocabs_domain_')) continue;
+      const id = key.slice('medi_vocabs_domain_'.length);
+      const domain = await this.getDomain(id);
+      if (domain) {
+        domains.push({
+          id,
+          meta: domain.meta,
+          organization: domain.organization,
+          itemCount: domain.items?.length || 0,
+          updatedAt: null
+        });
+      }
+    }
+    return domains.sort((a, b) => a.id.localeCompare(b.id));
+  },
+
+  async createDomain(domainId, { meta, organization }) {
+    const existing = await this.getDomain(domainId);
+    if (existing) throw new Error(`Le domaine « ${domainId} » existe déjà`);
+    await this.saveDomain(domainId, {
+      id: domainId,
+      version: 2,
+      meta,
+      organization,
+      items: []
+    });
+    return { id: domainId, meta, organization };
+  },
+
+  async deleteDomain(domainId) {
+    await this.resetDomain(domainId);
+    const catPrefix = `medi_vocabs_catimg_${domainId}_`;
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(catPrefix)) keysToRemove.push(key);
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
   }
 };
 

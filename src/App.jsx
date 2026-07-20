@@ -5,7 +5,10 @@ import Home from './pages/Home';
 import CourseView from './pages/CourseView';
 import LessonView from './pages/LessonView';
 import VocabsView from './pages/VocabsView';
+import VocabsGuide from './pages/VocabsGuide';
 import VocabsAdmin from './pages/VocabsAdmin';
+import VocabsAdminGuide from './pages/VocabsAdminGuide';
+import VocabsGlobalAdmin from './pages/VocabsGlobalAdmin';
 import Navigation from './components/Navigation';
 
 const AppContext = React.createContext();
@@ -22,8 +25,11 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/course/:courseId" element={<CourseView />} />
             <Route path="/course/:courseId/lesson/:lessonId" element={<LessonView />} />
-            <Route path="/vocabs/:domainId" element={<VocabsView />} />
+            <Route path="/admin/vocabs" element={<VocabsGlobalAdmin />} />
+            <Route path="/vocabs/:domainId/guide" element={<VocabsGuide />} />
+            <Route path="/vocabs/:domainId/admin/guide" element={<VocabsAdminGuide />} />
             <Route path="/vocabs/:domainId/admin" element={<VocabsAdmin />} />
+            <Route path="/vocabs/:domainId/*" element={<VocabsView />} />
           </Routes>
         </div>
       </Router>
