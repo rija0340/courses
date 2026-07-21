@@ -36,13 +36,17 @@ loadEnvFile(path.join(root, '.env.local'));
 const transcribe = require('../api/speech/transcribe');
 const speak = require('../api/speech/speak');
 const generate = require('../api/llm/generate');
+const writtenTurn = require('../api/llm/written-turn');
+const aiHealth = require('../api/ai/health');
 
 const PORT = Number(process.env.API_PORT || 3001);
 
 const routes = {
   'POST /api/speech/transcribe': transcribe,
   'POST /api/speech/speak': speak,
-  'POST /api/llm/generate': generate
+  'POST /api/llm/generate': generate,
+  'POST /api/llm/written-turn': writtenTurn,
+  'GET /api/ai/health': aiHealth
 };
 
 function readBody(req) {

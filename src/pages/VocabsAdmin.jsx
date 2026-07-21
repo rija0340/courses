@@ -47,9 +47,11 @@ export default function VocabsAdmin() {
       setSession(s);
       setCheckingAuth(false);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
-      if (s) refresh();
+      if (s && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+        refresh();
+      }
     });
     return () => subscription?.unsubscribe();
   }, [refresh]);

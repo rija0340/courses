@@ -30,8 +30,9 @@ export default function useVocabDomainsList(lang = 'fr') {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  const refresh = useCallback(async (options = {}) => {
+    const { soft = false } = options;
+    if (!soft) setLoading(true);
     setError(null);
     try {
       const list = await vocabStorage.listDomains();

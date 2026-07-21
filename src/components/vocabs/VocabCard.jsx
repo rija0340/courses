@@ -73,8 +73,16 @@ export default function VocabCard({
                 : activeWord}
             </div>
             {item.phonetic && (
-              <div className="text-[13px] text-[#9aa0a6] mt-1 font-medium">
-                {item.phonetic}
+              <div className="flex items-center gap-1.5 mt-1">
+                <span
+                  className="text-[9px] font-semibold uppercase tracking-wide text-[#dadce0] select-none"
+                  title="Prononciation anglaise (IPA)"
+                >
+                  pron.
+                </span>
+                <span className="text-[13px] text-[#9aa0a6] font-medium">
+                  {item.phonetic}
+                </span>
               </div>
             )}
           </div>

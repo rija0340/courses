@@ -266,20 +266,23 @@ export function buildImportTemplate(domain = null) {
             },
           ],
     },
-    items: [
-      exampleFromFields(ITEM_FIELDS),
-      {
+    items: (() => {
+      const tabs = domain?.organization?.tabs?.length
+        ? domain.organization.tabs
+        : [{ id: 'vocab' }, { id: 'maladies' }, { id: 'expressions' }];
+      const firstCat = domain?.organization?.categories?.[0]?.id || 'sub-example';
+      return tabs.map((tab, index) => ({
         ...exampleFromFields(ITEM_FIELDS),
-        id: 'example-2',
-        en: 'Second word',
-        fr: 'Deuxième mot',
-        mg: 'Faharoa',
-        category: 'Maladie',
-        tab: 'maladies',
-        categoryId: 'sub-example',
-        phonetic: null,
-      },
-    ],
+        id: `example-${tab.id}`,
+        en: index === 0 ? 'Example word' : `Example (${tab.id})`,
+        fr: index === 0 ? 'Mot exemple' : `Exemple (${tab.id})`,
+        mg: index === 0 ? 'Ohatra' : `Ohatra (${tab.id})`,
+        category: index % 2 === 0 ? 'Organe' : 'Maladie',
+        tab: tab.id,
+        categoryId: firstCat,
+        phonetic: index === 0 ? '/ɪɡˈzæmpəl/' : null,
+      }));
+    })(),
     _comment: {
       about: 'Supprimez cette clé _comment avant import. Ce modèle suit vocabDomainSchema.js',
       version: VOCAB_DOMAIN_VERSION,
@@ -450,36 +453,38 @@ export function computeImportMergeStats(currentItems, importedItems) {
  * Build a minimal template with only items[] for adding new words.
  */
 export function buildItemsOnlyImportTemplate(domain = null) {
-  const firstTab = domain?.organization?.tabs?.[0]?.id || 'vocab';
+  const tabs = domain?.organization?.tabs?.length
+    ? domain.organization.tabs
+    : [{ id: 'vocab' }];
   const firstCat = domain?.organization?.categories?.[0]?.id || '';
-  const sampleFromDomain = domain?.items?.[0];
+  const tabIds = tabs.map((t) => t.id);
+
+  const sampleItems = tabs.map((tab, index) => {
+    const existing = domain?.items?.find((item) => item.tab === tab.id);
+    if (existing) {
+      return pickItemFields(existing);
+    }
+    return {
+      ...exampleFromFields(ITEM_FIELDS),
+      id: `nouveau-mot-${tab.id}`,
+      en: `Example word (${tab.id})`,
+      fr: `Mot exemple (${tab.id})`,
+      mg: `Ohatra (${tab.id})`,
+      category: index % 2 === 0 ? 'Organe' : 'Maladie',
+      tab: tab.id,
+      categoryId: firstCat || undefined,
+    };
+  });
 
   return {
-    items: [
-      sampleFromDomain
-        ? pickItemFields(sampleFromDomain)
-        : {
-            ...exampleFromFields(ITEM_FIELDS),
-            id: 'nouveau-mot-1',
-            tab: firstTab,
-            categoryId: firstCat || undefined,
-          },
-      {
-        ...exampleFromFields(ITEM_FIELDS),
-        id: 'nouveau-mot-2',
-        en: 'New word',
-        fr: 'Nouveau mot',
-        mg: 'Teny vaovao',
-        category: 'Organe',
-        tab: firstTab,
-        categoryId: firstCat || undefined,
-      },
-    ],
+    items: sampleItems,
     _comment: {
       about: 'Import mots seulement — supprimez _comment avant import',
       notes: [
         'Seul le tableau items est requis. Les mots existants sont conservés.',
         'Même id = mise à jour ; nouvel id = ajout.',
+        `Onglets disponibles dans ce domaine : ${tabIds.join(', ')}.`,
+        'Chaque item doit avoir un champ tab correspondant à un onglet existant.',
         'tab et categoryId doivent exister dans le domaine.',
         'Les images se gèrent via upload admin, pas via JSON.',
       ],

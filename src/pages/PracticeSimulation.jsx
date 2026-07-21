@@ -1,9 +1,10 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { AppContext } from '../App';
 import Breadcrumb from '../components/Breadcrumb';
 import SimulationPanel from '../practice/components/SimulationPanel';
+import WrittenSimulationPanel from '../practice/components/WrittenSimulationPanel';
 import { isPracticeEnabled } from '../practice/config';
 import useVocabDomain from '../hooks/useVocabDomain';
 
@@ -13,6 +14,8 @@ export default function PracticeSimulation() {
   const { lang } = useContext(AppContext);
   const theme = params.get('theme') || '';
   const categoryId = params.get('category') || '';
+  const initialModality = params.get('mode') === 'written' ? 'written' : 'oral';
+  const [modality, setModality] = useState(initialModality);
   const { domain, items, loading } = useVocabDomain(domainId);
 
   if (!isPracticeEnabled()) {
@@ -49,13 +52,48 @@ export default function PracticeSimulation() {
       {loading ? (
         <p className="text-[14px] text-[#5f6368]">Loading vocabulary…</p>
       ) : (
-        <SimulationPanel
-          defaultTheme={theme}
-          categories={categories}
-          items={items}
-          defaultCategoryId={categoryId}
-        />
+        <>
+          <div className="flex gap-2 mb-5">
+            <ModalityChip active={modality === 'oral'} onClick={() => setModality('oral')}>
+              Oral (écoute)
+            </ModalityChip>
+            <ModalityChip active={modality === 'written'} onClick={() => setModality('written')}>
+              Écrit
+            </ModalityChip>
+          </div>
+          {modality === 'oral' ? (
+            <SimulationPanel
+              defaultTheme={theme}
+              categories={categories}
+              items={items}
+              defaultCategoryId={categoryId}
+            />
+          ) : (
+            <WrittenSimulationPanel
+              defaultTheme={theme}
+              categories={categories}
+              items={items}
+              defaultCategoryId={categoryId}
+            />
+          )}
+        </>
       )}
     </div>
+  );
+}
+
+function ModalityChip({ active, onClick, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`text-[13px] font-semibold px-4 py-2 rounded-full border transition-colors ${
+        active
+          ? 'bg-[#e8f0fe] border-[#1a73e8] text-[#1a73e8]'
+          : 'bg-white border-[#dadce0] text-[#5f6368] hover:bg-[#f8f9fa]'
+      }`}
+    >
+      {children}
+    </button>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import vocabStorage from '../services/vocabStorage';
 
 export default function useVocabDomain(domainId) {
@@ -7,19 +7,24 @@ export default function useVocabDomain(domainId) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const hasLoadedRef = useRef(false);
 
   const refresh = useCallback(() => setRefreshKey(k => k + 1), []);
 
   useEffect(() => {
     let cancelled = false;
+    hasLoadedRef.current = false;
     async function load() {
       if (!domainId) {
         setDomain(null);
         setItems([]);
         setLoading(false);
+        hasLoadedRef.current = false;
         return;
       }
-      setLoading(true);
+      if (!hasLoadedRef.current) {
+        setLoading(true);
+      }
       setError(null);
       try {
         await vocabStorage.initDomain(domainId);
@@ -31,7 +36,10 @@ export default function useVocabDomain(domainId) {
       } catch (err) {
         if (!cancelled) setError(err.message);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          hasLoadedRef.current = true;
+          setLoading(false);
+        }
       }
     }
     load();

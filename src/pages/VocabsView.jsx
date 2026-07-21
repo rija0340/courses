@@ -228,6 +228,7 @@ export default function VocabsView() {
         onToggle={toggleExpand}
         onSelect={selectCategory}
         counts={counts}
+        images={catImages}
         getLabel={getLabel}
         lang={lang}
       />
@@ -520,6 +521,7 @@ export default function VocabsView() {
               activeTab={activeTab}
               onTabChange={setActiveTab}
               getLabel={getLabel}
+              items={items}
               guideLink={`/vocabs/${domainId}/guide`}
               sectionLabel={guideT(VOCAB_GUIDE.tabSectionLabel)}
             />
@@ -555,6 +557,28 @@ export default function VocabsView() {
 
           {viewMode === 'image' && (
             <div className="space-y-8">
+              {activeCategory && catImages[activeCategory] && (
+                <div>
+                  <p className="text-[13px] font-bold text-[#9aa0a6] uppercase tracking-wider mb-3">
+                    Schéma de la catégorie
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => openLightbox(
+                      catImages[activeCategory],
+                      getLabel(findNodeById(categories, activeCategory)?.label)
+                    )}
+                    className="w-full rounded-2xl border border-[#dadce0] overflow-hidden bg-white cursor-zoom-in hover:shadow-md transition-shadow"
+                  >
+                    <img
+                      src={catImages[activeCategory]}
+                      alt={getLabel(findNodeById(categories, activeCategory)?.label)}
+                      className="w-full max-h-[400px] object-contain bg-[#f8f9fa]"
+                    />
+                  </button>
+                </div>
+              )}
+
               {subcategoriesToRender.length > 0 && (
                 <div>
                   <h3 className="text-[13px] font-bold text-[#9aa0a6] uppercase tracking-wider mb-4 px-1">
@@ -653,28 +677,6 @@ export default function VocabsView() {
                       );
                     })}
                   </div>
-                </div>
-              )}
-
-              {activeCategory && catImages[activeCategory] && (
-                <div className="mt-6">
-                  <p className="text-[13px] font-bold text-[#9aa0a6] uppercase tracking-wider mb-3">
-                    Schéma de la catégorie
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => openLightbox(
-                      catImages[activeCategory],
-                      getLabel(findNodeById(categories, activeCategory)?.label)
-                    )}
-                    className="w-full rounded-2xl border border-[#dadce0] overflow-hidden bg-white cursor-zoom-in hover:shadow-md transition-shadow"
-                  >
-                    <img
-                      src={catImages[activeCategory]}
-                      alt={getLabel(findNodeById(categories, activeCategory)?.label)}
-                      className="w-full max-h-[400px] object-contain bg-[#f8f9fa]"
-                    />
-                  </button>
                 </div>
               )}
 

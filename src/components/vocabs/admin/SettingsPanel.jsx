@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Save, FileCode, Upload, Download, Copy, Check, ChevronsUpDown,
-  RefreshCw, Database, HelpCircle
+  RefreshCw, Database, HelpCircle, Cpu
 } from 'lucide-react';
 import vocabStorage from '../../../services/vocabStorage';
 import {
@@ -15,6 +15,8 @@ import {
   VOCAB_DOMAIN_VERSION,
 } from '../../../data/vocabs/vocabDomainSchema';
 import { checkSupabaseHealth } from '../../../services/supabaseHealth';
+import { checkAiProvidersHealth } from '../../../practice/services/aiHealth';
+import { LLM_PROVIDER, SPEECH_PROVIDER } from '../../../practice/config';
 import TabEditor from './TabEditor';
 import { Panel } from './shared';
 
@@ -98,6 +100,101 @@ function SupabaseConnectionPanel() {
               Bucket <code className="bg-[#f1f3f4] px-1 rounded">vocab-images</code>
             </li>
           </ul>
+          {(health?.errors || []).length > 0 && (
+            <div className="rounded-xl bg-red-50 border border-red-100 p-3 text-[12px] text-red-700 space-y-1">
+              {health.errors.map((e, i) => <p key={i}>• {e}</p>)}
+            </div>
+          )}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+function AiProvidersPanel() {
+  const [health, setHealth] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const runCheck = async () => {
+    setLoading(true);
+    try {
+      const h = await checkAiProvidersHealth();
+      setHealth(h);
+    } catch (err) {
+      setHealth({
+        ready: false,
+        llm: { ok: false, message: err.message },
+        stt: { ok: false, message: err.message },
+        tts: { ok: false, message: err.message },
+        errors: [err.message]
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { runCheck(); }, []);
+
+  const StatusDot = ({ ok }) => (
+    <span className={`inline-block w-2 h-2 rounded-full ${ok ? 'bg-[#34A853]' : ok === false ? 'bg-[#EA4335]' : 'bg-[#9aa0a6]'}`} />
+  );
+
+  return (
+    <Panel
+      title="Services IA (LLM / STT / TTS)"
+      icon={Cpu}
+      action={
+        <button
+          type="button"
+          onClick={runCheck}
+          disabled={loading}
+          className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-[#f1f3f4] text-[#5f6368] text-[12px] font-semibold hover:bg-[#e8eaed] disabled:opacity-50"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          Vérifier
+        </button>
+      }
+    >
+      {loading && !health ? (
+        <p className="text-[13px] text-[#9aa0a6]">Diagnostic en cours…</p>
+      ) : (
+        <div className="space-y-3">
+          <div className={`rounded-xl px-3 py-2.5 text-[13px] font-medium border ${
+            health?.ready
+              ? 'bg-[#E6F4EA] border-[#34A853]/30 text-[#137333]'
+              : 'bg-[#FCE8E6] border-red-200 text-[#C5221F]'
+          }`}>
+            {health?.ready
+              ? 'Services IA accessibles via la passerelle API.'
+              : 'Un ou plusieurs services IA ne sont pas prêts.'}
+          </div>
+          <ul className="space-y-1.5 text-[12px] text-[#3c4043]">
+            <li className="flex items-center gap-2">
+              <StatusDot ok={LLM_PROVIDER === 'mock' ? null : health?.llm?.ok} />
+              LLM: <code className="bg-[#f1f3f4] px-1 rounded">{LLM_PROVIDER}</code>
+              {health?.llm?.message && <span className="text-[#9aa0a6]">— {health.llm.message}</span>}
+            </li>
+            <li className="flex items-center gap-2">
+              <StatusDot ok={SPEECH_PROVIDER === 'mock' ? null : health?.stt?.ok} />
+              STT: <code className="bg-[#f1f3f4] px-1 rounded">{SPEECH_PROVIDER}</code>
+              {health?.stt?.message && <span className="text-[#9aa0a6]">— {health.stt.message}</span>}
+            </li>
+            <li className="flex items-center gap-2">
+              <StatusDot ok={SPEECH_PROVIDER === 'mock' ? null : health?.tts?.ok} />
+              TTS: <code className="bg-[#f1f3f4] px-1 rounded">{SPEECH_PROVIDER}</code>
+              {health?.tts?.message && <span className="text-[#9aa0a6]">— {health.tts.message}</span>}
+            </li>
+            {health?.client?.gatewayUrl && (
+              <li className="text-[#9aa0a6]">
+                Passerelle: <code className="bg-[#f1f3f4] px-1 rounded">{health.client.gatewayUrl}</code>
+              </li>
+            )}
+          </ul>
+          {(LLM_PROVIDER === 'mock' || SPEECH_PROVIDER === 'mock') && (
+            <p className="text-[12px] text-[#9aa0a6]">
+              Mode mock actif côté client — configurez REACT_APP_LLM_PROVIDER=remote et REACT_APP_SPEECH_PROVIDER=remote pour utiliser Groq / Deepgram.
+            </p>
+          )}
           {(health?.errors || []).length > 0 && (
             <div className="rounded-xl bg-red-50 border border-red-100 p-3 text-[12px] text-red-700 space-y-1">
               {health.errors.map((e, i) => <p key={i}>• {e}</p>)}
@@ -440,6 +537,7 @@ export default function SettingsPanel({ domain, updateMeta, updateOrganization, 
 
         <div className="space-y-4">
           <SupabaseConnectionPanel />
+          <AiProvidersPanel />
 
           <Panel
             title="Import / Export JSON"

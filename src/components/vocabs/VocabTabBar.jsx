@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { countItemsForTab } from '../../utils/tabOrder';
 
 export default function VocabTabBar({
   tabs,
@@ -7,7 +8,8 @@ export default function VocabTabBar({
   onTabChange,
   getLabel,
   guideLink,
-  sectionLabel
+  sectionLabel,
+  items = []
 }) {
   if (!tabs?.length) return null;
 
@@ -29,7 +31,9 @@ export default function VocabTabBar({
         </div>
       )}
       <div className="flex flex-wrap gap-2 w-full">
-        {tabs.map(tab => (
+        {tabs.map(tab => {
+          const itemCount = countItemsForTab(items, tab.id);
+          return (
           <button
             key={tab.id}
             type="button"
@@ -40,9 +44,15 @@ export default function VocabTabBar({
                 : 'bg-[#f1f3f4] text-[#5f6368] hover:bg-[#e8eaed] hover:text-[#202124]'
             }`}
           >
-            {getLabel(tab.label)}
+            <span className="truncate">{getLabel(tab.label)}</span>
+            {itemCount > 0 && (
+              <span className="ml-1 text-[10px] font-medium text-[#9aa0a6] tabular-nums">
+                ({itemCount})
+              </span>
+            )}
           </button>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

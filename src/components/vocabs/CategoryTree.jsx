@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ImageIcon } from 'lucide-react';
 
 export default function CategoryTree({
   nodes,
@@ -8,6 +8,7 @@ export default function CategoryTree({
   onToggle,
   onSelect,
   counts,
+  images,
   getLabel,
   lang
 }) {
@@ -22,6 +23,7 @@ export default function CategoryTree({
           onToggle={onToggle}
           onSelect={onSelect}
           counts={counts}
+          images={images}
           getLabel={getLabel}
           lang={lang}
           depth={0}
@@ -31,7 +33,7 @@ export default function CategoryTree({
   );
 }
 
-function CategoryNode({ node, activeId, expandedIds, onToggle, onSelect, counts, getLabel, lang, depth }) {
+function CategoryNode({ node, activeId, expandedIds, onToggle, onSelect, counts, images, getLabel, lang, depth }) {
   const hasChildren = node.children && node.children.length > 0;
   const isExpanded = expandedIds.includes(node.id);
   const isActive = activeId === node.id;
@@ -68,6 +70,24 @@ function CategoryNode({ node, activeId, expandedIds, onToggle, onSelect, counts,
         ) : (
           <span className="w-4 shrink-0" />
         )}
+        {images?.[node.id] ? (
+          <img
+            src={images[node.id]}
+            alt=""
+            className="w-6 h-6 rounded-md object-cover shrink-0 border border-[#dadce0]"
+          />
+        ) : (
+          <span
+            className={`w-6 h-6 rounded-md shrink-0 flex items-center justify-center border ${
+              isActive
+                ? 'border-white/30 bg-white/20'
+                : 'border-[#e8eaed] bg-[#f8f9fa]'
+            }`}
+            title="Pas d'image"
+          >
+            <ImageIcon className={`w-3 h-3 ${isActive ? 'text-white/70' : 'text-[#dadce0]'}`} />
+          </span>
+        )}
         <span className="flex-1 truncate">{getLabel(node.label)}</span>
         <span
           className={`text-[12px] px-2 py-0.5 rounded-full shrink-0 ${
@@ -92,6 +112,7 @@ function CategoryNode({ node, activeId, expandedIds, onToggle, onSelect, counts,
               onToggle={onToggle}
               onSelect={onSelect}
               counts={counts}
+              images={images}
               getLabel={getLabel}
               lang={lang}
               depth={depth + 1}

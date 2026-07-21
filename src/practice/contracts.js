@@ -68,3 +68,74 @@ export function normalizeSimulationScript(raw) {
   }
   return { ...cleaned, turns: validTurns.slice(0, 28) };
 }
+
+const FEEDBACK_CATEGORIES = new Set([
+  'grammar',
+  'vocabulary_general',
+  'vocabulary_theme',
+  'sentence_structure',
+  'question_forms',
+  'naturalness'
+]);
+
+export function createWrittenTurnResult({
+  partnerTurn,
+  feedback,
+  done = false,
+  meta = {}
+}) {
+  return {
+    version: 1,
+    partnerTurn: {
+      role: partnerTurn?.role === 'doctor' || partnerTurn?.role === 'patient'
+        ? partnerTurn.role
+        : 'doctor',
+      text: String(partnerTurn?.text || '').trim()
+    },
+    feedback: {
+      overallScore: Math.max(0, Math.min(100, Math.round(Number(feedback?.overallScore) || 0))),
+      strengths: Array.isArray(feedback?.strengths) ? feedback.strengths : [],
+      issues: Array.isArray(feedback?.issues) ? feedback.issues : [],
+      reformulation: String(feedback?.reformulation || '').trim(),
+      vocabUsed: {
+        theme: feedback?.vocabUsed?.theme || [],
+        missed: feedback?.vocabUsed?.missed || []
+      },
+      tips: Array.isArray(feedback?.tips) ? feedback.tips : []
+    },
+    done: !!done,
+    meta
+  };
+}
+
+export function normalizeWrittenTurn(raw) {
+  if (!raw || typeof raw !== 'object') {
+    throw new Error('INVALID_WRITTEN_TURN: empty payload');
+  }
+  const partner = raw.partnerTurn || {};
+  const fb = raw.feedback || {};
+  const issues = Array.isArray(fb.issues)
+    ? fb.issues
+        .map((issue) => ({
+          category: FEEDBACK_CATEGORIES.has(issue.category)
+            ? issue.category
+            : 'grammar',
+          severity: ['low', 'medium', 'high'].includes(issue.severity) ? issue.severity : 'medium',
+          original: String(issue.original || '').trim(),
+          suggestion: String(issue.suggestion || '').trim(),
+          explanation: String(issue.explanation || '').trim()
+        }))
+        .filter((issue) => issue.explanation || issue.suggestion)
+    : [];
+
+  return createWrittenTurnResult({
+    partnerTurn: partner,
+    feedback: {
+      ...fb,
+      issues,
+      overallScore: fb.overallScore
+    },
+    done: raw.done,
+    meta: raw.meta || {}
+  });
+}

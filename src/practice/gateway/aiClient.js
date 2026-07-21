@@ -47,6 +47,10 @@ export const aiClient = {
 
   generateSimulation(input) {
     return postJson('/api/llm/generate', input);
+  },
+
+  generateWrittenTurn(input) {
+    return postJson('/api/llm/written-turn', input);
   }
 };
 
