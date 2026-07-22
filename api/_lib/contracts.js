@@ -54,8 +54,36 @@ const FEEDBACK_CATEGORIES = new Set([
   'vocabulary_theme',
   'sentence_structure',
   'question_forms',
-  'naturalness'
+  'naturalness',
+  'agreement',
+  'tense_aspect',
+  'preposition',
+  'article',
+  'collocation',
+  'word_order'
 ]);
+
+function normalizeIssue(issue) {
+  const steps = Array.isArray(issue.steps)
+    ? issue.steps.map((s) => String(s).trim()).filter(Boolean)
+    : typeof issue.formation === 'string' && issue.formation.trim()
+      ? [issue.formation.trim()]
+      : [];
+  return {
+    category: FEEDBACK_CATEGORIES.has(issue.category) ? issue.category : 'grammar',
+    severity: ['low', 'medium', 'high'].includes(issue.severity) ? issue.severity : 'medium',
+    original: String(issue.original || '').trim(),
+    suggestion: String(issue.suggestion || '').trim(),
+    explanation: String(issue.explanation || '').trim(),
+    partOfSpeech: String(issue.partOfSpeech || '').trim(),
+    errorType: String(issue.errorType || '').trim(),
+    rule: String(issue.rule || '').trim(),
+    formation: String(issue.formation || '').trim(),
+    steps,
+    exampleCorrect: String(issue.exampleCorrect || '').trim(),
+    exampleWrong: String(issue.exampleWrong || '').trim()
+  };
+}
 
 function normalizeWrittenTurn(raw) {
   if (!raw || typeof raw !== 'object') {
@@ -65,16 +93,8 @@ function normalizeWrittenTurn(raw) {
   const fb = raw.feedback || {};
   const issues = Array.isArray(fb.issues)
     ? fb.issues
-        .map((issue) => ({
-          category: FEEDBACK_CATEGORIES.has(issue.category)
-            ? issue.category
-            : 'grammar',
-          severity: ['low', 'medium', 'high'].includes(issue.severity) ? issue.severity : 'medium',
-          original: String(issue.original || '').trim(),
-          suggestion: String(issue.suggestion || '').trim(),
-          explanation: String(issue.explanation || '').trim()
-        }))
-        .filter((issue) => issue.explanation || issue.suggestion)
+        .map(normalizeIssue)
+        .filter((issue) => issue.explanation || issue.suggestion || issue.rule)
     : [];
 
   const score = Number(fb.overallScore);

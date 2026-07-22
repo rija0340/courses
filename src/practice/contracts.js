@@ -75,8 +75,36 @@ const FEEDBACK_CATEGORIES = new Set([
   'vocabulary_theme',
   'sentence_structure',
   'question_forms',
-  'naturalness'
+  'naturalness',
+  'agreement',
+  'tense_aspect',
+  'preposition',
+  'article',
+  'collocation',
+  'word_order'
 ]);
+
+function normalizeIssue(issue) {
+  const steps = Array.isArray(issue.steps)
+    ? issue.steps.map((s) => String(s).trim()).filter(Boolean)
+    : typeof issue.formation === 'string' && issue.formation.trim()
+      ? [issue.formation.trim()]
+      : [];
+  return {
+    category: FEEDBACK_CATEGORIES.has(issue.category) ? issue.category : 'grammar',
+    severity: ['low', 'medium', 'high'].includes(issue.severity) ? issue.severity : 'medium',
+    original: String(issue.original || '').trim(),
+    suggestion: String(issue.suggestion || '').trim(),
+    explanation: String(issue.explanation || '').trim(),
+    partOfSpeech: String(issue.partOfSpeech || '').trim(),
+    errorType: String(issue.errorType || '').trim(),
+    rule: String(issue.rule || '').trim(),
+    formation: String(issue.formation || '').trim(),
+    steps,
+    exampleCorrect: String(issue.exampleCorrect || '').trim(),
+    exampleWrong: String(issue.exampleWrong || '').trim()
+  };
+}
 
 export function createWrittenTurnResult({
   partnerTurn,
@@ -84,6 +112,9 @@ export function createWrittenTurnResult({
   done = false,
   meta = {}
 }) {
+  const issues = Array.isArray(feedback?.issues)
+    ? feedback.issues.map(normalizeIssue)
+    : [];
   return {
     version: 1,
     partnerTurn: {
@@ -95,7 +126,7 @@ export function createWrittenTurnResult({
     feedback: {
       overallScore: Math.max(0, Math.min(100, Math.round(Number(feedback?.overallScore) || 0))),
       strengths: Array.isArray(feedback?.strengths) ? feedback.strengths : [],
-      issues: Array.isArray(feedback?.issues) ? feedback.issues : [],
+      issues,
       reformulation: String(feedback?.reformulation || '').trim(),
       vocabUsed: {
         theme: feedback?.vocabUsed?.theme || [],
@@ -116,16 +147,8 @@ export function normalizeWrittenTurn(raw) {
   const fb = raw.feedback || {};
   const issues = Array.isArray(fb.issues)
     ? fb.issues
-        .map((issue) => ({
-          category: FEEDBACK_CATEGORIES.has(issue.category)
-            ? issue.category
-            : 'grammar',
-          severity: ['low', 'medium', 'high'].includes(issue.severity) ? issue.severity : 'medium',
-          original: String(issue.original || '').trim(),
-          suggestion: String(issue.suggestion || '').trim(),
-          explanation: String(issue.explanation || '').trim()
-        }))
-        .filter((issue) => issue.explanation || issue.suggestion)
+        .map(normalizeIssue)
+        .filter((issue) => issue.explanation || issue.suggestion || issue.rule)
     : [];
 
   return createWrittenTurnResult({

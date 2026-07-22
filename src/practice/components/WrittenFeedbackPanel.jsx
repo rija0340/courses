@@ -4,7 +4,13 @@ const CATEGORY_LABELS = {
   vocabulary_theme: 'Vocabulaire du thème',
   sentence_structure: 'Structure de phrase',
   question_forms: 'Formes interrogatives',
-  naturalness: 'Formulation naturelle'
+  naturalness: 'Formulation naturelle',
+  agreement: 'Accord',
+  tense_aspect: 'Temps / aspect',
+  preposition: 'Préposition',
+  article: 'Article',
+  collocation: 'Expression / collocation',
+  word_order: 'Ordre des mots'
 };
 
 export default function WrittenFeedbackPanel({ feedback, onSpeakReformulation }) {
@@ -60,26 +66,91 @@ export default function WrittenFeedbackPanel({ feedback, onSpeakReformulation })
 
       {feedback.issues?.length > 0 && (
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#9aa0a6] mb-2">Corrections</p>
-          <div className="space-y-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#9aa0a6] mb-2">
+            Corrections détaillées ({feedback.issues.length})
+          </p>
+          <div className="space-y-3">
             {feedback.issues.map((issue, i) => (
-              <div key={i} className="rounded-xl bg-white border border-[#dadce0] p-3 text-[13px]">
-                <div className="flex items-center gap-2 mb-1">
+              <div key={i} className="rounded-xl bg-white border border-[#dadce0] p-3.5 text-[13px] space-y-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-[#f1f3f4] text-[#5f6368]">
                     {CATEGORY_LABELS[issue.category] || issue.category}
                   </span>
+                  {issue.errorType && (
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#E8F0FE] text-[#1967D2]">
+                      {issue.errorType}
+                    </span>
+                  )}
+                  {issue.partOfSpeech && (
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#f8f9fa] text-[#5f6368] border border-[#dadce0]">
+                      {issue.partOfSpeech}
+                    </span>
+                  )}
                   {issue.severity === 'high' && (
                     <span className="text-[10px] font-semibold text-[#C5221F]">important</span>
                   )}
                 </div>
-                {issue.original && (
-                  <p className="text-[#9aa0a6] line-through">{issue.original}</p>
+
+                {(issue.original || issue.suggestion) && (
+                  <div className="rounded-lg bg-[#f8f9fa] px-2.5 py-2 space-y-0.5">
+                    {issue.original && (
+                      <p className="text-[#9aa0a6]">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide mr-1">Erreur</span>
+                        <span className="line-through">{issue.original}</span>
+                      </p>
+                    )}
+                    {issue.suggestion && (
+                      <p className="text-[#137333]">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide mr-1">Correction</span>
+                        <span className="font-medium">{issue.suggestion}</span>
+                      </p>
+                    )}
+                  </div>
                 )}
-                {issue.suggestion && (
-                  <p className="text-[#202124] font-medium">{issue.suggestion}</p>
+
+                {issue.rule && (
+                  <p className="text-[#3c4043]">
+                    <span className="font-semibold text-[#202124]">Règle : </span>
+                    {issue.rule}
+                  </p>
                 )}
+
                 {issue.explanation && (
-                  <p className="text-[#5f6368] mt-1">{issue.explanation}</p>
+                  <p className="text-[#5f6368] leading-relaxed">{issue.explanation}</p>
+                )}
+
+                {(issue.steps?.length > 0 || issue.formation) && (
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#9aa0a6] mb-1">
+                      Formation de la correction
+                    </p>
+                    {issue.steps?.length > 0 ? (
+                      <ol className="list-decimal pl-4 space-y-0.5 text-[#3c4043]">
+                        {issue.steps.map((step, si) => (
+                          <li key={si}>{step}</li>
+                        ))}
+                      </ol>
+                    ) : (
+                      <p className="text-[#3c4043]">{issue.formation}</p>
+                    )}
+                  </div>
+                )}
+
+                {(issue.exampleCorrect || issue.exampleWrong) && (
+                  <div className="grid sm:grid-cols-2 gap-2 text-[12px]">
+                    {issue.exampleWrong && (
+                      <div className="rounded-lg border border-red-100 bg-red-50/60 px-2.5 py-1.5">
+                        <p className="text-[10px] font-semibold uppercase text-[#C5221F] mb-0.5">À éviter</p>
+                        <p className="text-[#5f6368]">{issue.exampleWrong}</p>
+                      </div>
+                    )}
+                    {issue.exampleCorrect && (
+                      <div className="rounded-lg border border-green-100 bg-[#E6F4EA]/60 px-2.5 py-1.5">
+                        <p className="text-[10px] font-semibold uppercase text-[#137333] mb-0.5">Exemple</p>
+                        <p className="text-[#3c4043]">{issue.exampleCorrect}</p>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             ))}

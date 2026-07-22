@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Search, X, Filter, Image as ImageIcon, Volume2, BookOpen, Eye, HelpCircle, Link2, Check, Languages, MoreHorizontal, Sparkles } from 'lucide-react';
 import { AppContext } from '../App';
 import Breadcrumb from '../components/Breadcrumb';
-import { CompactMenu, MenuButton, MenuLink, MenuTrigger } from '../components/CompactMenu';
+import { CompactMenu, MenuButton, MenuTrigger } from '../components/CompactMenu';
 import VocabCard from '../components/vocabs/VocabCard';
 import CategoryTree from '../components/vocabs/CategoryTree';
 import VocabTabBar from '../components/vocabs/VocabTabBar';
@@ -57,6 +57,8 @@ export default function VocabsView() {
 
   const drawerRef = useRef(null);
   const buttonRef = useRef(null);
+  const desktopSearchRef = useRef(null);
+  const mobileSearchRef = useRef(null);
   const [drawerPos, setDrawerPos] = useState({ top: 0, left: 0, width: 280 });
 
   useEffect(() => {
@@ -116,6 +118,16 @@ export default function VocabsView() {
 
   const selectCategory = (id) => {
     setActiveCategory(id);
+    const node = findNodeById(categories, id);
+    const isLeaf = !node?.children?.length;
+    if (isLeaf) {
+      setMobileDrawerOpen(false);
+    }
+  };
+
+  const handleSearchSubmit = (e, inputRef) => {
+    e.preventDefault();
+    inputRef?.current?.blur();
   };
 
   const handleShare = async () => {
@@ -141,6 +153,14 @@ export default function VocabsView() {
     activeTab,
     search
   }), [items, categories, activeCategory, activeTab, search]);
+
+  /** Category-scoped items for tab counts (ignore search + active tab). */
+  const tabCountItems = useMemo(() => filterVocabItems(items, {
+    categories,
+    activeCategory,
+    activeTab: null,
+    search: ''
+  }), [items, categories, activeCategory]);
 
   const getLabel = (obj) => {
     if (!obj) return '';
@@ -255,59 +275,100 @@ export default function VocabsView() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8">
       <Breadcrumb items={breadcrumbItems} />
 
-      <div className="mb-8 sm:mb-12 mt-3 sm:mt-4">
-        <h1 className="text-4xl font-normal text-[#202124] mb-4 leading-tight">
-          {getLabel(meta?.title)}
-        </h1>
-        <p className="text-xl text-[#5f6368] leading-relaxed">{getLabel(meta?.description)}</p>
+      <div className="mb-6 sm:mb-8 mt-3 sm:mt-4">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <h1 className="text-3xl sm:text-4xl font-normal text-[#202124] leading-tight min-w-0">
+            {getLabel(meta?.title)}
+          </h1>
+          <div className="flex items-center gap-1.5 shrink-0 pt-1">
+            <Link
+              to={`/vocabs/${domainId}/guide`}
+              className="inline-flex items-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-xl bg-white border border-[#dadce0] text-[12px] sm:text-[13px] font-semibold text-[#3c4043] hover:bg-[#f8f9fa] transition-all"
+              title={guideT(VOCAB_GUIDE.pageTitle)}
+            >
+              <HelpCircle className="w-4 h-4 text-[#1a73e8]" />
+              <span>Guide</span>
+            </Link>
+            <button
+              type="button"
+              onClick={handleShare}
+              className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white border border-[#dadce0] text-[13px] font-semibold text-[#3c4043] hover:bg-[#f8f9fa] transition-all"
+              title="Copier le lien de cette page"
+            >
+              {shareCopied ? (
+                <Check className="w-4 h-4 text-[#137333]" />
+              ) : (
+                <Link2 className="w-4 h-4 text-[#1a73e8]" />
+              )}
+              {shareCopied ? 'Copié !' : 'Partager'}
+            </button>
+            <CompactMenu
+              className="sm:hidden"
+              trigger={(open) => <MenuTrigger icon={MoreHorizontal} label="Plus d'actions" open={open} />}
+            >
+              <MenuButton onClick={handleShare}>
+                {shareCopied ? (
+                  <Check size={15} className="text-[#137333]" />
+                ) : (
+                  <Link2 size={15} className="text-[#1a73e8]" />
+                )}
+                {shareCopied ? 'Lien copié !' : 'Copier le lien'}
+              </MenuButton>
+            </CompactMenu>
+          </div>
+        </div>
+        <p className="text-lg sm:text-xl text-[#5f6368] leading-relaxed">{getLabel(meta?.description)}</p>
       </div>
 
       <div className="flex flex-col gap-3 mb-5">
-        <div className="flex gap-2 items-center flex-wrap justify-between">
-          <div className="flex gap-2 items-center flex-wrap flex-1 min-w-0">
+        {/* Row 1: modes + simulation + revision controls */}
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex gap-[2px] p-[2px] bg-[#f1f3f4] rounded-xl shrink-0">
             <button
+              type="button"
               onClick={() => setViewMode('lecture')}
-              className={`flex items-center gap-1.5 px-3 h-9 rounded-lg text-[13px] font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 h-9 rounded-lg text-[12px] sm:text-[13px] font-semibold transition-all ${
                 viewMode === 'lecture'
                   ? 'bg-white text-[#1a73e8] shadow-sm'
                   : 'text-[#5f6368] hover:text-[#202124]'
               }`}
             >
-              <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Lecture</span>
+              <BookOpen className="w-4 h-4 shrink-0" />
+              <span>Lecture</span>
             </button>
             <button
+              type="button"
               onClick={() => setViewMode('revision')}
-              className={`flex items-center gap-1.5 px-3 h-9 rounded-lg text-[13px] font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 h-9 rounded-lg text-[12px] sm:text-[13px] font-semibold transition-all ${
                 viewMode === 'revision'
                   ? 'bg-white text-[#1a73e8] shadow-sm'
                   : 'text-[#5f6368] hover:text-[#202124]'
               }`}
             >
-              <Eye className="w-4 h-4" />
-              <span className="hidden sm:inline">Révision</span>
+              <Eye className="w-4 h-4 shrink-0" />
+              <span>Révision</span>
             </button>
             <button
+              type="button"
               onClick={() => setViewMode('image')}
-              className={`flex items-center gap-1.5 px-3 h-9 rounded-lg text-[13px] font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 h-9 rounded-lg text-[12px] sm:text-[13px] font-semibold transition-all ${
                 viewMode === 'image'
                   ? 'bg-white text-[#1a73e8] shadow-sm'
                   : 'text-[#5f6368] hover:text-[#202124]'
               }`}
             >
-              <ImageIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">Image</span>
+              <ImageIcon className="w-4 h-4 shrink-0" />
+              <span>Image</span>
             </button>
           </div>
 
           {isPracticeEnabled() && (
             <Link
               to={`/vocabs/${domainId}/practice/simulation`}
-              className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-[#dadce0] bg-white text-[13px] font-semibold text-[#1a73e8] hover:bg-[#e8f0fe] shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-[#dadce0] bg-white text-[12px] sm:text-[13px] font-semibold text-[#1a73e8] hover:bg-[#e8f0fe] shrink-0"
             >
               <Sparkles className="w-4 h-4" />
-              <span className="hidden sm:inline">Simulation</span>
+              <span>Simulation</span>
             </Link>
           )}
 
@@ -334,6 +395,7 @@ export default function VocabsView() {
                 {['fr', 'en', 'mg'].map(code => (
                   <button
                     key={code}
+                    type="button"
                     onClick={() => setRevisionLang(code)}
                     className={`px-3 h-9 rounded-lg text-[12px] font-bold uppercase transition-all ${
                       revisionLang === code
@@ -359,11 +421,24 @@ export default function VocabsView() {
               </button>
             </>
           )}
+        </div>
 
+        {modeHint && (
+          <p className="text-[13px] text-[#5f6368]">{modeHint}</p>
+        )}
+
+        {/* Row 2: search + mobile categories */}
+        <div className="flex flex-wrap items-center gap-2">
           {isTextMode && (
-            <div className="hidden md:flex relative flex-1 items-center min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aa0a6]" />
+            <form
+              onSubmit={(e) => handleSearchSubmit(e, desktopSearchRef)}
+              className="hidden md:flex relative flex-1 items-center min-w-[220px]"
+            >
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aa0a6] pointer-events-none" />
               <input
+                ref={desktopSearchRef}
+                type="search"
+                enterKeyHint="search"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Rechercher..."
@@ -371,30 +446,35 @@ export default function VocabsView() {
               />
               {search && (
                 <button
+                  type="button"
                   onClick={() => setSearch('')}
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-zinc-100 rounded-full hover:bg-zinc-200"
                 >
                   <X className="w-3 h-3" />
                 </button>
               )}
-            </div>
+            </form>
           )}
 
           {hasSidebar && (
             <button
               ref={buttonRef}
+              type="button"
               onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
               className="md:hidden flex items-center gap-1.5 px-3 h-9 rounded-xl bg-white border border-[#dadce0] text-[13px] font-semibold text-[#3c4043] shadow-sm hover:bg-[#f8f9fa] transition-all shrink-0"
             >
               <Filter className="w-4 h-4 text-[#5f6368]" />
-              <span className="max-w-[120px] truncate">
+              <span className="max-w-[140px] truncate">
                 {activeCategory
                   ? categoryPath.map(n => getLabel(n.label)).join(' > ')
                   : 'Catégories'}
               </span>
               {activeCategory && (
                 <span
+                  role="button"
+                  tabIndex={0}
                   onClick={e => { e.stopPropagation(); clearFilters(); }}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.stopPropagation(); clearFilters(); } }}
                   className="ml-0.5 p-0.5 rounded-full bg-[#e8eaed] hover:bg-[#dadce0]"
                 >
                   <X className="w-3 h-3" />
@@ -402,63 +482,18 @@ export default function VocabsView() {
               )}
             </button>
           )}
-          </div>
-
-          {/* Mobile: guide + share menu */}
-          <CompactMenu
-            className="sm:hidden shrink-0"
-            trigger={(open) => <MenuTrigger icon={MoreHorizontal} label="Guide et partage" open={open} />}
-          >
-            <MenuLink to={`/vocabs/${domainId}/guide`}>
-              <HelpCircle size={15} className="text-[#1a73e8]" />
-              {guideT(VOCAB_GUIDE.seeGuide)}
-            </MenuLink>
-            <MenuButton onClick={handleShare}>
-              {shareCopied ? (
-                <Check size={15} className="text-[#137333]" />
-              ) : (
-                <Link2 size={15} className="text-[#1a73e8]" />
-              )}
-              {shareCopied ? 'Lien copié !' : 'Copier le lien'}
-            </MenuButton>
-          </CompactMenu>
-
-          <Link
-            to={`/vocabs/${domainId}/guide`}
-            className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white border border-[#dadce0] text-[13px] font-semibold text-[#3c4043] hover:bg-[#f8f9fa] transition-all shrink-0"
-            title={guideT(VOCAB_GUIDE.pageTitle)}
-          >
-            <HelpCircle className="w-4 h-4 text-[#1a73e8]" />
-            {guideT(VOCAB_GUIDE.seeGuide)}
-          </Link>
-          <button
-            type="button"
-            onClick={handleShare}
-            className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white border border-[#dadce0] text-[13px] font-semibold text-[#3c4043] hover:bg-[#f8f9fa] transition-all shrink-0"
-            title="Copier le lien de cette page"
-          >
-            {shareCopied ? (
-              <Check className="w-4 h-4 text-[#137333]" />
-            ) : (
-              <Link2 className="w-4 h-4 text-[#1a73e8]" />
-            )}
-            {shareCopied ? 'Copié !' : 'Partager'}
-          </button>
         </div>
 
-        {modeHint && (
-          <p className="text-[13px] text-[#5f6368] flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span>{modeHint}</span>
-            <Link to={`/vocabs/${domainId}/guide`} className="text-[#1a73e8] font-medium hover:underline shrink-0">
-              {guideT(VOCAB_GUIDE.seeGuide)} →
-            </Link>
-          </p>
-        )}
-
         {isTextMode && (
-          <div className="md:hidden relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aa0a6]" />
+          <form
+            onSubmit={(e) => handleSearchSubmit(e, mobileSearchRef)}
+            className="md:hidden relative"
+          >
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aa0a6] pointer-events-none" />
             <input
+              ref={mobileSearchRef}
+              type="search"
+              enterKeyHint="search"
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Rechercher : eye, maso, yeux..."
@@ -466,13 +501,14 @@ export default function VocabsView() {
             />
             {search && (
               <button
+                type="button"
                 onClick={() => setSearch('')}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-zinc-100 rounded-full hover:bg-zinc-200"
               >
                 <X className="w-3 h-3" />
               </button>
             )}
-          </div>
+          </form>
         )}
       </div>
 
@@ -521,8 +557,7 @@ export default function VocabsView() {
               activeTab={activeTab}
               onTabChange={setActiveTab}
               getLabel={getLabel}
-              items={items}
-              guideLink={`/vocabs/${domainId}/guide`}
+              items={tabCountItems}
               sectionLabel={guideT(VOCAB_GUIDE.tabSectionLabel)}
             />
           )}

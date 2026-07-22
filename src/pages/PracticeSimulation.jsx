@@ -55,10 +55,10 @@ export default function PracticeSimulation() {
         <>
           <div className="flex gap-2 mb-5">
             <ModalityChip active={modality === 'oral'} onClick={() => setModality('oral')}>
-              Oral (écoute)
+              Écoute
             </ModalityChip>
             <ModalityChip active={modality === 'written'} onClick={() => setModality('written')}>
-              Écrit
+              Écrit et oral
             </ModalityChip>
           </div>
           {modality === 'oral' ? (

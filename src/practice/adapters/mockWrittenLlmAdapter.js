@@ -33,50 +33,132 @@ export const mockWrittenLlmAdapter = {
     const missedTheme = vocabWords.filter((w) => !usedTheme.includes(w)).slice(0, 4);
 
     const issues = [];
-    if (learnerText && !learnerText.trim().endsWith('?') && learnerText.toLowerCase().includes('how')) {
+    if (learnerText && !learnerText.trim().endsWith('?') && /\b(how|what|when|where|why|do|does|did|can|could)\b/i.test(learnerText)) {
       issues.push({
         category: 'question_forms',
-        severity: 'medium',
-        original: learnerText,
-        suggestion: learnerText.replace(/\.$/, '?'),
-        explanation: 'Les questions en anglais se terminent souvent par un point d\'interrogation.'
+        severity: 'high',
+        original: learnerText.trim().replace(/\?$/, ''),
+        suggestion: `${learnerText.trim().replace(/[.?!]$/, '')}?`,
+        explanation:
+          'En anglais, une question directe se termine par un point d’interrogation et, souvent, place l’auxiliaire avant le sujet (inversion).',
+        partOfSpeech: 'auxiliaire + sujet (interrogative)',
+        errorType: 'forme interrogative incomplète',
+        rule: 'Structure WH- / Yes-No : (WH-word) + auxiliaire + sujet + verbe… ?',
+        formation: 'Ajoutez le ? et vérifiez l’ordre auxiliaire–sujet.',
+        steps: [
+          'Identifiez si c’est une question (mot interrogatif ou demande d’info).',
+          'Placez l’auxiliaire (do/does/did/can…) avant le sujet si besoin.',
+          'Terminez par ?'
+        ],
+        exampleWrong: 'How long it hurts.',
+        exampleCorrect: 'How long has it hurt?'
       });
     }
-    if (learnerText && learnerText.split(' ').length < 4) {
+    if (learnerText && /\bi have pain since\b/i.test(learnerText)) {
+      issues.push({
+        category: 'tense_aspect',
+        severity: 'high',
+        original: 'I have pain since',
+        suggestion: 'I have had pain since / I have been having pain since',
+        explanation:
+          'Avec « since » (point de départ dans le passé), l’anglais utilise souvent le present perfect, pas le present simple.',
+        partOfSpeech: 'verbe (present perfect)',
+        errorType: 'temps / aspect incorrect avec since',
+        rule: 'since + moment passé → present perfect (have/has + V3) ou present perfect continuous.',
+        formation: 'have/has + participe passé du verbe principal.',
+        steps: [
+          'Repérez « since » + un moment passé.',
+          'Conjuguez have/has selon le sujet.',
+          'Ajoutez le participe passé (had, felt, noticed…).'
+        ],
+        exampleWrong: 'I have pain since Monday.',
+        exampleCorrect: 'I have had pain since Monday.'
+      });
+    }
+    if (learnerText && learnerText.split(/\s+/).length < 4) {
       issues.push({
         category: 'sentence_structure',
-        severity: 'low',
+        severity: 'medium',
         original: learnerText,
-        suggestion: `${learnerText} I would like to explain in more detail.`,
-        explanation: 'Essayez des phrases plus complètes pour décrire votre situation.'
+        suggestion: `I would like to explain that ${learnerText.replace(/^[.]+|[.]+$/g, '')}.`,
+        explanation:
+          'Une réponse trop courte manque souvent de sujet + verbe + complément. Développez avec une proposition complète.',
+        partOfSpeech: 'phrase (SVO)',
+        errorType: 'phrase trop elliptique',
+        rule: 'Phrase affirmative de base : Subject + Verb + Object/Complement.',
+        formation: 'Ajoutez un sujet clair, un verbe conjugué, puis le détail clinique.',
+        steps: [
+          'Choisissez le sujet (I / My eye / The pain…).',
+          'Ajoutez un verbe conjugué (have, feel, noticed…).',
+          'Complétez avec le détail (where, when, how).'
+        ],
+        exampleWrong: 'Pain eye.',
+        exampleCorrect: 'I have pain in my right eye.'
       });
     }
     if (missedTheme.length && learnerText) {
+      const word = missedTheme[0];
       issues.push({
         category: 'vocabulary_theme',
         severity: 'medium',
         original: '',
-        suggestion: `Try using: ${missedTheme[0]}`,
-        explanation: 'Intégrez le vocabulaire du thème pour enrichir votre expression.'
+        suggestion: `… my ${word} …`,
+        explanation: `Le thème invite à utiliser « ${word} ». Intégrez ce terme dans une collocation naturelle (my ${word}, pain in the ${word}, etc.).`,
+        partOfSpeech: 'nom (vocabulaire thématique)',
+        errorType: 'vocabulaire du thème non utilisé',
+        rule: 'Réutilisez les termes du thème dans des collocations médicales naturelles.',
+        formation: `Insérez « ${word} » après un déterminant (my/the) ou dans une expression fixe.`,
+        steps: [
+          `Choisissez le slot : my ${word} / the ${word} / pain in the ${word}.`,
+          'Placez-le dans une phrase SVO complète.',
+          'Vérifiez l’article (a/the/my) selon le contexte.'
+        ],
+        exampleWrong: 'Something is wrong there.',
+        exampleCorrect: `I have discomfort in my ${word}.`
+      });
+    }
+    if (learnerText && /\bgo to hospital\b/i.test(learnerText) && !/\bthe hospital\b/i.test(learnerText)) {
+      issues.push({
+        category: 'article',
+        severity: 'low',
+        original: 'go to hospital',
+        suggestion: 'go to the hospital (US) / go to hospital (UK — possible)',
+        explanation:
+          'En anglais américain, on dit souvent « the hospital ». En britannique, « hospital » sans article est courant pour l’institution.',
+        partOfSpeech: 'article défini',
+        errorType: 'article / usage institutionnel',
+        rule: 'Article selon variété et sens (lieu vs institution).',
+        formation: 'Ajoutez « the » si vous visez l’usage américain.',
+        steps: [
+          'Décidez US vs UK.',
+          'US : the hospital ; UK institution : hospital.'
+        ],
+        exampleWrong: 'I go to hospital yesterday. (tense + article)',
+        exampleCorrect: 'I went to the hospital yesterday.'
       });
     }
 
     return createWrittenTurnResult({
       partnerTurn: { role: partnerRole, text: partnerText },
       feedback: {
-        overallScore: issues.length ? 72 : 88,
+        overallScore: issues.length ? 68 : 90,
         strengths: learnerText
-          ? ['Vous participez activement à la conversation.', 'Ton approprié pour un contexte médical.']
-          : ['Prêt à commencer la simulation écrite.'],
+          ? [
+              'Vous répondez dans le rôle et avancez le dialogue.',
+              'Le message reste compréhensible dans un contexte médical.'
+            ]
+          : ['Prêt à commencer : écoutez l’ouverture puis écrivez ou dictez.'],
         issues,
         reformulation: learnerText
-          ? learnerText.charAt(0).toUpperCase() + learnerText.slice(1).replace(/\.$/, '') + '.'
+          ? learnerText.charAt(0).toUpperCase() + learnerText.slice(1).replace(/\.$/, '') + (learnerText.includes('?') ? '' : '.')
           : '',
         vocabUsed: { theme: usedTheme, missed: missedTheme },
-        tips: [
-          'Utilisez des connecteurs : "because", "since", "however".',
-          'Pour poser des questions : "Could you tell me…?", "How long has…?"'
-        ]
+        tips: learnerText
+          ? [
+              'Après chaque correction, reformulez à voix haute la version corrigée.',
+              'Pour les questions : auxiliaire + sujet + verbe, puis ?'
+            ]
+          : ['Préparez une phrase complète : sujet + verbe + détail clinique.']
       },
       done: turnIndex >= 5,
       meta: {

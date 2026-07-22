@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { Loader2, MessageSquare, Send, RotateCcw } from 'lucide-react';
+import { Loader2, MessageSquare, Send, RotateCcw, Mic, Square } from 'lucide-react';
 import { AppContext } from '../../App';
 import { writtenSimulationService } from '../services/writtenSimulationService';
 import { simulationService } from '../services/simulationService';
@@ -13,6 +13,7 @@ import {
 } from '../domain/writtenSimulationSession';
 import WrittenFeedbackPanel from './WrittenFeedbackPanel';
 import { speechService } from '../services/speechService';
+import { useMicTranscript } from '../hooks/useMicTranscript';
 
 export default function WrittenSimulationPanel({
   defaultTheme = '',
@@ -42,6 +43,7 @@ export default function WrittenSimulationPanel({
   const [done, setDone] = useState(saved?.done || false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const mic = useMicTranscript({ language: 'en' });
 
   const selected = presets.find((p) => p.id === promptId);
   const topicVocab = useMemo(
@@ -140,6 +142,20 @@ export default function WrittenSimulationPanel({
     setStarted(false);
     setDone(false);
     setError(null);
+    mic.reset();
+  };
+
+  const handleMicToggle = async () => {
+    if (mic.status === 'recording') {
+      const text = await mic.stop();
+      if (text) {
+        setDraft((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
+      }
+      return;
+    }
+    if (mic.status === 'transcribing' || loading) return;
+    setError(null);
+    await mic.start();
   };
 
   const handleSpeakReformulation = () => {
@@ -158,9 +174,9 @@ export default function WrittenSimulationPanel({
       <div className="rounded-2xl border border-[#dadce0] bg-white p-5 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-[18px] font-semibold text-[#202124]">Simulation écrite</h2>
+            <h2 className="text-[18px] font-semibold text-[#202124]">Écrit et oral</h2>
             <p className="text-[13px] text-[#5f6368] mt-1">
-              Dialogue patient–médecin par écrit avec retour pédagogique complet.
+              Dialogue patient–médecin : écrivez ou dictez votre réponse, puis recevez un retour pédagogique détaillé.
               {usesRemoteLlm() ? ' · Groq' : ' · mock'}
             </p>
           </div>
@@ -289,6 +305,7 @@ export default function WrittenSimulationPanel({
         )}
 
         {error && <div className="text-[13px] text-[#c5221f]">{error}</div>}
+        {mic.error && <div className="text-[13px] text-[#c5221f]">{mic.error}</div>}
       </div>
 
       {started && (
@@ -320,16 +337,46 @@ export default function WrittenSimulationPanel({
 
           {!done && (
             <form onSubmit={handleSubmit} className="space-y-3">
-              <textarea
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                rows={3}
-                placeholder={`Écrivez votre réponse en tant que ${learnerRole === 'patient' ? 'patient' : 'médecin'}…`}
-                className="w-full rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8] resize-y"
-              />
+              <div className="relative">
+                <textarea
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  rows={3}
+                  placeholder={`Écrivez ou dictez votre réponse en tant que ${learnerRole === 'patient' ? 'patient' : 'médecin'}…`}
+                  className="w-full rounded-xl border border-[#dadce0] px-3 py-2 pr-14 text-[14px] outline-none focus:border-[#1a73e8] resize-y"
+                />
+                <button
+                  type="button"
+                  onClick={handleMicToggle}
+                  disabled={loading || mic.status === 'transcribing'}
+                  title={mic.status === 'recording' ? 'Arrêter et transcrire' : 'Dicter au micro'}
+                  className={`absolute right-2 bottom-2 w-10 h-10 rounded-full flex items-center justify-center transition-all disabled:opacity-50 ${
+                    mic.status === 'recording'
+                      ? 'bg-[#EA4335] text-white animate-pulse'
+                      : mic.status === 'transcribing'
+                        ? 'bg-[#f1f3f4] text-[#9aa0a6]'
+                        : 'bg-[#f1f3f4] hover:bg-[#e8eaed] text-[#5f6368]'
+                  }`}
+                >
+                  {mic.status === 'transcribing' ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : mic.status === 'recording' ? (
+                    <Square className="w-3.5 h-3.5 fill-current" />
+                  ) : (
+                    <Mic className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              <p className="text-[12px] text-[#9aa0a6]">
+                {mic.status === 'recording'
+                  ? 'Enregistrement… appuyez pour arrêter.'
+                  : mic.status === 'transcribing'
+                    ? 'Transcription en cours…'
+                    : 'Écrivez au clavier ou utilisez le micro, puis envoyez.'}
+              </p>
               <button
                 type="submit"
-                disabled={loading || !draft.trim()}
+                disabled={loading || !draft.trim() || mic.status === 'recording' || mic.status === 'transcribing'}
                 className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] text-white text-[13px] font-semibold px-4 py-2 hover:bg-[#1557b0] disabled:opacity-50"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
