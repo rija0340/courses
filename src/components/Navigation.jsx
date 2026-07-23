@@ -1,8 +1,9 @@
-import React, { useContext } from 'react';
-import { BookOpen, Settings, Globe, Languages } from 'lucide-react';
+import React, { useContext, useState, useEffect } from 'react';
+import { Settings, Globe, Languages, Moon, Sun } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { AppContext } from '../App';
 import { CompactMenu, MenuButton, MenuLink, MenuTrigger } from './CompactMenu';
+import { getSessionTheme, toggleSessionTheme } from '../utils/sessionTheme';
 
 const LANGS = [
   { id: 'mg', label: 'Malagasy' },
@@ -13,6 +14,11 @@ const LANGS = [
 const Navigation = () => {
   const { lang, setLang } = useContext(AppContext);
   const location = useLocation();
+  const [theme, setTheme] = useState(() => getSessionTheme());
+
+  useEffect(() => {
+    setTheme(getSessionTheme());
+  }, []);
 
   const vocabMatch = location.pathname.match(/^\/vocabs\/([^/]+)/);
   const domainId = vocabMatch ? vocabMatch[1] : null;
@@ -20,18 +26,35 @@ const Navigation = () => {
   const isHome = location.pathname === '/';
   const showAdminMenu = (isHome || domainId) && !isAdminRoute;
 
+  const handleToggleTheme = () => {
+    setTheme(toggleSessionTheme());
+  };
+
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-[#dadce0] shadow-sm">
+    <nav className="sticky top-0 z-50 bg-white dark:bg-[#202124] border-b border-[#dadce0] dark:border-[#3c4043] shadow-sm">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
         <Link to="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="w-8 h-8 bg-[#1a73e8] rounded-lg flex items-center justify-center text-white shrink-0">
-            <BookOpen size={18} />
-          </div>
-          <span className="font-medium text-lg sm:text-xl text-[#3c4043] truncate">LearnHub</span>
+          <img
+            src={`${process.env.PUBLIC_URL || ''}/logo.svg`}
+            alt="LearnHub"
+            className="w-8 h-8 rounded-lg shrink-0"
+            width={32}
+            height={32}
+          />
+          <span className="font-medium text-lg sm:text-xl text-[#3c4043] dark:text-[#e8eaed] truncate">LearnHub</span>
         </Link>
 
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-          {/* Mobile: admin dropdown */}
+          <button
+            type="button"
+            onClick={handleToggleTheme}
+            className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-[#dadce0] dark:border-[#5f6368] bg-white dark:bg-[#303134] text-[#5f6368] dark:text-[#e8eaed] hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043] transition-all"
+            title={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+            aria-label={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+          >
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+
           {showAdminMenu && (
             <CompactMenu
               className="sm:hidden"
@@ -50,11 +73,10 @@ const Navigation = () => {
             </CompactMenu>
           )}
 
-          {/* Desktop: admin links */}
           {showAdminMenu && (
             <Link
               to="/admin/vocabs"
-              className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-full border border-[#dadce0] bg-white hover:bg-[#f1f3f4] text-[#5f6368] text-sm font-medium transition-all shadow-sm shrink-0"
+              className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-full border border-[#dadce0] dark:border-[#5f6368] bg-white dark:bg-[#303134] hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043] text-[#5f6368] dark:text-[#e8eaed] text-sm font-medium transition-all shadow-sm shrink-0"
               title="Admin global vocabulaires"
             >
               <Globe size={14} />
@@ -65,14 +87,13 @@ const Navigation = () => {
           {domainId && !isAdminRoute && (
             <Link
               to={`/vocabs/${domainId}/admin`}
-              className="hidden sm:flex items-center gap-1.5 h-9 px-4 rounded-full border border-[#dadce0] bg-white hover:bg-[#f1f3f4] text-[#5f6368] text-sm font-medium transition-all shadow-sm shrink-0"
+              className="hidden sm:flex items-center gap-1.5 h-9 px-4 rounded-full border border-[#dadce0] dark:border-[#5f6368] bg-white dark:bg-[#303134] hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043] text-[#5f6368] dark:text-[#e8eaed] text-sm font-medium transition-all shadow-sm shrink-0"
             >
               <Settings size={14} />
               <span>Admin</span>
             </Link>
           )}
 
-          {/* Mobile: lang dropdown */}
           <CompactMenu
             className="sm:hidden"
             trigger={(open) => (
@@ -87,16 +108,16 @@ const Navigation = () => {
             ))}
           </CompactMenu>
 
-          {/* Desktop: lang pills */}
-          <div className="hidden sm:flex bg-[#f1f3f4] p-[2px] rounded-full">
+          <div className="hidden sm:flex bg-[#f1f3f4] dark:bg-[#303134] p-[2px] rounded-full">
             {LANGS.map(l => (
               <button
                 key={l.id}
+                type="button"
                 onClick={() => setLang(l.id)}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   lang === l.id
-                    ? 'bg-white text-[#1a73e8] shadow-sm'
-                    : 'text-[#5f6368] hover:bg-black/5'
+                    ? 'bg-white dark:bg-[#3c4043] text-[#1a73e8] dark:text-[#8ab4f8] shadow-sm'
+                    : 'text-[#5f6368] dark:text-[#9aa0a6] hover:bg-black/5 dark:hover:bg-white/5'
                 }`}
               >
                 {l.id.toUpperCase()}

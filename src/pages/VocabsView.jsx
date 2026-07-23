@@ -277,7 +277,7 @@ export default function VocabsView() {
 
       <div className="mb-6 sm:mb-8 mt-3 sm:mt-4">
         <div className="flex items-start justify-between gap-3 mb-3">
-          <h1 className="text-3xl sm:text-4xl font-normal text-[#202124] leading-tight min-w-0">
+          <h1 className="text-3xl sm:text-4xl font-normal text-[#202124] dark:text-[#e8eaed] leading-tight min-w-0">
             {getLabel(meta?.title)}
           </h1>
           <div className="flex items-center gap-1.5 shrink-0 pt-1">

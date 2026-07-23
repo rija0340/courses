@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Save, FileCode, Upload, Download, Copy, Check, ChevronsUpDown,
-  RefreshCw, Database, HelpCircle, Cpu
+  RefreshCw, Database, HelpCircle, Cpu, Activity, ClipboardPaste
 } from 'lucide-react';
 import vocabStorage from '../../../services/vocabStorage';
 import {
@@ -17,8 +17,16 @@ import {
 import { checkSupabaseHealth } from '../../../services/supabaseHealth';
 import { checkAiProvidersHealth } from '../../../practice/services/aiHealth';
 import { LLM_PROVIDER, SPEECH_PROVIDER } from '../../../practice/config';
+import { getAiUsage, resetAiUsage, totalCalls } from '../../../practice/services/aiUsage';
 import TabEditor from './TabEditor';
 import { Panel } from './shared';
+
+const SETTINGS_TABS = [
+  { id: 'domaine', label: 'Domaine' },
+  { id: 'connexions', label: 'Connexions' },
+  { id: 'consommation', label: 'Consommation IA' },
+  { id: 'donnees', label: 'Données' }
+];
 
 function SupabaseConnectionPanel() {
   const [health, setHealth] = useState(null);
@@ -206,6 +214,86 @@ function AiProvidersPanel() {
   );
 }
 
+function AiUsagePanel() {
+  const [usage, setUsage] = useState(() => getAiUsage());
+
+  useEffect(() => {
+    const refresh = () => setUsage(getAiUsage());
+    window.addEventListener('ai-usage-updated', refresh);
+    const id = setInterval(refresh, 2000);
+    return () => {
+      window.removeEventListener('ai-usage-updated', refresh);
+      clearInterval(id);
+    };
+  }, []);
+
+  const rows = [
+    { key: 'tts', label: 'TTS (parole)' },
+    { key: 'stt', label: 'STT (transcription)' },
+    { key: 'llmGenerate', label: 'LLM simulation (écoute)' },
+    { key: 'llmWritten', label: 'LLM écrit / oral' },
+    { key: 'llmQuiz', label: 'LLM quiz' }
+  ];
+
+  return (
+    <Panel
+      title="Consommation IA (session)"
+      icon={Activity}
+      action={
+        <button
+          type="button"
+          onClick={() => { resetAiUsage(); setUsage(getAiUsage()); }}
+          className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-[#f1f3f4] text-[#5f6368] text-[12px] font-semibold hover:bg-[#e8eaed]"
+        >
+          Réinitialiser
+        </button>
+      }
+    >
+      <p className="text-[12px] text-[#5f6368] mb-3">
+        Compteurs locaux pour cet onglet navigateur uniquement — pas la facturation Groq/Deepgram.
+        Total appels : <strong className="tabular-nums">{totalCalls(usage)}</strong>
+      </p>
+      <div className="overflow-hidden rounded-xl border border-[#dadce0]">
+        <table className="w-full text-[13px]">
+          <thead className="bg-[#f8f9fa] text-[#9aa0a6] text-[11px] uppercase tracking-wider">
+            <tr>
+              <th className="text-left px-3 py-2 font-semibold">Service</th>
+              <th className="text-right px-3 py-2 font-semibold">OK</th>
+              <th className="text-right px-3 py-2 font-semibold">Échecs</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#f1f3f4]">
+            {rows.map((row) => (
+              <tr key={row.key}>
+                <td className="px-3 py-2 text-[#3c4043]">{row.label}</td>
+                <td className="px-3 py-2 text-right tabular-nums text-[#137333] font-semibold">
+                  {usage[row.key]?.ok || 0}
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums text-[#C5221F] font-semibold">
+                  {usage[row.key]?.fail || 0}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {(usage.tokens?.total > 0) && (
+        <p className="mt-3 text-[12px] text-[#5f6368]">
+          Tokens Groq estimés (session) : prompt {usage.tokens.prompt} · completion {usage.tokens.completion} · total {usage.tokens.total}
+        </p>
+      )}
+      {(usage.errors || []).length > 0 && (
+        <div className="mt-3 rounded-xl bg-red-50 border border-red-100 p-3 text-[12px] text-red-700 space-y-1">
+          <p className="font-semibold mb-1">Dernières erreurs</p>
+          {usage.errors.map((e, i) => (
+            <p key={i}>• [{e.code}] {e.message}</p>
+          ))}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
 function ImportPreviewModal({ preview, importMode, setImportMode, onCancel, onConfirm }) {
   const { result, fileName } = preview;
   const ok = result?.ok;
@@ -332,6 +420,8 @@ export default function SettingsPanel({ domain, updateMeta, updateOrganization, 
   const [showFields, setShowFields] = useState(false);
   const [showTemplate, setShowTemplate] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [settingsTab, setSettingsTab] = useState('domaine');
+  const [pasteJson, setPasteJson] = useState('');
 
   const schemaDocs = useMemo(() => getSchemaFieldDocs(), []);
   const templateJson = useMemo(() => templateToPrettyJson(domain), [domain]);
@@ -407,23 +497,35 @@ export default function SettingsPanel({ domain, updateMeta, updateOrganization, 
     showToast('Modèle mots seulement téléchargé');
   };
 
+  const processImportText = (text, sourceLabel) => {
+    try {
+      const parsed = JSON.parse(text);
+      const result = validateImportPayload(parsed, domain);
+      setImportPreview({ raw: parsed, result, fileName: sourceLabel });
+      setImportMode('merge');
+      if (!result.ok) showToast(result.errors[0] || 'JSON invalide', 'error');
+    } catch (err) {
+      showToast(`JSON invalide: ${err.message}`, 'error');
+    }
+  };
+
   const handleImportSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (event) => {
-      try {
-        const parsed = JSON.parse(event.target.result);
-        const result = validateImportPayload(parsed, domain);
-        setImportPreview({ raw: parsed, result, fileName: file.name });
-        setImportMode(result.importType === 'items_only' ? 'merge' : 'merge');
-        if (!result.ok) showToast(result.errors[0] || 'JSON invalide', 'error');
-      } catch (err) {
-        showToast(`JSON invalide: ${err.message}`, 'error');
-      }
+      processImportText(event.target.result, file.name);
     };
     reader.readAsText(file);
     e.target.value = '';
+  };
+
+  const handlePasteImport = () => {
+    if (!pasteJson.trim()) {
+      showToast('Collez un JSON d’abord', 'error');
+      return;
+    }
+    processImportText(pasteJson, 'Collé');
   };
 
   const mergeItems = (currentItems, importedItems) => {
@@ -475,6 +577,7 @@ export default function SettingsPanel({ domain, updateMeta, updateOrganization, 
         showToast(`Fusion OK — ${stats?.added || 0} nouveau(x), ${stats?.updated || 0} mis à jour`);
       }
       setImportPreview(null);
+      setPasteJson('');
       if (refresh) await refresh();
     } catch (err) {
       showToast(`Erreur d'import: ${err.message}`, 'error');
@@ -485,7 +588,7 @@ export default function SettingsPanel({ domain, updateMeta, updateOrganization, 
     <section className="pb-20">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <p className="text-[13px] text-[#5f6368]">
-          Métadonnées, onglets et import/export JSON.
+          Paramètres du domaine, connexions et données.
         </p>
         {domain?.id && (
           <Link
@@ -493,12 +596,30 @@ export default function SettingsPanel({ domain, updateMeta, updateOrganization, 
             className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#1a73e8] hover:underline"
           >
             <HelpCircle className="w-3.5 h-3.5" />
-            Guide admin — import & paramètres
+            Guide admin
           </Link>
         )}
       </div>
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <div className="space-y-4">
+
+      <div className="flex flex-wrap gap-2 mb-5">
+        {SETTINGS_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setSettingsTab(tab.id)}
+            className={`text-[13px] font-semibold px-3.5 py-2 rounded-full border transition-colors ${
+              settingsTab === tab.id
+                ? 'bg-[#e8f0fe] border-[#1a73e8] text-[#1a73e8]'
+                : 'bg-white border-[#dadce0] text-[#5f6368] hover:bg-[#f8f9fa]'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {settingsTab === 'domaine' && (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <Panel title="Informations du domaine">
             <div className="space-y-4">
               {['title', 'description'].map(field => (
@@ -521,7 +642,6 @@ export default function SettingsPanel({ domain, updateMeta, updateOrganization, 
               ))}
             </div>
           </Panel>
-
           <Panel title="Onglets du domaine">
             <p className="text-[12px] text-[#5f6368] mb-3">
               L’ordre des onglets ici est reflété dans le front et l’admin catégories.
@@ -534,11 +654,23 @@ export default function SettingsPanel({ domain, updateMeta, updateOrganization, 
             />
           </Panel>
         </div>
+      )}
 
-        <div className="space-y-4">
+      {settingsTab === 'connexions' && (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <SupabaseConnectionPanel />
           <AiProvidersPanel />
+        </div>
+      )}
 
+      {settingsTab === 'consommation' && (
+        <div className="max-w-2xl">
+          <AiUsagePanel />
+        </div>
+      )}
+
+      {settingsTab === 'donnees' && (
+        <div className="max-w-3xl">
           <Panel
             title="Import / Export JSON"
             icon={FileCode}
@@ -551,8 +683,7 @@ export default function SettingsPanel({ domain, updateMeta, updateOrganization, 
             <div className="rounded-xl border border-[#E8F0FE] bg-[#E8F0FE]/40 p-3.5 mb-3 text-[13px] text-[#1967D2] leading-relaxed">
               <p className="font-semibold mb-1">Ajouter des mots sans tout réimporter</p>
               <p className="text-[#3c4043]">
-                Téléchargez le modèle <strong>Mots seulement</strong>, remplissez le tableau <code className="bg-white/80 px-1 rounded text-[12px]">items</code>, puis importez.
-                Les mots existants sont conservés — même <code className="bg-white/80 px-1 rounded text-[12px]">id</code> = mise à jour, nouvel <code className="bg-white/80 px-1 rounded text-[12px]">id</code> = ajout.
+                Téléchargez le modèle <strong>Mots seulement</strong>, remplissez <code className="bg-white/80 px-1 rounded text-[12px]">items</code>, puis importez fichier ou collez le JSON.
               </p>
             </div>
 
@@ -612,18 +743,40 @@ export default function SettingsPanel({ domain, updateMeta, updateOrganization, 
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 mb-4">
               <button type="button" onClick={handleExport} className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-[#dadce0] text-[13px] font-semibold hover:bg-[#f8f9fa]">
                 <Download className="w-4 h-4" /> Exporter
               </button>
               <label className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-[#1a73e8] text-[13px] font-semibold text-white hover:bg-[#1b66c9] cursor-pointer">
-                <Upload className="w-4 h-4" /> Importer
+                <Upload className="w-4 h-4" /> Importer fichier
                 <input type="file" accept=".json,application/json" onChange={handleImportSelect} className="hidden" />
               </label>
             </div>
+
+            <div className="rounded-xl border border-[#dadce0] p-3.5 space-y-2">
+              <p className="text-[12px] font-semibold text-[#202124] flex items-center gap-1.5">
+                <ClipboardPaste className="w-3.5 h-3.5 text-[#1a73e8]" />
+                Ou coller le JSON
+              </p>
+              <textarea
+                value={pasteJson}
+                onChange={(e) => setPasteJson(e.target.value)}
+                rows={8}
+                placeholder='{ "items": [ ... ] }'
+                className="w-full rounded-xl border border-[#dadce0] px-3 py-2 text-[12px] font-mono outline-none focus:border-[#1a73e8] resize-y bg-[#f8f9fa]"
+              />
+              <button
+                type="button"
+                onClick={handlePasteImport}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-[#1a73e8] text-white text-[13px] font-semibold hover:bg-[#1b66c9]"
+              >
+                <ClipboardPaste className="w-4 h-4" />
+                Importer le texte collé
+              </button>
+            </div>
           </Panel>
         </div>
-      </div>
+      )}
 
       <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-40 transition-all duration-200 ${dirty ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
         <button

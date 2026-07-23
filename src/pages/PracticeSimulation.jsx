@@ -5,8 +5,16 @@ import { AppContext } from '../App';
 import Breadcrumb from '../components/Breadcrumb';
 import SimulationPanel from '../practice/components/SimulationPanel';
 import WrittenSimulationPanel from '../practice/components/WrittenSimulationPanel';
+import QuizPracticePanel from '../practice/components/QuizPracticePanel';
 import { isPracticeEnabled } from '../practice/config';
 import useVocabDomain from '../hooks/useVocabDomain';
+
+function initialModalityFromParams(params) {
+  const mode = params.get('mode');
+  if (mode === 'written') return 'written';
+  if (mode === 'quiz') return 'quiz';
+  return 'oral';
+}
 
 export default function PracticeSimulation() {
   const { domainId } = useParams();
@@ -14,8 +22,7 @@ export default function PracticeSimulation() {
   const { lang } = useContext(AppContext);
   const theme = params.get('theme') || '';
   const categoryId = params.get('category') || '';
-  const initialModality = params.get('mode') === 'written' ? 'written' : 'oral';
-  const [modality, setModality] = useState(initialModality);
+  const [modality, setModality] = useState(() => initialModalityFromParams(params));
   const { domain, items, loading } = useVocabDomain(domainId);
 
   if (!isPracticeEnabled()) {
@@ -43,7 +50,7 @@ export default function PracticeSimulation() {
       <div className="mb-4">
         <Link
           to={domainId ? `/vocabs/${domainId}` : '/'}
-          className="inline-flex items-center gap-1.5 text-[13px] text-[#5f6368] hover:text-[#202124]"
+          className="inline-flex items-center gap-1.5 text-[13px] text-[#5f6368] dark:text-[#9aa0a6] hover:text-[#202124]"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
@@ -53,23 +60,35 @@ export default function PracticeSimulation() {
         <p className="text-[14px] text-[#5f6368]">Loading vocabulary…</p>
       ) : (
         <>
-          <div className="flex gap-2 mb-5">
+          <div className="flex flex-wrap gap-2 mb-5">
             <ModalityChip active={modality === 'oral'} onClick={() => setModality('oral')}>
               Écoute
             </ModalityChip>
             <ModalityChip active={modality === 'written'} onClick={() => setModality('written')}>
               Écrit et oral
             </ModalityChip>
+            <ModalityChip active={modality === 'quiz'} onClick={() => setModality('quiz')}>
+              Quiz
+            </ModalityChip>
           </div>
-          {modality === 'oral' ? (
+          {modality === 'oral' && (
             <SimulationPanel
               defaultTheme={theme}
               categories={categories}
               items={items}
               defaultCategoryId={categoryId}
             />
-          ) : (
+          )}
+          {modality === 'written' && (
             <WrittenSimulationPanel
+              defaultTheme={theme}
+              categories={categories}
+              items={items}
+              defaultCategoryId={categoryId}
+            />
+          )}
+          {modality === 'quiz' && (
+            <QuizPracticePanel
               defaultTheme={theme}
               categories={categories}
               items={items}
@@ -90,7 +109,7 @@ function ModalityChip({ active, onClick, children }) {
       className={`text-[13px] font-semibold px-4 py-2 rounded-full border transition-colors ${
         active
           ? 'bg-[#e8f0fe] border-[#1a73e8] text-[#1a73e8]'
-          : 'bg-white border-[#dadce0] text-[#5f6368] hover:bg-[#f8f9fa]'
+          : 'bg-white dark:bg-[#303134] border-[#dadce0] dark:border-[#5f6368] text-[#5f6368] dark:text-[#e8eaed] hover:bg-[#f8f9fa]'
       }`}
     >
       {children}

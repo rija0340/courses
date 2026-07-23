@@ -4,6 +4,7 @@ import { remoteSpeechAdapter } from '../adapters/remoteSpeechAdapter';
 import { browserTtsAdapter } from '../adapters/browserTtsAdapter';
 import { scorePronunciation } from '../domain/pronunciation';
 import { browserVoiceOptsForRole, voiceModelForRole } from '../domain/voices';
+import { ttsCache } from './ttsCache';
 
 function speechAdapter() {
   return usesRemoteSpeech() ? remoteSpeechAdapter : mockSpeechAdapter;
@@ -45,6 +46,10 @@ function playBase64Audio(audioBase64, mimeType) {
   });
 }
 
+/**
+ * prefer: 'browser' | 'remote' | undefined
+ * Default: browser unless a role is set (simulation dual voices) or prefer=remote.
+ */
 export const speechService = {
   async speak(text, options = {}) {
     const role = options.role || null;
@@ -53,12 +58,24 @@ export const speechService = {
       ? { lang: options.lang || 'en-US', ...browserVoiceOptsForRole(role) }
       : { lang: options.lang || 'en-US' };
 
-    const adapter = speechAdapter();
+    const prefer =
+      options.prefer ||
+      (role ? 'remote' : 'browser');
+
+    if (prefer === 'browser' || !usesRemoteSpeech()) {
+      return browserTtsAdapter.synthesize(text, browserOpts);
+    }
+
     try {
-      const result = await adapter.synthesize(text, { ...options, model });
+      const cached = await ttsCache.get(text, model);
+      if (cached?.audioBase64) {
+        return playBase64Audio(cached.audioBase64, cached.mimeType);
+      }
+      const result = await remoteSpeechAdapter.synthesize(text, { ...options, model });
       if (result?.useBrowserTts || !result?.audioBase64) {
         return browserTtsAdapter.synthesize(text, browserOpts);
       }
+      await ttsCache.set(text, model, result);
       return playBase64Audio(result.audioBase64, result.mimeType);
     } catch {
       return browserTtsAdapter.synthesize(text, browserOpts);

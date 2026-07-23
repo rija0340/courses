@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import dataRegistry from './data/registry';
 import Home from './pages/Home';
@@ -11,16 +11,21 @@ import VocabsAdminGuide from './pages/VocabsAdminGuide';
 import VocabsGlobalAdmin from './pages/VocabsGlobalAdmin';
 import PracticeSimulation from './pages/PracticeSimulation';
 import Navigation from './components/Navigation';
+import { initSessionTheme } from './utils/sessionTheme';
 
 const AppContext = React.createContext();
 
 const App = () => {
   const [lang, setLang] = useState('fr');
 
+  useEffect(() => {
+    initSessionTheme();
+  }, []);
+
   return (
     <AppContext.Provider value={{ lang, setLang, dataRegistry }}>
       <Router>
-        <div className="min-h-screen bg-[#f8f9fa] font-sans text-[#3c4043] pb-24">
+        <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#171717] font-sans text-[#3c4043] dark:text-[#e8eaed] pb-24">
           <Navigation />
           <Routes>
             <Route path="/" element={<Home />} />
@@ -40,4 +45,5 @@ const App = () => {
   );
 };
 
-export { App as default, AppContext };
+export { AppContext };
+export default App;

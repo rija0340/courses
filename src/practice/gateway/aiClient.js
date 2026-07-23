@@ -1,4 +1,5 @@
 import { AI_GATEWAY_URL } from '../config';
+import { recordAiSuccess, recordAiFailure } from '../services/aiUsage';
 
 class AiGatewayError extends Error {
   constructor(code, message, details = null) {
@@ -11,29 +12,40 @@ class AiGatewayError extends Error {
 
 async function postJson(path, body) {
   const url = `${AI_GATEWAY_URL}${path}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-
-  let payload;
   try {
-    payload = await res.json();
-  } catch {
-    throw new AiGatewayError('BAD_RESPONSE', `Invalid JSON from ${path}`);
-  }
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
 
-  if (!res.ok || payload?.ok === false) {
-    const err = payload?.error || {};
-    throw new AiGatewayError(
-      err.code || 'REQUEST_FAILED',
-      err.message || `Request failed (${res.status})`,
-      err.details || null
-    );
-  }
+    let payload;
+    try {
+      payload = await res.json();
+    } catch {
+      const err = new AiGatewayError('BAD_RESPONSE', `Invalid JSON from ${path}`);
+      recordAiFailure(path, err);
+      throw err;
+    }
 
-  return payload.data;
+    if (!res.ok || payload?.ok === false) {
+      const errInfo = payload?.error || {};
+      const err = new AiGatewayError(
+        errInfo.code || 'REQUEST_FAILED',
+        errInfo.message || `Request failed (${res.status})`,
+        errInfo.details || null
+      );
+      recordAiFailure(path, err);
+      throw err;
+    }
+
+    recordAiSuccess(path, payload.usage || payload.data?.meta?.usage || null);
+    return payload.data;
+  } catch (err) {
+    if (err instanceof AiGatewayError) throw err;
+    recordAiFailure(path, err);
+    throw err;
+  }
 }
 
 export const aiClient = {
@@ -51,6 +63,10 @@ export const aiClient = {
 
   generateWrittenTurn(input) {
     return postJson('/api/llm/written-turn', input);
+  },
+
+  generateQuizFeedback(input) {
+    return postJson('/api/llm/quiz-feedback', input);
   }
 };
 
