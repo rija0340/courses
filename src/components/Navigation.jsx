@@ -11,6 +11,9 @@ const LANGS = [
   { id: 'en', label: 'English' }
 ];
 
+const navChip =
+  'inline-flex items-center gap-1.5 h-9 px-3 rounded-full border border-lh-border bg-lh-card hover:bg-lh-muted text-lh-secondary text-sm font-medium transition-all shadow-lh shrink-0';
+
 const Navigation = () => {
   const { lang, setLang } = useContext(AppContext);
   const location = useLocation();
@@ -32,7 +35,10 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-white dark:bg-[#202124] border-b border-[#dadce0] dark:border-[#3c4043] shadow-sm">
+    <nav
+      className="sticky top-0 z-50 border-b border-lh-border shadow-lh backdrop-blur-md"
+      style={{ backgroundColor: 'var(--lh-nav)', borderColor: 'var(--lh-nav-border)' }}
+    >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
         <Link to="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
           <img
@@ -42,14 +48,14 @@ const Navigation = () => {
             width={32}
             height={32}
           />
-          <span className="font-medium text-lg sm:text-xl text-[#3c4043] dark:text-[#e8eaed] truncate">LearnHub</span>
+          <span className="font-medium text-lg sm:text-xl text-lh-text truncate">LearnHub</span>
         </Link>
 
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <button
             type="button"
             onClick={handleToggleTheme}
-            className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-[#dadce0] dark:border-[#5f6368] bg-white dark:bg-[#303134] text-[#5f6368] dark:text-[#e8eaed] hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043] transition-all"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-lh-border bg-lh-card text-lh-secondary hover:bg-lh-muted transition-all"
             title={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
             aria-label={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
           >
@@ -62,16 +68,16 @@ const Navigation = () => {
               trigger={(open) => <MenuTrigger icon={Settings} label="Administration" open={open} />}
             >
               <MenuLink to="/admin/vocabs">
-                <Globe size={15} className="text-[#5f6368]" />
+                <Globe size={15} className="text-lh-secondary" />
                 Admin vocabs
               </MenuLink>
               <MenuLink to="/admin/courses">
-                <Settings size={15} className="text-[#5f6368]" />
+                <Settings size={15} className="text-lh-secondary" />
                 Admin cours
               </MenuLink>
               {domainId && (
                 <MenuLink to={`/vocabs/${domainId}/admin`}>
-                  <Settings size={15} className="text-[#5f6368]" />
+                  <Settings size={15} className="text-lh-secondary" />
                   Admin domaine
                 </MenuLink>
               )}
@@ -79,32 +85,21 @@ const Navigation = () => {
           )}
 
           {showAdminMenu && (
-            <Link
-              to="/admin/courses"
-              className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-full border border-[#dadce0] dark:border-[#5f6368] bg-white dark:bg-[#303134] hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043] text-[#5f6368] dark:text-[#e8eaed] text-sm font-medium transition-all shadow-sm shrink-0"
-              title="Admin cours JSON"
-            >
+            <Link to="/admin/courses" className={`hidden sm:flex ${navChip}`} title="Admin cours JSON">
               <BookOpen size={14} />
               <span>Admin cours</span>
             </Link>
           )}
 
           {showAdminMenu && (
-            <Link
-              to="/admin/vocabs"
-              className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-full border border-[#dadce0] dark:border-[#5f6368] bg-white dark:bg-[#303134] hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043] text-[#5f6368] dark:text-[#e8eaed] text-sm font-medium transition-all shadow-sm shrink-0"
-              title="Admin global vocabulaires"
-            >
+            <Link to="/admin/vocabs" className={`hidden sm:flex ${navChip}`} title="Admin global vocabulaires">
               <Globe size={14} />
               <span>Admin vocabs</span>
             </Link>
           )}
 
           {domainId && !isAdminRoute && (
-            <Link
-              to={`/vocabs/${domainId}/admin`}
-              className="hidden sm:flex items-center gap-1.5 h-9 px-4 rounded-full border border-[#dadce0] dark:border-[#5f6368] bg-white dark:bg-[#303134] hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043] text-[#5f6368] dark:text-[#e8eaed] text-sm font-medium transition-all shadow-sm shrink-0"
-            >
+            <Link to={`/vocabs/${domainId}/admin`} className={`hidden sm:flex ${navChip}`}>
               <Settings size={14} />
               <span>Admin</span>
             </Link>
@@ -116,24 +111,24 @@ const Navigation = () => {
               <MenuTrigger icon={Languages} label="Langue de l'interface" open={open} badge={lang} />
             )}
           >
-            {LANGS.map(l => (
+            {LANGS.map((l) => (
               <MenuButton key={l.id} active={lang === l.id} onClick={() => setLang(l.id)}>
-                <span className="w-7 text-[11px] font-bold uppercase text-[#9aa0a6]">{l.id}</span>
+                <span className="w-7 text-[11px] font-bold uppercase text-lh-faint">{l.id}</span>
                 {l.label}
               </MenuButton>
             ))}
           </CompactMenu>
 
-          <div className="hidden sm:flex bg-[#f1f3f4] dark:bg-[#303134] p-[2px] rounded-full">
-            {LANGS.map(l => (
+          <div className="hidden sm:flex bg-lh-muted p-[2px] rounded-full">
+            {LANGS.map((l) => (
               <button
                 key={l.id}
                 type="button"
                 onClick={() => setLang(l.id)}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   lang === l.id
-                    ? 'bg-white dark:bg-[#3c4043] text-[#1a73e8] dark:text-[#8ab4f8] shadow-sm'
-                    : 'text-[#5f6368] dark:text-[#9aa0a6] hover:bg-black/5 dark:hover:bg-white/5'
+                    ? 'bg-lh-card text-lh-accent shadow-lh'
+                    : 'text-lh-secondary hover:bg-black/5 dark:hover:bg-white/5'
                 }`}
               >
                 {l.id.toUpperCase()}

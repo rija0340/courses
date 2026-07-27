@@ -27,7 +27,7 @@ const App = () => {
   return (
     <AppContext.Provider value={{ lang, setLang, dataRegistry }}>
       <Router>
-        <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#171717] font-sans text-[#3c4043] dark:text-[#e8eaed] pb-24">
+        <div className="min-h-screen bg-lh-page font-sans text-lh-text pb-24">
           <Navigation />
           <Routes>
             <Route path="/" element={<Home />} />

@@ -4,17 +4,283 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --lh-page: #f8f9fa;
+  --lh-card: #ffffff;
+  --lh-muted: #f1f3f4;
+  --lh-border: #dadce0;
+  --lh-text: #202124;
+  --lh-text-secondary: #5f6368;
+  --lh-text-muted: #9aa0a6;
+  --lh-accent: #1a73e8;
+  --lh-accent-soft: #e8f0fe;
+  --lh-accent-text: #174ea6;
+  --lh-success-bg: #e6f4ea;
+  --lh-success-text: #137333;
+  --lh-success-border: #ceead6;
+  --lh-warning-bg: #fff8e1;
+  --lh-warning-text: #8d6e00;
+  --lh-warning-border: #fde293;
+  --lh-danger-bg: #fce8e6;
+  --lh-danger-text: #c5221f;
+  --lh-nav: #ffffff;
+  --lh-nav-border: #dadce0;
+  --lh-shadow: 0 1px 3px rgba(60, 64, 67, 0.12);
+}
+
+html.dark {
+  color-scheme: dark;
+  --lh-page: #0e1016;
+  --lh-card: #171a22;
+  --lh-muted: #222632;
+  --lh-border: #2f3545;
+  --lh-text: #e8eaed;
+  --lh-text-secondary: #a8b0c0;
+  --lh-text-muted: #7a8498;
+  --lh-accent: #8ab4f8;
+  --lh-accent-soft: #1a2f4d;
+  --lh-accent-text: #aecbfa;
+  --lh-success-bg: #12261a;
+  --lh-success-text: #81c995;
+  --lh-success-border: #1e4d32;
+  --lh-warning-bg: #2a2310;
+  --lh-warning-text: #fdd663;
+  --lh-warning-border: #5c4b12;
+  --lh-danger-bg: #2e1514;
+  --lh-danger-text: #f6aea9;
+  --lh-nav: #12151c;
+  --lh-nav-border: #2a3040;
+  --lh-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
 body {
   margin: 0;
   font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Oxygen',
-
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--lh-page);
+  color: var(--lh-text);
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* ------------------------------------------------------------------ */
+/* Global dark remaps — fix light-only hardcoded colors across the app */
+/* ------------------------------------------------------------------ */
+
+html.dark .bg-white {
+  background-color: var(--lh-card) !important;
+}
+html.dark .bg-\[\#ffffff\] {
+  background-color: var(--lh-card) !important;
+}
+html.dark .bg-\[\#f8f9fa\] {
+  background-color: var(--lh-muted) !important;
+}
+html.dark .bg-\[\#f1f3f4\] {
+  background-color: var(--lh-muted) !important;
+}
+html.dark .bg-\[\#fffcf0\] {
+  background-color: var(--lh-warning-bg) !important;
+}
+html.dark .bg-\[\#fff8e1\] {
+  background-color: var(--lh-warning-bg) !important;
+}
+html.dark .bg-\[\#e8f0fe\],
+html.dark .bg-\[\#E8F0FE\] {
+  background-color: var(--lh-accent-soft) !important;
+}
+html.dark .bg-\[\#e6f4ea\] {
+  background-color: var(--lh-success-bg) !important;
+}
+html.dark .bg-\[\#fce8e6\] {
+  background-color: var(--lh-danger-bg) !important;
+}
+html.dark .bg-\[\#171717\] {
+  background-color: var(--lh-page) !important;
+}
+html.dark .bg-\[\#202124\] {
+  background-color: var(--lh-card) !important;
+}
+html.dark .bg-\[\#303134\] {
+  background-color: var(--lh-muted) !important;
+}
+html.dark .bg-\[\#3c4043\] {
+  background-color: var(--lh-muted) !important;
+}
+
+html.dark .text-\[\#202124\],
+html.dark .text-\[\#3c4043\] {
+  color: var(--lh-text) !important;
+}
+html.dark .text-\[\#5f6368\] {
+  color: var(--lh-text-secondary) !important;
+}
+html.dark .text-\[\#9aa0a6\] {
+  color: var(--lh-text-muted) !important;
+}
+html.dark .text-\[\#e8eaed\],
+html.dark .text-\[\#dadce0\] {
+  color: var(--lh-text) !important;
+}
+html.dark .text-\[\#1a73e8\] {
+  color: var(--lh-accent) !important;
+}
+html.dark .text-\[\#174ea6\],
+html.dark .text-\[\#1967D2\] {
+  color: var(--lh-accent-text) !important;
+}
+html.dark .text-\[\#137333\] {
+  color: var(--lh-success-text) !important;
+}
+html.dark .text-\[\#8d6e00\] {
+  color: var(--lh-warning-text) !important;
+}
+html.dark .text-\[\#c5221f\] {
+  color: var(--lh-danger-text) !important;
+}
+
+html.dark .border-\[\#dadce0\],
+html.dark .border-\[\#e8eaed\] {
+  border-color: var(--lh-border) !important;
+}
+html.dark .border-\[\#5f6368\],
+html.dark .border-\[\#3c4043\] {
+  border-color: var(--lh-border) !important;
+}
+html.dark .border-\[\#fde293\] {
+  border-color: var(--lh-warning-border) !important;
+}
+html.dark .border-\[\#ceead6\] {
+  border-color: var(--lh-success-border) !important;
+}
+html.dark .border-\[\#1a73e8\] {
+  border-color: var(--lh-accent) !important;
+}
+
+html.dark .hover\:bg-\[\#f1f3f4\]:hover {
+  background-color: var(--lh-muted) !important;
+}
+html.dark .hover\:bg-\[\#f8f9fa\]:hover {
+  background-color: var(--lh-muted) !important;
+}
+html.dark .hover\:text-\[\#1a73e8\]:hover {
+  color: var(--lh-accent) !important;
+}
+html.dark .group:hover .group-hover\:text-\[\#1a73e8\] {
+  color: var(--lh-accent) !important;
+}
+
+/* Soft accent buttons / pills that stay white in light mode */
+html.dark .bg-\[\#1a73e8\] {
+  background-color: #3c7fd4 !important;
+  color: #ffffff !important;
+}
+html.dark .hover\:bg-\[\#1b66c9\]:hover {
+  background-color: #4a8be0 !important;
+}
+
+/* Existing dark: utilities → same palette (avoid pure black / washed white) */
+html.dark .dark\:bg-\[\#171717\] {
+  background-color: var(--lh-page) !important;
+}
+html.dark .dark\:bg-\[\#202124\] {
+  background-color: var(--lh-card) !important;
+}
+html.dark .dark\:bg-\[\#303134\] {
+  background-color: var(--lh-muted) !important;
+}
+html.dark .dark\:bg-\[\#3c4043\] {
+  background-color: #2a3040 !important;
+}
+html.dark .dark\:bg-\[\#1a3a5c\] {
+  background-color: var(--lh-accent-soft) !important;
+}
+html.dark .dark\:bg-\[\#0d2818\] {
+  background-color: var(--lh-success-bg) !important;
+}
+html.dark .dark\:bg-\[\#3c3010\],
+html.dark .dark\:bg-\[\#2a2410\] {
+  background-color: var(--lh-warning-bg) !important;
+}
+html.dark .dark\:bg-\[\#3c1512\] {
+  background-color: var(--lh-danger-bg) !important;
+}
+
+html.dark .dark\:text-\[\#e8eaed\],
+html.dark .dark\:text-\[\#dadce0\] {
+  color: var(--lh-text) !important;
+}
+html.dark .dark\:text-\[\#9aa0a6\] {
+  color: var(--lh-text-muted) !important;
+}
+html.dark .dark\:text-\[\#aecbfa\] {
+  color: var(--lh-accent-text) !important;
+}
+html.dark .dark\:text-\[\#8ab4f8\] {
+  color: var(--lh-accent) !important;
+}
+html.dark .dark\:text-\[\#81c995\],
+html.dark .dark\:text-\[\#ceead6\] {
+  color: var(--lh-success-text) !important;
+}
+html.dark .dark\:text-\[\#fde293\] {
+  color: var(--lh-warning-text) !important;
+}
+html.dark .dark\:text-\[\#f6aea9\] {
+  color: var(--lh-danger-text) !important;
+}
+
+html.dark .dark\:border-\[\#3c4043\],
+html.dark .dark\:border-\[\#5f6368\] {
+  border-color: var(--lh-border) !important;
+}
+html.dark .dark\:border-\[\#8d6e00\] {
+  border-color: var(--lh-warning-border) !important;
+}
+html.dark .dark\:hover\:bg-\[\#3c4043\]:hover {
+  background-color: var(--lh-muted) !important;
+}
+
+html.dark .bg-red-50 {
+  background-color: var(--lh-danger-bg) !important;
+}
+html.dark .text-red-700 {
+  color: var(--lh-danger-text) !important;
+}
+html.dark .border-red-100 {
+  border-color: var(--lh-danger-border, #5c2b28) !important;
+}
+html.dark .bg-green-50 {
+  background-color: var(--lh-success-bg) !important;
+}
+html.dark .text-green-700 {
+  color: var(--lh-success-text) !important;
+}
+html.dark .border-green-100 {
+  border-color: var(--lh-success-border) !important;
+}
+html.dark .bg-amber-50 {
+  background-color: var(--lh-warning-bg) !important;
+}
+html.dark .text-amber-700,
+html.dark .text-amber-800 {
+  color: var(--lh-warning-text) !important;
+}
+html.dark .border-amber-100,
+html.dark .border-amber-200 {
+  border-color: var(--lh-warning-border) !important;
+}
+
+/* Soft page depth in dark mode */
+html.dark body {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(138, 180, 248, 0.08), transparent),
+    linear-gradient(180deg, var(--lh-page) 0%, #0b0d12 100%);
+  background-attachment: fixed;
 }
