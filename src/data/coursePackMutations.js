@@ -16,14 +16,25 @@ export function slugifyId(text) {
   );
 }
 
+/** Return slugified base, or base-2, base-3… while `isTaken` is true. */
+export function uniqueId(base, isTaken) {
+  const root = slugifyId(base);
+  if (!isTaken(root)) return root;
+  let n = 2;
+  while (isTaken(`${root}-${n}`)) n += 1;
+  return `${root}-${n}`;
+}
+
 function clonePack(pack) {
   return normalizePack(structuredClone(pack));
 }
 
 export function addLevel(pack, { id, cefr = 'A1', title } = {}) {
   const next = clonePack(pack);
-  const levelId = id || slugifyId(cefr || 'level');
-  if (next.levels.some((l) => l.id === levelId)) {
+  const levelId =
+    id ||
+    uniqueId(cefr || 'level', (candidate) => next.levels.some((l) => l.id === candidate));
+  if (id && next.levels.some((l) => l.id === levelId)) {
     throw new Error(`Niveau déjà existant: ${levelId}`);
   }
   next.levels.push({
@@ -39,14 +50,19 @@ export function addChapter(pack, levelId, { id, title, description } = {}) {
   const next = clonePack(pack);
   const level = next.levels.find((l) => l.id === levelId);
   if (!level) throw new Error('Niveau introuvable');
-  const chapterId = id || slugifyId(title?.fr || title?.en || 'chapter');
-  if ((level.chapters || []).some((c) => c.id === chapterId)) {
+  const resolvedTitle = title || emptyI18n('Nouveau chapitre', 'New chapter', 'Toko vaovao');
+  const chapterId =
+    id ||
+    uniqueId(resolvedTitle.fr || resolvedTitle.en || 'chapitre', (candidate) =>
+      (level.chapters || []).some((c) => c.id === candidate)
+    );
+  if (id && (level.chapters || []).some((c) => c.id === chapterId)) {
     throw new Error(`Chapitre déjà existant: ${chapterId}`);
   }
   level.chapters = level.chapters || [];
   level.chapters.push({
     id: chapterId,
-    title: title || emptyI18n('Nouveau chapitre', 'New chapter', 'Toko vaovao'),
+    title: resolvedTitle,
     description: description || emptyI18n(),
     lessons: [],
   });
@@ -58,14 +74,19 @@ export function addLessonStub(pack, levelId, chapterId, { id, title, description
   const level = next.levels.find((l) => l.id === levelId);
   const chapter = level?.chapters?.find((c) => c.id === chapterId);
   if (!chapter) throw new Error('Chapitre introuvable');
-  const lessonId = id || slugifyId(title?.fr || title?.en || 'lesson');
-  if ((chapter.lessons || []).some((l) => l.id === lessonId)) {
+  const resolvedTitle = title || emptyI18n('Nouvelle leçon', 'New lesson', 'Lesona vaovao');
+  const lessonId =
+    id ||
+    uniqueId(resolvedTitle.fr || resolvedTitle.en || 'nouvelle-lecon', (candidate) =>
+      !!findLessonInPack(next, candidate)
+    );
+  if (id && findLessonInPack(next, lessonId)) {
     throw new Error(`Leçon déjà existante: ${lessonId}`);
   }
   chapter.lessons = chapter.lessons || [];
   chapter.lessons.push({
     id: lessonId,
-    title: title || emptyI18n('Nouvelle leçon', 'New lesson', 'Lesona vaovao'),
+    title: resolvedTitle,
     description: description || emptyI18n(),
     estimatedMinutes: 10,
     introduction: emptyI18n(),

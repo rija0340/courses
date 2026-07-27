@@ -38,6 +38,22 @@ export const EXERCISE_TYPE_LABELS = {
   transform: 'Transformation',
 };
 
+export const SECTION_TYPE_LABELS = {
+  'core-concept': 'Concept clé',
+  rules: 'Règles',
+  image: 'Image',
+  gallery: 'Galerie',
+  dialogue: 'Dialogue',
+  tip: 'Astuce',
+  example: 'Exemple',
+};
+
+/** Highlight map sample used by StyledText in sections. */
+export const SAMPLE_LESSON_STYLES = {
+  'key-term': { color: '#1a73e8', fontWeight: 600 },
+  emphasis: { color: '#c5221f', fontStyle: 'italic' },
+};
+
 export function isI18nObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value);
 }
@@ -596,41 +612,126 @@ export function validateExercisesPayload(raw, { expectedLessonId = null } = {}) 
   };
 }
 
-export function buildLessonContentTemplate(lessonId = 'sample-lesson') {
-  return {
-    id: lessonId,
-    introduction: {
-      fr: 'Introduction de la leçon.',
-      en: 'Lesson introduction.',
-      mg: 'Fampidirana ny lesona.',
-    },
-    sections: [
-      {
+export function buildSectionExample(type) {
+  switch (type) {
+    case 'core-concept':
+      return {
+        type: 'core-concept',
+        title: { fr: 'Concept clé', en: 'Core concept', mg: 'Foto-kevitra' },
+        content: [
+          {
+            text: {
+              fr: 'Le verbe to be a 3 formes au présent :',
+              en: 'The verb to be has 3 present forms:',
+              mg: 'Ny matoanteny to be dia misy endrika 3 :',
+            },
+            items: [
+              { text: ' am ', highlight: 'key-term' },
+              { text: ', ', highlight: 'none' },
+              { text: ' is ', highlight: 'key-term' },
+              { text: ', ', highlight: 'none' },
+              { text: ' are ', highlight: 'key-term' },
+            ],
+          },
+          {
+            type: 'definition',
+            term: 'I am',
+            highlight: 'emphasis',
+            definitions: {
+              fr: 'Je suis (I am a student).',
+              en: 'I am (I am a student).',
+              mg: 'Izaho dia (I am a student).',
+            },
+          },
+        ],
+      };
+    case 'rules':
+      return {
+        type: 'rules',
+        title: { fr: 'Règles', en: 'Rules', mg: 'Fitsipika' },
+        content: [
+          { text: 'I / you / we / they → am / are. ', highlight: 'key-term' },
+          { text: 'he / she / it → is.', highlight: 'emphasis' },
+        ],
+        notes: {
+          fr: 'Contractions : I’m, you’re, he’s…',
+          en: 'Contractions: I’m, you’re, he’s…',
+          mg: 'Contractions: I’m, you’re, he’s…',
+        },
+      };
+    case 'image':
+      return {
+        type: 'image',
+        title: { fr: 'Illustration', en: 'Illustration', mg: 'Sary' },
+        src: 'https://placehold.co/640x360/png?text=Lesson+image',
+        caption: {
+          fr: 'Légende de l’image',
+          en: 'Image caption',
+          mg: 'Sora-tsoratra',
+        },
+      };
+    case 'gallery':
+      return {
+        type: 'gallery',
+        title: { fr: 'Galerie', en: 'Gallery', mg: 'Gallery' },
+        images: [
+          {
+            src: 'https://placehold.co/320x200/png?text=1',
+            caption: { fr: 'Image 1', en: 'Image 1', mg: 'Sary 1' },
+          },
+          {
+            src: 'https://placehold.co/320x200/png?text=2',
+            caption: { fr: 'Image 2', en: 'Image 2', mg: 'Sary 2' },
+          },
+        ],
+      };
+    case 'dialogue':
+      return {
+        type: 'dialogue',
+        title: { fr: 'Dialogue', en: 'Dialogue', mg: 'Resaka' },
+        lines: [
+          {
+            speaker: 'A',
+            text: { fr: 'Hi! How are you?', en: 'Hi! How are you?', mg: 'Hi! How are you?' },
+          },
+          {
+            speaker: 'B',
+            text: { fr: 'I am fine, thanks.', en: 'I am fine, thanks.', mg: 'I am fine, thanks.' },
+          },
+        ],
+      };
+    case 'tip':
+      return {
         type: 'tip',
         title: { fr: 'Astuce', en: 'Tip', mg: 'Torohevitra' },
         text: {
-          fr: 'Éditez ce modèle puis validez.',
-          en: 'Edit this template then apply.',
-          mg: 'Ovay ity modèle ity dia ampiharo.',
+          fr: 'Écoutez la forme contractée “I’m” dans les dialogues.',
+          en: 'Listen for the contracted form “I’m” in dialogues.',
+          mg: 'Henoy ny endrika “I’m” ao amin’ny resaka.',
         },
-      },
-      {
+      };
+    case 'example':
+      return {
         type: 'example',
         title: { fr: 'Exemple', en: 'Example', mg: 'Ohatra' },
         text: { fr: 'I am a student.', en: 'I am a student.', mg: 'I am a student.' },
-        translation: { fr: 'Je suis étudiant.', en: 'I am a student.', mg: 'Mpianatra aho.' },
-      },
-    ],
-    styles: {},
-  };
+        translation: {
+          fr: 'Je suis étudiant.',
+          en: 'I am a student.',
+          mg: 'Mpianatra aho.',
+        },
+      };
+    default:
+      throw new Error(`Type de section inconnu: ${type}`);
+  }
 }
 
-export function buildExercisesTemplate(lessonId = 'sample-lesson') {
-  return {
-    lessonId,
-    exercises: [
-      {
-        id: 'ex-mc-1',
+export function buildExerciseExample(type, idSuffix = '1') {
+  const id = `ex-${type}-${idSuffix}`.replace(/[^a-z0-9-]/g, '-');
+  switch (type) {
+    case 'multiple-choice':
+      return {
+        id,
         type: 'multiple-choice',
         points: 1,
         prompt: { fr: 'QCM : choisissez.', en: 'MCQ: choose.', mg: 'QCM: fidio.' },
@@ -639,43 +740,60 @@ export function buildExercisesTemplate(lessonId = 'sample-lesson') {
           { id: 'b', text: { fr: 'Mauvaise', en: 'Wrong', mg: 'Diso' } },
         ],
         correctChoiceId: 'a',
-      },
-      {
-        id: 'ex-ms-1',
+      };
+    case 'multi-select':
+      return {
+        id,
         type: 'multi-select',
         points: 2,
-        prompt: { fr: 'Cochez toutes les bonnes réponses.', en: 'Select all that apply.', mg: 'Mariho ny marina rehetra.' },
+        prompt: {
+          fr: 'Cochez toutes les bonnes réponses.',
+          en: 'Select all that apply.',
+          mg: 'Mariho ny marina rehetra.',
+        },
         choices: [
           { id: 'a', text: { fr: 'Oui', en: 'Yes', mg: 'Eny' } },
           { id: 'b', text: { fr: 'Non', en: 'No', mg: 'Tsia' } },
           { id: 'c', text: { fr: 'Aussi', en: 'Also', mg: 'Koas' } },
         ],
         correctChoiceIds: ['a', 'c'],
-      },
-      {
-        id: 'ex-tf-1',
+      };
+    case 'true-false':
+      return {
+        id,
         type: 'true-false',
         points: 1,
         prompt: { fr: 'Ceci est vrai.', en: 'This is true.', mg: 'Marina ity.' },
         correct: true,
-      },
-      {
-        id: 'ex-fb-1',
+      };
+    case 'fill-blank':
+      return {
+        id,
         type: 'fill-blank',
         points: 1,
         prompt: { fr: 'Complétez.', en: 'Fill in.', mg: 'Fenoy.' },
-        sentence: { fr: 'I ___ a teacher.', en: 'I ___ a teacher.', mg: 'I ___ a teacher.' },
+        sentence: {
+          fr: 'I ___ a teacher.',
+          en: 'I ___ a teacher.',
+          mg: 'I ___ a teacher.',
+        },
         acceptedAnswers: ['am', 'Am'],
-      },
-      {
-        id: 'ex-sa-1',
+      };
+    case 'short-answer':
+      return {
+        id,
         type: 'short-answer',
         points: 1,
-        prompt: { fr: 'Écrivez le pluriel de "cat".', en: 'Write the plural of "cat".', mg: 'Soraty ny pluriel an\'ny "cat".' },
+        prompt: {
+          fr: 'Écrivez le pluriel de "cat".',
+          en: 'Write the plural of "cat".',
+          mg: 'Soraty ny pluriel an\'ny "cat".',
+        },
         acceptedAnswers: ['cats', 'Cats'],
-      },
-      {
-        id: 'ex-match-1',
+      };
+    case 'match':
+      return {
+        id,
         type: 'match',
         points: 2,
         prompt: { fr: 'Associez.', en: 'Match.', mg: 'Ampifanaraho.' },
@@ -683,9 +801,10 @@ export function buildExercisesTemplate(lessonId = 'sample-lesson') {
           { id: 'p1', left: { fr: 'I', en: 'I', mg: 'I' }, right: { fr: 'am', en: 'am', mg: 'am' } },
           { id: 'p2', left: { fr: 'He', en: 'He', mg: 'He' }, right: { fr: 'is', en: 'is', mg: 'is' } },
         ],
-      },
-      {
-        id: 'ex-ord-1',
+      };
+    case 'reorder':
+      return {
+        id,
         type: 'reorder',
         points: 2,
         prompt: { fr: 'Remettez en ordre.', en: 'Reorder.', mg: 'Avereno filaharana.' },
@@ -695,9 +814,10 @@ export function buildExercisesTemplate(lessonId = 'sample-lesson') {
           { id: 'w3', text: { fr: 'happy', en: 'happy', mg: 'happy' } },
         ],
         correctOrder: ['w1', 'w2', 'w3'],
-      },
-      {
-        id: 'ex-cat-1',
+      };
+    case 'categorize':
+      return {
+        id,
         type: 'categorize',
         points: 2,
         prompt: { fr: 'Classez.', en: 'Categorize.', mg: 'Sokajio.' },
@@ -709,38 +829,75 @@ export function buildExercisesTemplate(lessonId = 'sample-lesson') {
           { id: 'i1', text: { fr: 'run', en: 'run', mg: 'run' }, categoryId: 'verb' },
           { id: 'i2', text: { fr: 'dog', en: 'dog', mg: 'dog' }, categoryId: 'noun' },
         ],
-      },
-      {
-        id: 'ex-err-1',
+      };
+    case 'error-correction':
+      return {
+        id,
         type: 'error-correction',
         points: 1,
-        prompt: { fr: 'Corrigez la phrase.', en: 'Correct the sentence.', mg: 'Ahitsio ny fehezanteny.' },
-        source: { fr: 'She are happy.', en: 'She are happy.', mg: 'She are happy.' },
+        prompt: {
+          fr: 'Corrigez la phrase.',
+          en: 'Correct the sentence.',
+          mg: 'Ahitsio ny fehezanteny.',
+        },
+        source: {
+          fr: 'She are happy.',
+          en: 'She are happy.',
+          mg: 'She are happy.',
+        },
         acceptedAnswers: ['She is happy.', 'She is happy'],
-      },
-      {
-        id: 'ex-cloze-1',
+      };
+    case 'cloze':
+      return {
+        id,
         type: 'cloze',
         points: 2,
-        prompt: { fr: 'Remplissez les trous.', en: 'Fill the blanks.', mg: 'Fenoy ny lavaka.' },
+        prompt: {
+          fr: 'Remplissez les trous.',
+          en: 'Fill the blanks.',
+          mg: 'Fenoy ny lavaka.',
+        },
         text: {
           fr: 'I {{0}} a student and he {{1}} a teacher.',
           en: 'I {{0}} a student and he {{1}} a teacher.',
           mg: 'I {{0}} a student and he {{1}} a teacher.',
         },
-        blanks: [
-          { acceptedAnswers: ['am'] },
-          { acceptedAnswers: ['is'] },
-        ],
-      },
-      {
-        id: 'ex-tr-1',
+        blanks: [{ acceptedAnswers: ['am'] }, { acceptedAnswers: ['is'] }],
+      };
+    case 'transform':
+      return {
+        id,
         type: 'transform',
         points: 1,
-        prompt: { fr: 'Mettez au négatif.', en: 'Make it negative.', mg: 'Ataovy négatif.' },
+        prompt: {
+          fr: 'Mettez au négatif.',
+          en: 'Make it negative.',
+          mg: 'Ataovy négatif.',
+        },
         source: { fr: 'I am ready.', en: 'I am ready.', mg: 'I am ready.' },
         acceptedAnswers: ["I am not ready.", "I'm not ready."],
-      },
-    ],
+      };
+    default:
+      throw new Error(`Type d’exercice inconnu: ${type}`);
+  }
+}
+
+export function buildLessonContentTemplate(lessonId = 'sample-lesson') {
+  return {
+    id: lessonId,
+    introduction: {
+      fr: 'Introduction de la leçon.',
+      en: 'Lesson introduction.',
+      mg: 'Fampidirana ny lesona.',
+    },
+    sections: SECTION_TYPES.map((type) => buildSectionExample(type)),
+    styles: { ...SAMPLE_LESSON_STYLES },
+  };
+}
+
+export function buildExercisesTemplate(lessonId = 'sample-lesson') {
+  return {
+    lessonId,
+    exercises: EXERCISE_TYPES.map((type, i) => buildExerciseExample(type, String(i + 1))),
   };
 }
