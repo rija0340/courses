@@ -1,7 +1,18 @@
 import englishPack from './english/pack.json';
+import b1Level from './english/b1-level.json';
+import { normalizePack } from './coursePackSchema';
+
+function buildEnglishSeed() {
+  const pack = structuredClone(englishPack);
+  const hasB1 = (pack.levels || []).some((l) => l.id === 'b1');
+  if (!hasB1) {
+    pack.levels = [...(pack.levels || []), structuredClone(b1Level)];
+  }
+  return normalizePack(pack);
+}
 
 const COURSE_SEEDS = {
-  english: englishPack,
+  english: buildEnglishSeed(),
 };
 
 export function getCoursePackSeed(courseId) {

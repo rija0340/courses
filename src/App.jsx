@@ -12,6 +12,7 @@ import VocabsGlobalAdmin from './pages/VocabsGlobalAdmin';
 import PracticeSimulation from './pages/PracticeSimulation';
 import LessonPractice from './pages/LessonPractice';
 import CoursesAdmin from './pages/CoursesAdmin';
+import AdminHub from './pages/AdminHub';
 import Navigation from './components/Navigation';
 import { initSessionTheme } from './utils/sessionTheme';
 
@@ -34,6 +35,7 @@ const App = () => {
             <Route path="/course/:courseId" element={<CourseView />} />
             <Route path="/course/:courseId/lesson/:lessonId" element={<LessonView />} />
             <Route path="/course/:courseId/lesson/:lessonId/practice" element={<LessonPractice />} />
+            <Route path="/admin" element={<AdminHub />} />
             <Route path="/admin/courses" element={<CoursesAdmin />} />
             <Route path="/admin/vocabs" element={<VocabsGlobalAdmin />} />
             <Route path="/vocabs/:domainId/guide" element={<VocabsGuide />} />

@@ -12,11 +12,31 @@ export const SECTION_TYPES = [
 
 export const EXERCISE_TYPES = [
   'multiple-choice',
+  'multi-select',
   'true-false',
   'fill-blank',
+  'short-answer',
   'match',
   'reorder',
+  'categorize',
+  'error-correction',
+  'cloze',
+  'transform',
 ];
+
+export const EXERCISE_TYPE_LABELS = {
+  'multiple-choice': 'QCM (1 réponse)',
+  'multi-select': 'QCM multi',
+  'true-false': 'Vrai / Faux',
+  'fill-blank': 'Texte à trous',
+  'short-answer': 'Réponse courte',
+  match: 'Association',
+  reorder: 'Remise en ordre',
+  categorize: 'Catégoriser',
+  'error-correction': 'Correction d’erreur',
+  cloze: 'Cloze multi-trous',
+  transform: 'Transformation',
+};
 
 export function isI18nObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value);
@@ -81,6 +101,20 @@ function validateExercise(errors, path, exercise) {
       }
       break;
     }
+    case 'multi-select': {
+      if (!Array.isArray(exercise.choices) || exercise.choices.length < 2) {
+        pushError(errors, `${path}.choices`, 'au moins 2 choix requis');
+      } else {
+        exercise.choices.forEach((c, i) => {
+          if (!c?.id) pushError(errors, `${path}.choices[${i}].id`, 'id requis');
+          validateI18n(errors, `${path}.choices[${i}].text`, c?.text);
+        });
+      }
+      if (!Array.isArray(exercise.correctChoiceIds) || !exercise.correctChoiceIds.length) {
+        pushError(errors, `${path}.correctChoiceIds`, 'au moins une bonne réponse');
+      }
+      break;
+    }
     case 'true-false': {
       if (typeof exercise.correct !== 'boolean') {
         pushError(errors, `${path}.correct`, 'boolean requis');
@@ -89,6 +123,17 @@ function validateExercise(errors, path, exercise) {
     }
     case 'fill-blank': {
       validateI18n(errors, `${path}.sentence`, exercise.sentence);
+      if (!Array.isArray(exercise.acceptedAnswers) || !exercise.acceptedAnswers.length) {
+        pushError(errors, `${path}.acceptedAnswers`, 'au moins une réponse acceptée');
+      }
+      break;
+    }
+    case 'short-answer':
+    case 'error-correction':
+    case 'transform': {
+      if (exercise.type === 'error-correction' || exercise.type === 'transform') {
+        validateI18n(errors, `${path}.source`, exercise.source);
+      }
       if (!Array.isArray(exercise.acceptedAnswers) || !exercise.acceptedAnswers.length) {
         pushError(errors, `${path}.acceptedAnswers`, 'au moins une réponse acceptée');
       }
@@ -117,6 +162,34 @@ function validateExercise(errors, path, exercise) {
       }
       if (!Array.isArray(exercise.correctOrder) || !exercise.correctOrder.length) {
         pushError(errors, `${path}.correctOrder`, 'ordre correct requis');
+      }
+      break;
+    }
+    case 'categorize': {
+      if (!Array.isArray(exercise.categories) || exercise.categories.length < 2) {
+        pushError(errors, `${path}.categories`, 'au moins 2 catégories');
+      }
+      if (!Array.isArray(exercise.items) || exercise.items.length < 2) {
+        pushError(errors, `${path}.items`, 'au moins 2 items');
+      } else {
+        exercise.items.forEach((it, i) => {
+          if (!it?.id) pushError(errors, `${path}.items[${i}].id`, 'id requis');
+          if (!it?.categoryId) pushError(errors, `${path}.items[${i}].categoryId`, 'requis');
+          validateI18n(errors, `${path}.items[${i}].text`, it?.text);
+        });
+      }
+      break;
+    }
+    case 'cloze': {
+      validateI18n(errors, `${path}.text`, exercise.text);
+      if (!Array.isArray(exercise.blanks) || !exercise.blanks.length) {
+        pushError(errors, `${path}.blanks`, 'au moins un trou');
+      } else {
+        exercise.blanks.forEach((b, i) => {
+          if (!Array.isArray(b?.acceptedAnswers) || !b.acceptedAnswers.length) {
+            pushError(errors, `${path}.blanks[${i}].acceptedAnswers`, 'requis');
+          }
+        });
       }
       break;
     }
@@ -451,4 +524,223 @@ export function summarizePack(pack) {
     });
   });
   return { levels, chapters, lessons, exercises };
+}
+
+export function validateLessonContentPayload(raw, { expectedLessonId = null } = {}) {
+  const errors = [];
+  const warnings = [];
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return { ok: false, errors: ['JSON leçon invalide (objet requis)'], warnings };
+  }
+  if (expectedLessonId && raw.id && raw.id !== expectedLessonId) {
+    warnings.push(`id JSON (${raw.id}) ≠ leçon sélectionnée (${expectedLessonId}) — id ignoré`);
+  }
+  if (raw.introduction) validateI18n(errors, 'introduction', raw.introduction, { required: false });
+  if (raw.title) validateI18n(errors, 'title', raw.title, { required: false });
+  if (raw.description) validateI18n(errors, 'description', raw.description, { required: false });
+  if (raw.sections != null) {
+    if (!Array.isArray(raw.sections)) pushError(errors, 'sections', 'tableau requis');
+    else raw.sections.forEach((s, i) => validateSection(errors, `sections[${i}]`, s));
+  } else {
+    warnings.push('aucune section');
+  }
+  if (raw.exercises != null) {
+    warnings.push('exercises ignorés ici — utiliser l’import Exercices');
+  }
+  return {
+    ok: errors.length === 0,
+    errors,
+    warnings,
+    content: errors.length === 0
+      ? {
+          introduction: raw.introduction,
+          sections: raw.sections || [],
+          styles: raw.styles || {},
+          coverImage: raw.coverImage,
+          estimatedMinutes: raw.estimatedMinutes,
+          description: raw.description,
+          title: raw.title,
+        }
+      : undefined,
+  };
+}
+
+export function validateExercisesPayload(raw, { expectedLessonId = null } = {}) {
+  const errors = [];
+  const warnings = [];
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return { ok: false, errors: ['JSON exercices invalide (objet requis)'], warnings };
+  }
+  if (expectedLessonId && raw.lessonId && raw.lessonId !== expectedLessonId) {
+    pushError(errors, 'lessonId', `attendu "${expectedLessonId}", reçu "${raw.lessonId}"`);
+  }
+  const list = Array.isArray(raw.exercises) ? raw.exercises : Array.isArray(raw) ? raw : null;
+  if (!list) {
+    pushError(errors, 'exercises', 'tableau exercises requis');
+    return { ok: false, errors, warnings };
+  }
+  if (!list.length) warnings.push('liste d’exercices vide');
+  const ids = new Set();
+  list.forEach((ex, i) => {
+    validateExercise(errors, `exercises[${i}]`, ex);
+    if (ex?.id) {
+      if (ids.has(ex.id)) pushError(errors, `exercises[${i}].id`, `doublon ${ex.id}`);
+      ids.add(ex.id);
+    }
+  });
+  return {
+    ok: errors.length === 0,
+    errors,
+    warnings,
+    exercises: errors.length === 0 ? list : undefined,
+  };
+}
+
+export function buildLessonContentTemplate(lessonId = 'sample-lesson') {
+  return {
+    id: lessonId,
+    introduction: {
+      fr: 'Introduction de la leçon.',
+      en: 'Lesson introduction.',
+      mg: 'Fampidirana ny lesona.',
+    },
+    sections: [
+      {
+        type: 'tip',
+        title: { fr: 'Astuce', en: 'Tip', mg: 'Torohevitra' },
+        text: {
+          fr: 'Éditez ce modèle puis validez.',
+          en: 'Edit this template then apply.',
+          mg: 'Ovay ity modèle ity dia ampiharo.',
+        },
+      },
+      {
+        type: 'example',
+        title: { fr: 'Exemple', en: 'Example', mg: 'Ohatra' },
+        text: { fr: 'I am a student.', en: 'I am a student.', mg: 'I am a student.' },
+        translation: { fr: 'Je suis étudiant.', en: 'I am a student.', mg: 'Mpianatra aho.' },
+      },
+    ],
+    styles: {},
+  };
+}
+
+export function buildExercisesTemplate(lessonId = 'sample-lesson') {
+  return {
+    lessonId,
+    exercises: [
+      {
+        id: 'ex-mc-1',
+        type: 'multiple-choice',
+        points: 1,
+        prompt: { fr: 'QCM : choisissez.', en: 'MCQ: choose.', mg: 'QCM: fidio.' },
+        choices: [
+          { id: 'a', text: { fr: 'Bonne', en: 'Correct', mg: 'Marina' } },
+          { id: 'b', text: { fr: 'Mauvaise', en: 'Wrong', mg: 'Diso' } },
+        ],
+        correctChoiceId: 'a',
+      },
+      {
+        id: 'ex-ms-1',
+        type: 'multi-select',
+        points: 2,
+        prompt: { fr: 'Cochez toutes les bonnes réponses.', en: 'Select all that apply.', mg: 'Mariho ny marina rehetra.' },
+        choices: [
+          { id: 'a', text: { fr: 'Oui', en: 'Yes', mg: 'Eny' } },
+          { id: 'b', text: { fr: 'Non', en: 'No', mg: 'Tsia' } },
+          { id: 'c', text: { fr: 'Aussi', en: 'Also', mg: 'Koas' } },
+        ],
+        correctChoiceIds: ['a', 'c'],
+      },
+      {
+        id: 'ex-tf-1',
+        type: 'true-false',
+        points: 1,
+        prompt: { fr: 'Ceci est vrai.', en: 'This is true.', mg: 'Marina ity.' },
+        correct: true,
+      },
+      {
+        id: 'ex-fb-1',
+        type: 'fill-blank',
+        points: 1,
+        prompt: { fr: 'Complétez.', en: 'Fill in.', mg: 'Fenoy.' },
+        sentence: { fr: 'I ___ a teacher.', en: 'I ___ a teacher.', mg: 'I ___ a teacher.' },
+        acceptedAnswers: ['am', 'Am'],
+      },
+      {
+        id: 'ex-sa-1',
+        type: 'short-answer',
+        points: 1,
+        prompt: { fr: 'Écrivez le pluriel de "cat".', en: 'Write the plural of "cat".', mg: 'Soraty ny pluriel an\'ny "cat".' },
+        acceptedAnswers: ['cats', 'Cats'],
+      },
+      {
+        id: 'ex-match-1',
+        type: 'match',
+        points: 2,
+        prompt: { fr: 'Associez.', en: 'Match.', mg: 'Ampifanaraho.' },
+        pairs: [
+          { id: 'p1', left: { fr: 'I', en: 'I', mg: 'I' }, right: { fr: 'am', en: 'am', mg: 'am' } },
+          { id: 'p2', left: { fr: 'He', en: 'He', mg: 'He' }, right: { fr: 'is', en: 'is', mg: 'is' } },
+        ],
+      },
+      {
+        id: 'ex-ord-1',
+        type: 'reorder',
+        points: 2,
+        prompt: { fr: 'Remettez en ordre.', en: 'Reorder.', mg: 'Avereno filaharana.' },
+        items: [
+          { id: 'w1', text: { fr: 'I', en: 'I', mg: 'I' } },
+          { id: 'w2', text: { fr: 'am', en: 'am', mg: 'am' } },
+          { id: 'w3', text: { fr: 'happy', en: 'happy', mg: 'happy' } },
+        ],
+        correctOrder: ['w1', 'w2', 'w3'],
+      },
+      {
+        id: 'ex-cat-1',
+        type: 'categorize',
+        points: 2,
+        prompt: { fr: 'Classez.', en: 'Categorize.', mg: 'Sokajio.' },
+        categories: [
+          { id: 'verb', label: { fr: 'Verbe', en: 'Verb', mg: 'Matoanteny' } },
+          { id: 'noun', label: { fr: 'Nom', en: 'Noun', mg: 'Anarana' } },
+        ],
+        items: [
+          { id: 'i1', text: { fr: 'run', en: 'run', mg: 'run' }, categoryId: 'verb' },
+          { id: 'i2', text: { fr: 'dog', en: 'dog', mg: 'dog' }, categoryId: 'noun' },
+        ],
+      },
+      {
+        id: 'ex-err-1',
+        type: 'error-correction',
+        points: 1,
+        prompt: { fr: 'Corrigez la phrase.', en: 'Correct the sentence.', mg: 'Ahitsio ny fehezanteny.' },
+        source: { fr: 'She are happy.', en: 'She are happy.', mg: 'She are happy.' },
+        acceptedAnswers: ['She is happy.', 'She is happy'],
+      },
+      {
+        id: 'ex-cloze-1',
+        type: 'cloze',
+        points: 2,
+        prompt: { fr: 'Remplissez les trous.', en: 'Fill the blanks.', mg: 'Fenoy ny lavaka.' },
+        text: {
+          fr: 'I {{0}} a student and he {{1}} a teacher.',
+          en: 'I {{0}} a student and he {{1}} a teacher.',
+          mg: 'I {{0}} a student and he {{1}} a teacher.',
+        },
+        blanks: [
+          { acceptedAnswers: ['am'] },
+          { acceptedAnswers: ['is'] },
+        ],
+      },
+      {
+        id: 'ex-tr-1',
+        type: 'transform',
+        points: 1,
+        prompt: { fr: 'Mettez au négatif.', en: 'Make it negative.', mg: 'Ataovy négatif.' },
+        source: { fr: 'I am ready.', en: 'I am ready.', mg: 'I am ready.' },
+        acceptedAnswers: ["I am not ready.", "I'm not ready."],
+      },
+    ],
+  };
 }

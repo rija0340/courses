@@ -2,7 +2,8 @@ import { ACTIVE_PROVIDER, STORAGE_PROVIDERS } from './storageConfig';
 import localCourseProvider from './providers/localCourseProvider';
 import supabaseCourseProvider from './providers/supabaseCourseProvider';
 import { getCoursePackSeed } from '../data/courseSeeds';
-import { normalizePack, mergeCoursePacks, validateCoursePack } from '../data/coursePackSchema';
+import { normalizePack, mergeCoursePacks, validateCoursePack, validateLessonContentPayload, validateExercisesPayload, findLessonInPack } from '../data/coursePackSchema';
+import { applyLessonContent, applyLessonExercises } from '../data/coursePackMutations';
 
 const provider =
   ACTIVE_PROVIDER === STORAGE_PROVIDERS.SUPABASE
@@ -44,6 +45,32 @@ const courseStorage = {
     }
 
     const saved = await provider.savePack(courseId, toSave);
+    return { ok: true, pack: saved, warnings: result.warnings, errors: [] };
+  },
+
+  async importLessonContent(courseId, lessonId, raw) {
+    const result = validateLessonContentPayload(raw, { expectedLessonId: lessonId });
+    if (!result.ok) return { ok: false, ...result };
+    const current = (await this.getPack(courseId)) || getCoursePackSeed(courseId);
+    if (!current) return { ok: false, errors: ['Pack introuvable'], warnings: [] };
+    if (!findLessonInPack(current, lessonId)) {
+      return { ok: false, errors: [`Leçon ${lessonId} introuvable`], warnings: [] };
+    }
+    const next = applyLessonContent(current, lessonId, result.content);
+    const saved = await this.savePack(courseId, next);
+    return { ok: true, pack: saved, warnings: result.warnings, errors: [] };
+  },
+
+  async importLessonExercises(courseId, lessonId, raw, { mode = 'replace' } = {}) {
+    const result = validateExercisesPayload(raw, { expectedLessonId: lessonId });
+    if (!result.ok) return { ok: false, ...result };
+    const current = (await this.getPack(courseId)) || getCoursePackSeed(courseId);
+    if (!current) return { ok: false, errors: ['Pack introuvable'], warnings: [] };
+    if (!findLessonInPack(current, lessonId)) {
+      return { ok: false, errors: [`Leçon ${lessonId} introuvable`], warnings: [] };
+    }
+    const next = applyLessonExercises(current, lessonId, result.exercises, { mode });
+    const saved = await this.savePack(courseId, next);
     return { ok: true, pack: saved, warnings: result.warnings, errors: [] };
   },
 

@@ -1,0 +1,278 @@
+{
+  "id": "b1",
+  "cefr": "B1",
+  "title": {
+    "fr": "Intermédiaire B1",
+    "en": "Intermediate B1",
+    "mg": "Antonony B1"
+  },
+  "coverImage": "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=1400&q=80",
+  "chapters": [
+    {
+      "id": "clause-expansion",
+      "title": {
+        "fr": "Expansion des phrases",
+        "en": "Sentence expansion",
+        "mg": "Fanitarana fehezanteny"
+      },
+      "description": {
+        "fr": "Passer d'une idée simple à des phrases riches avec des clauses.",
+        "en": "From a simple idea to richer sentences with clauses.",
+        "mg": "Avy amin'ny hevitra tsotra mankany amin'ny fehezanteny manankarena amin'ny clauses."
+      },
+      "lessons": [
+        {
+          "id": "expanding-sentences-with-clauses",
+          "title": {
+            "fr": "Étendre une phrase avec des clauses",
+            "en": "Expanding a sentence with clauses",
+            "mg": "Fanitarana fehezanteny amin'ny clauses"
+          },
+          "description": {
+            "fr": "Coordination, subordination et clauses relatives, adverbiales et nominales.",
+            "en": "Coordination, subordination, and relative, adverbial, and noun clauses.",
+            "mg": "Coordination, subordination ary clauses relative, adverbial ary noun."
+          },
+          "coverImage": "https://images.unsplash.com/photo-1456513080880-7d93d20f0d60?auto=format&fit=crop&w=900&q=80",
+          "estimatedMinutes": 20,
+          "introduction": {
+            "fr": "L'expansion d'une phrase en anglais par les clauses consiste à passer d'une pensée simple à une structure plus riche et nuancée en combinant des groupes de mots contenant chacun un sujet et un prédicat.",
+            "en": "Expanding an English sentence with clauses means moving from a simple thought to a richer, more nuanced structure by combining word groups that each contain a subject and a predicate.",
+            "mg": "Ny fanitarana fehezanteny anglisy amin'ny clauses dia midika hoe miala amin'ny hevitra tsotra mankany amin'ny firafitra manankarena kokoa amin'ny fampifangaroana vondron-teny izay samy manana subject sy predicate."
+          },
+          "sections": [
+            {
+              "type": "image",
+              "src": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1400&q=80",
+              "caption": {
+                "fr": "Construire des phrases plus riches, étape par étape",
+                "en": "Build richer sentences, step by step",
+                "mg": "Manangana fehezanteny manankarena kokoa, dingana isaky ny dingana"
+              }
+            },
+            {
+              "type": "core-concept",
+              "title": {
+                "fr": "1. Les deux types de clauses",
+                "en": "1. The two types of clauses",
+                "mg": "1. Karazana clause roa"
+              },
+              "content": [
+                {
+                  "text": {
+                    "fr": "Avant de construire, il faut distinguer les deux blocs fondamentaux : ",
+                    "en": "Before building, distinguish the two fundamental blocks: ",
+                    "mg": "Alohan'ny hananganana, tsy maintsy fantarina ny vato fototra roa: "
+                  },
+                  "items": [
+                    { "text": "independent", "highlight": "key-term" },
+                    { "text": " vs ", "highlight": "none" },
+                    { "text": "dependent", "highlight": "key-term" },
+                    { "text": ".", "highlight": "none" }
+                  ]
+                },
+                {
+                  "type": "definition",
+                  "term": {
+                    "fr": "Independent Clause",
+                    "en": "Independent Clause",
+                    "mg": "Independent Clause"
+                  },
+                  "highlight": "very-important",
+                  "definitions": {
+                    "fr": "Exprime une pensée complète et peut être une phrase seule. Ex. : The dog chased the cat.",
+                    "en": "Expresses a complete thought and can stand alone. Ex.: The dog chased the cat.",
+                    "mg": "Maneho hevitra feno ary afaka mijoro ho fehezanteny irery. Ohatra: The dog chased the cat."
+                  }
+                },
+                {
+                  "type": "definition",
+                  "term": {
+                    "fr": "Dependent Clause",
+                    "en": "Dependent Clause",
+                    "mg": "Dependent Clause"
+                  },
+                  "highlight": "important",
+                  "definitions": {
+                    "fr": "A un sujet et un verbe mais ne fait pas sens seule (because, although, if…). Exige une clause indépendante.",
+                    "en": "Has a subject and a verb but cannot stand alone (because, although, if…). Needs an independent clause.",
+                    "mg": "Manana subject sy verbe fa tsy mahavita mijoro irery (because, although, if…). Mila independent clause."
+                  }
+                }
+              ]
+            },
+            {
+              "type": "tip",
+              "title": { "fr": "Astuce FANBOYS", "en": "FANBOYS tip", "mg": "Torohevitra FANBOYS" },
+              "text": {
+                "fr": "For, And, Nor, But, Or, Yet, So — souvent avec une virgule avant la conjonction entre deux clauses indépendantes.",
+                "en": "For, And, Nor, But, Or, Yet, So — often with a comma before the conjunction between two independent clauses.",
+                "mg": "For, And, Nor, But, Or, Yet, So — matetika misy faingo alohan'ny conjunction."
+              }
+            },
+            {
+              "type": "example",
+              "title": { "fr": "Compound", "en": "Compound", "mg": "Compound" },
+              "text": {
+                "fr": "The dog chased the cat, and the cat climbed a tree.",
+                "en": "The dog chased the cat, and the cat climbed a tree.",
+                "mg": "The dog chased the cat, and the cat climbed a tree."
+              },
+              "translation": {
+                "fr": "Deux clauses indépendantes reliées par and.",
+                "en": "Two independent clauses joined by and.",
+                "mg": "Independent clause roa mifandray amin'ny and."
+              }
+            },
+            {
+              "type": "example",
+              "title": { "fr": "Complex", "en": "Complex", "mg": "Complex" },
+              "text": {
+                "fr": "The dog chased the cat because it was bored.",
+                "en": "The dog chased the cat because it was bored.",
+                "mg": "The dog chased the cat because it was bored."
+              },
+              "translation": {
+                "fr": "because it was bored = clause dépendante.",
+                "en": "because it was bored = dependent clause.",
+                "mg": "because it was bored = dependent clause."
+              }
+            },
+            {
+              "type": "rules",
+              "title": {
+                "fr": "Trois outils : relative, adverbiale, nominale",
+                "en": "Three tools: relative, adverbial, noun",
+                "mg": "Fitaovana telo: relative, adverbial, noun"
+              },
+              "content": [
+                { "text": "Relative clauses", "highlight": "very-important" },
+                { "text": " décrivent un nom. ", "highlight": "none" },
+                { "text": "Adverbial clauses", "highlight": "important" },
+                { "text": " : temps, lieu, cause, condition. ", "highlight": "none" },
+                { "text": "Noun clauses", "highlight": "key-term" },
+                { "text": " : rôle de nom.", "highlight": "none" }
+              ],
+              "notes": {
+                "fr": "Compound-complex = ≥2 indépendantes + ≥1 dépendante. Ex. : The dog chased the cat because it was bored, but the cat was too fast.",
+                "en": "Compound-complex = ≥2 independents + ≥1 dependent. Ex.: The dog chased the cat because it was bored, but the cat was too fast.",
+                "mg": "Compound-complex = ≥2 independent + ≥1 dependent."
+              }
+            }
+          ],
+          "exercises": [
+            {
+              "id": "ex-clause-mc-1",
+              "type": "multiple-choice",
+              "points": 1,
+              "prompt": {
+                "fr": "« because it was bored » est…",
+                "en": "« because it was bored » is…",
+                "mg": "« because it was bored » dia…"
+              },
+              "choices": [
+                { "id": "a", "text": { "fr": "une clause indépendante", "en": "an independent clause", "mg": "independent clause" } },
+                { "id": "b", "text": { "fr": "une clause dépendante", "en": "a dependent clause", "mg": "dependent clause" } },
+                { "id": "c", "text": { "fr": "un adjectif", "en": "an adjective", "mg": "adjective" } }
+              ],
+              "correctChoiceId": "b"
+            },
+            {
+              "id": "ex-clause-tf-1",
+              "type": "true-false",
+              "points": 1,
+              "prompt": {
+                "fr": "FANBOYS sert surtout à relier deux clauses indépendantes.",
+                "en": "FANBOYS mainly joins two independent clauses.",
+                "mg": "FANBOYS dia mampifandray independent clause roa."
+              },
+              "correct": true
+            },
+            {
+              "id": "ex-clause-fill-1",
+              "type": "fill-blank",
+              "points": 1,
+              "prompt": {
+                "fr": "Complétez FANBOYS.",
+                "en": "Complete FANBOYS.",
+                "mg": "Fenoy FANBOYS."
+              },
+              "sentence": {
+                "fr": "For, And, Nor, But, Or, Yet, ___",
+                "en": "For, And, Nor, But, Or, Yet, ___",
+                "mg": "For, And, Nor, But, Or, Yet, ___"
+              },
+              "acceptedAnswers": ["So", "so"]
+            },
+            {
+              "id": "ex-clause-match-1",
+              "type": "match",
+              "points": 2,
+              "prompt": {
+                "fr": "Associez le type de clause à son rôle.",
+                "en": "Match clause type to its role.",
+                "mg": "Ampifanaraho ny karazana clause."
+              },
+              "pairs": [
+                {
+                  "id": "p1",
+                  "left": { "fr": "Relative", "en": "Relative", "mg": "Relative" },
+                  "right": { "fr": "Décrit un nom", "en": "Describes a noun", "mg": "Mamaritra anarana" }
+                },
+                {
+                  "id": "p2",
+                  "left": { "fr": "Adverbial", "en": "Adverbial", "mg": "Adverbial" },
+                  "right": { "fr": "Temps / cause / condition", "en": "Time / reason / condition", "mg": "Fotoana / antony / fepetra" }
+                },
+                {
+                  "id": "p3",
+                  "left": { "fr": "Noun clause", "en": "Noun clause", "mg": "Noun clause" },
+                  "right": { "fr": "Rôle de nom", "en": "Acts as a noun", "mg": "Toy ny anarana" }
+                }
+              ]
+            },
+            {
+              "id": "ex-clause-mc-2",
+              "type": "multiple-choice",
+              "points": 1,
+              "prompt": {
+                "fr": "« The dog chased the cat because it was bored, but the cat was too fast » est…",
+                "en": "« The dog chased the cat because it was bored, but the cat was too fast » is…",
+                "mg": "Ity fehezanteny ity dia…"
+              },
+              "choices": [
+                { "id": "a", "text": { "fr": "simple", "en": "simple", "mg": "tsotra" } },
+                { "id": "b", "text": { "fr": "compound-complex", "en": "compound-complex", "mg": "compound-complex" } },
+                { "id": "c", "text": { "fr": "seulement compound", "en": "compound only", "mg": "compound ihany" } }
+              ],
+              "correctChoiceId": "b"
+            }
+          ],
+          "styles": {
+            "very-important": {
+              "color": "#e63946",
+              "background": "rgba(230, 57, 70, 0.08)",
+              "border": "2px solid #e63946",
+              "padding": "2px 6px",
+              "borderRadius": "6px",
+              "fontWeight": "bold"
+            },
+            "important": {
+              "color": "#457b9d",
+              "fontWeight": "600",
+              "background": "rgba(69, 123, 157, 0.08)",
+              "padding": "1px 5px",
+              "borderRadius": "4px"
+            },
+            "key-term": {
+              "color": "#2a9d8f",
+              "fontWeight": "bold",
+              "borderBottom": "2px solid #2a9d8f"
+            },
+            "none": {}
+          }
+        }
+      ]
+    }
+  ]
+}

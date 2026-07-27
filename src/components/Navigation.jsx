@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Settings, Globe, Languages, Moon, Sun, BookOpen } from 'lucide-react';
+import { Settings, Languages, Moon, Sun } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { AppContext } from '../App';
 import { CompactMenu, MenuButton, MenuLink, MenuTrigger } from './CompactMenu';
@@ -10,9 +10,6 @@ const LANGS = [
   { id: 'fr', label: 'Français' },
   { id: 'en', label: 'English' }
 ];
-
-const navChip =
-  'inline-flex items-center gap-1.5 h-9 px-3 rounded-full border border-lh-border bg-lh-card hover:bg-lh-muted text-lh-secondary text-sm font-medium transition-all shadow-lh shrink-0';
 
 const Navigation = () => {
   const { lang, setLang } = useContext(AppContext);
@@ -25,10 +22,10 @@ const Navigation = () => {
 
   const vocabMatch = location.pathname.match(/^\/vocabs\/([^/]+)/);
   const domainId = vocabMatch ? vocabMatch[1] : null;
-  const isAdminRoute = location.pathname.includes('/admin');
-  const isHome = location.pathname === '/';
-  const isCourseRoute = location.pathname.startsWith('/course/');
-  const showAdminMenu = (isHome || domainId || isCourseRoute) && !isAdminRoute;
+  const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname.includes('/admin');
+  const showAdmin = !isAdminRoute || location.pathname === '/admin';
+
+  const adminTo = domainId ? `/admin?domain=${domainId}` : '/admin';
 
   const handleToggleTheme = () => {
     setTheme(toggleSessionTheme());
@@ -62,47 +59,26 @@ const Navigation = () => {
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
-          {showAdminMenu && (
-            <CompactMenu
-              className="sm:hidden"
-              trigger={(open) => <MenuTrigger icon={Settings} label="Administration" open={open} />}
-            >
-              <MenuLink to="/admin/vocabs">
-                <Globe size={15} className="text-lh-secondary" />
-                Admin vocabs
-              </MenuLink>
-              <MenuLink to="/admin/courses">
-                <Settings size={15} className="text-lh-secondary" />
-                Admin cours
-              </MenuLink>
-              {domainId && (
-                <MenuLink to={`/vocabs/${domainId}/admin`}>
+          {showAdmin && (
+            <>
+              <CompactMenu
+                className="sm:hidden"
+                trigger={(open) => <MenuTrigger icon={Settings} label="Administration" open={open} />}
+              >
+                <MenuLink to={adminTo}>
                   <Settings size={15} className="text-lh-secondary" />
-                  Admin domaine
+                  Admin
                 </MenuLink>
-              )}
-            </CompactMenu>
-          )}
-
-          {showAdminMenu && (
-            <Link to="/admin/courses" className={`hidden sm:flex ${navChip}`} title="Admin cours JSON">
-              <BookOpen size={14} />
-              <span>Admin cours</span>
-            </Link>
-          )}
-
-          {showAdminMenu && (
-            <Link to="/admin/vocabs" className={`hidden sm:flex ${navChip}`} title="Admin global vocabulaires">
-              <Globe size={14} />
-              <span>Admin vocabs</span>
-            </Link>
-          )}
-
-          {domainId && !isAdminRoute && (
-            <Link to={`/vocabs/${domainId}/admin`} className={`hidden sm:flex ${navChip}`}>
-              <Settings size={14} />
-              <span>Admin</span>
-            </Link>
+              </CompactMenu>
+              <Link
+                to={adminTo}
+                className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-full border border-lh-border bg-lh-card hover:bg-lh-muted text-lh-secondary text-sm font-medium transition-all shadow-lh shrink-0"
+                title="Administration"
+              >
+                <Settings size={14} />
+                <span>Admin</span>
+              </Link>
+            </>
           )}
 
           <CompactMenu
