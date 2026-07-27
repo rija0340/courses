@@ -1,0 +1,519 @@
+{
+  "courseId": "english",
+  "version": 1,
+  "levels": [
+    {
+      "id": "a1",
+      "cefr": "A1",
+      "title": {
+        "fr": "Débutant A1",
+        "en": "Beginner A1",
+        "mg": "Vao manomboka A1"
+      },
+      "coverImage": "https://images.unsplash.com/photo-1456513080880-7d93d20f0d60?auto=format&fit=crop&w=1400&q=80",
+      "chapters": [
+        {
+          "id": "basics",
+          "title": {
+            "fr": "Les bases",
+            "en": "Basics",
+            "mg": "Ny fototra"
+          },
+          "description": {
+            "fr": "Structure de phrase et verbe to be.",
+            "en": "Sentence structure and the verb to be.",
+            "mg": "Firafitry ny fehezanteny sy ny matoanteny to be."
+          },
+          "lessons": [
+            {
+              "id": "verb-to-be",
+              "title": {
+                "fr": "Le verbe Être (To Be)",
+                "mg": "Ny matoanteny To Be",
+                "en": "The verb To Be"
+              },
+              "description": {
+                "fr": "Conjugaison et utilisation du verbe le plus important.",
+                "mg": "Fampihenjana sy fampiasana ny matoanteny manan-danja indrindra.",
+                "en": "Conjugation and use of the most important verb."
+              },
+              "coverImage": "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=900&q=80",
+              "estimatedMinutes": 12,
+              "introduction": {
+                "fr": "Le verbe 'to be' est le verbe le plus utilisé en anglais. Il décrit un état, une identité ou une caractéristique.",
+                "mg": "Ny matoanteny 'to be' no be mpampiasa indrindra amin'ny teny anglisy. Izy io dia mamaritra toetra, maha-izy azy na marika.",
+                "en": "The verb 'to be' is the most used verb in English. It describes a state, an identity, or a characteristic."
+              },
+              "sections": [
+                {
+                  "type": "image",
+                  "src": "https://images.unsplash.com/photo-1522202176988-662653fb3834?auto=format&fit=crop&w=1400&q=80",
+                  "caption": {
+                    "fr": "Présentez-vous avec am / is / are",
+                    "en": "Introduce yourself with am / is / are",
+                    "mg": "Ampahafantaro ny tenanao amin'ny am / is / are"
+                  }
+                },
+                {
+                  "type": "core-concept",
+                  "title": {
+                    "fr": "Formes au Présent",
+                    "mg": "Amin'ny fotoana ankehitriny",
+                    "en": "Present Form"
+                  },
+                  "content": [
+                    {
+                      "text": {
+                        "fr": "Le verbe 'to be' a 3 formes au présent:",
+                        "mg": "Ny matoanteny 'to be' dia misy endrika 3 ankehitriny:",
+                        "en": "The verb 'to be' has 3 forms in the present:"
+                      },
+                      "items": [
+                        { "text": " am ", "highlight": "key-term" },
+                        { "text": ", ", "highlight": "none" },
+                        { "text": " is ", "highlight": "key-term" },
+                        { "text": ", ", "highlight": "none" },
+                        { "text": " are ", "highlight": "key-term" }
+                      ]
+                    },
+                    {
+                      "type": "definition",
+                      "term": "I am",
+                      "highlight": "important",
+                      "definitions": {
+                        "fr": "Je suis (Je suis étudiant -> I am a student).",
+                        "mg": "Izaho dia (Mpianatra aho -> I am a student).",
+                        "en": "I am (I am a student)."
+                      }
+                    },
+                    {
+                      "type": "definition",
+                      "term": "He / She / It is",
+                      "highlight": "important",
+                      "definitions": {
+                        "fr": "Il / Elle / C'est (Il est grand -> He is tall).",
+                        "mg": "Izy / Izy (zavatra) dia (Avo izy -> He is tall).",
+                        "en": "He / She / It is (He is tall)."
+                      }
+                    },
+                    {
+                      "type": "definition",
+                      "term": "You / We / They are",
+                      "highlight": "important",
+                      "definitions": {
+                        "fr": "Tu es / Nous sommes / Ils sont (Vous êtes prêts -> You are ready).",
+                        "mg": "Ianao / Isika / Izy ireo dia (Vonona ianareo -> You are ready).",
+                        "en": "You / We / They are (You are ready)."
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "dialogue",
+                  "title": {
+                    "fr": "Dialogue court",
+                    "en": "Short dialogue",
+                    "mg": "Resaka fohy"
+                  },
+                  "lines": [
+                    {
+                      "speaker": "A",
+                      "text": { "fr": "Hi! I am Maya.", "en": "Hi! I am Maya.", "mg": "Hi! I am Maya." }
+                    },
+                    {
+                      "speaker": "B",
+                      "text": { "fr": "Hello! I am Tom. Are you a student?", "en": "Hello! I am Tom. Are you a student?", "mg": "Hello! I am Tom. Are you a student?" }
+                    },
+                    {
+                      "speaker": "A",
+                      "text": { "fr": "Yes, I am. He is my teacher.", "en": "Yes, I am. He is my teacher.", "mg": "Yes, I am. He is my teacher." }
+                    }
+                  ]
+                },
+                {
+                  "type": "tip",
+                  "title": { "fr": "Astuce", "en": "Tip", "mg": "Torohevitra" },
+                  "text": {
+                    "fr": "Avec I → toujours am. Avec he/she/it → is. Avec you/we/they → are.",
+                    "en": "With I → always am. With he/she/it → is. With you/we/they → are.",
+                    "mg": "Miaraka amin'ny I → am foana. He/she/it → is. You/we/they → are."
+                  }
+                },
+                {
+                  "type": "example",
+                  "title": { "fr": "Exemple", "en": "Example", "mg": "Ohatra" },
+                  "text": { "fr": "She is a doctor.", "en": "She is a doctor.", "mg": "She is a doctor." },
+                  "translation": {
+                    "fr": "Elle est médecin.",
+                    "en": "She is a doctor.",
+                    "mg": "Dokotera izy."
+                  }
+                }
+              ],
+              "exercises": [
+                {
+                  "id": "ex-be-mc-1",
+                  "type": "multiple-choice",
+                  "points": 1,
+                  "prompt": {
+                    "fr": "Complétez : I ___ a teacher.",
+                    "en": "Complete: I ___ a teacher.",
+                    "mg": "Fenoy: I ___ a teacher."
+                  },
+                  "choices": [
+                    { "id": "a", "text": { "fr": "am", "en": "am", "mg": "am" } },
+                    { "id": "b", "text": { "fr": "is", "en": "is", "mg": "is" } },
+                    { "id": "c", "text": { "fr": "are", "en": "are", "mg": "are" } }
+                  ],
+                  "correctChoiceId": "a",
+                  "explanation": {
+                    "fr": "Avec le pronom I, on utilise am.",
+                    "en": "With the pronoun I, use am.",
+                    "mg": "Miara-miasa amin'ny I ny am."
+                  }
+                },
+                {
+                  "id": "ex-be-tf-1",
+                  "type": "true-false",
+                  "points": 1,
+                  "prompt": {
+                    "fr": "« They is happy » est correct.",
+                    "en": "« They is happy » is correct.",
+                    "mg": "Marina ve ny « They is happy »."
+                  },
+                  "correct": false,
+                  "explanation": {
+                    "fr": "On dit They are happy.",
+                    "en": "We say They are happy.",
+                    "mg": "They are happy no marina."
+                  }
+                },
+                {
+                  "id": "ex-be-fill-1",
+                  "type": "fill-blank",
+                  "points": 1,
+                  "prompt": {
+                    "fr": "Complétez avec la bonne forme de to be.",
+                    "en": "Fill with the correct form of to be.",
+                    "mg": "Fenoy amin'ny endrika marina amin'ny to be."
+                  },
+                  "sentence": {
+                    "fr": "She ___ tall.",
+                    "en": "She ___ tall.",
+                    "mg": "She ___ tall."
+                  },
+                  "acceptedAnswers": ["is", "Is"],
+                  "explanation": {
+                    "fr": "She → is.",
+                    "en": "She → is.",
+                    "mg": "She → is."
+                  }
+                },
+                {
+                  "id": "ex-be-match-1",
+                  "type": "match",
+                  "points": 2,
+                  "prompt": {
+                    "fr": "Associez le sujet à la forme de to be.",
+                    "en": "Match each subject with the form of to be.",
+                    "mg": "Ampifanaraho ny mpanao amin'ny endrika to be."
+                  },
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "left": { "fr": "I", "en": "I", "mg": "I" },
+                      "right": { "fr": "am", "en": "am", "mg": "am" }
+                    },
+                    {
+                      "id": "p2",
+                      "left": { "fr": "He", "en": "He", "mg": "He" },
+                      "right": { "fr": "is", "en": "is", "mg": "is" }
+                    },
+                    {
+                      "id": "p3",
+                      "left": { "fr": "We", "en": "We", "mg": "We" },
+                      "right": { "fr": "are", "en": "are", "mg": "are" }
+                    }
+                  ]
+                },
+                {
+                  "id": "ex-be-reorder-1",
+                  "type": "reorder",
+                  "points": 2,
+                  "prompt": {
+                    "fr": "Remettez les mots dans le bon ordre.",
+                    "en": "Put the words in the correct order.",
+                    "mg": "Avereno am-bongony tsara ny teny."
+                  },
+                  "items": [
+                    { "id": "w1", "text": { "fr": "I", "en": "I", "mg": "I" } },
+                    { "id": "w2", "text": { "fr": "am", "en": "am", "mg": "am" } },
+                    { "id": "w3", "text": { "fr": "a", "en": "a", "mg": "a" } },
+                    { "id": "w4", "text": { "fr": "student", "en": "student", "mg": "student" } }
+                  ],
+                  "correctOrder": ["w1", "w2", "w3", "w4"]
+                }
+              ],
+              "styles": {
+                "important": {
+                  "color": "#1a73e8",
+                  "fontWeight": "600"
+                },
+                "key-term": {
+                  "color": "#1e8e3e",
+                  "fontWeight": "bold"
+                },
+                "none": {}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a2-b1",
+      "cefr": "A2-B1",
+      "title": {
+        "fr": "Élémentaire A2–B1",
+        "en": "Elementary A2–B1",
+        "mg": "Fototra A2–B1"
+      },
+      "coverImage": "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=1400&q=80",
+      "chapters": [
+        {
+          "id": "sentence-building",
+          "title": {
+            "fr": "Construire une phrase",
+            "en": "Building sentences",
+            "mg": "Fananganana fehezanteny"
+          },
+          "description": {
+            "fr": "Sujet, prédicat et ordre des mots.",
+            "en": "Subject, predicate, and word order.",
+            "mg": "Mpanao, lazaina ary filaharan'ny teny."
+          },
+          "lessons": [
+            {
+              "id": "sentence-structure-basics",
+              "title": {
+                "fr": "Construire une phrase en anglais – Les bases",
+                "mg": "Fananganana fehezanteny anglisy – Ny fototra",
+                "en": "Building an English Sentence – The Basics"
+              },
+              "description": {
+                "fr": "Apprenez les bases de la structure SVO.",
+                "mg": "Mianara ny fototry ny firafetana SVO.",
+                "en": "Learn the basics of SVO structure."
+              },
+              "coverImage": "https://images.unsplash.com/photo-1456513080880-7d93d20f0d60?auto=format&fit=crop&w=900&q=80",
+              "estimatedMinutes": 15,
+              "introduction": {
+                "fr": "Pour construire une phrase en anglais, il est essentiel de comprendre ses composants de base et les règles qui régissent leur agencement.",
+                "mg": "Raha hanangana fehezanteny amin'ny teny anglisy ianao, dia zava-dehibe ny mahafantatra ireo singa fototra sy ny fitsipika mifehy azy ireo.",
+                "en": "To build a sentence in English, it is essential to understand its basic components and the rules governing their arrangement."
+              },
+              "sections": [
+                {
+                  "type": "gallery",
+                  "title": {
+                    "fr": "Le langage en images",
+                    "en": "Language in pictures",
+                    "mg": "Ny fiteny amin'ny sary"
+                  },
+                  "images": [
+                    {
+                      "src": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&q=80",
+                      "caption": { "fr": "Écrire", "en": "Writing", "mg": "Manoratra" }
+                    },
+                    {
+                      "src": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80",
+                      "caption": { "fr": "Lire", "en": "Reading", "mg": "Mamaky" }
+                    },
+                    {
+                      "src": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80",
+                      "caption": { "fr": "Parler", "en": "Speaking", "mg": "Miteny" }
+                    }
+                  ]
+                },
+                {
+                  "type": "core-concept",
+                  "title": {
+                    "fr": "Les deux piliers de toute phrase",
+                    "mg": "Ireo andry roa iorenan'ny fehezanteny",
+                    "en": "The Two Pillars of Every Sentence"
+                  },
+                  "content": [
+                    {
+                      "text": {
+                        "fr": "Toute phrase complète en anglais doit contenir au moins ",
+                        "mg": "Ny fehezanteny anglisy feno dia tsy maintsy misy farafahakeliny ",
+                        "en": "Every complete sentence in English must contain at least "
+                      },
+                      "items": [
+                        { "text": "un Sujet (Subject)", "highlight": "key-term" },
+                        { "text": " & ", "highlight": "none" },
+                        { "text": "un Prédicat (Predicate)", "highlight": "key-term" },
+                        { "text": ".", "highlight": "none" }
+                      ]
+                    },
+                    {
+                      "type": "definition",
+                      "term": {
+                        "fr": "Subject (Sujet)",
+                        "mg": "Subject (Mpanao)",
+                        "en": "Subject"
+                      },
+                      "highlight": "very-important",
+                      "definitions": {
+                        "fr": "C’est la personne, le lieu ou la chose qui accomplit l'action du verbe.",
+                        "mg": "Ilay olona, toerana, na zavatra manao ny asa lazain'ny matoanteny.",
+                        "en": "The person, place, or thing that performs the action of the verb."
+                      }
+                    },
+                    {
+                      "type": "definition",
+                      "term": {
+                        "fr": "Predicate (Prédicat)",
+                        "mg": "Predicate (Lazaina)",
+                        "en": "Predicate"
+                      },
+                      "highlight": "very-important",
+                      "definitions": {
+                        "fr": "Décrit l’action ou l’état du sujet. Contient au moins un verbe.",
+                        "mg": "Manazava ny asa na ny toetran'ny mpanao. Ahitana matoanteny iray farafahakeliny.",
+                        "en": "Describes the action or state of the subject. Contains at least one verb."
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "rules",
+                  "title": {
+                    "fr": "Ordre des mots et accord",
+                    "mg": "Ny filaharan'ny teny sy ny fifanarahana",
+                    "en": "Word Order and Agreement"
+                  },
+                  "content": [
+                    { "text": "Sujet avant le verbe", "highlight": "important" },
+                    { "text": " (Ex: I eat). ", "highlight": "none" },
+                    { "text": "Le verbe doit ", "highlight": "none" },
+                    { "text": "s’accorder avec le sujet", "highlight": "very-important" },
+                    { "text": ".", "highlight": "none" }
+                  ],
+                  "notes": {
+                    "fr": "Exception : Dans les ordres (impératif), le sujet 'You' est caché.",
+                    "mg": "Fanamarihana: Amin'ny didy, dia tsy voalaza ny 'You' fa hita taratra fotsiny.",
+                    "en": "Exception: In commands (imperative), the subject 'You' is understood but omitted."
+                  }
+                },
+                {
+                  "type": "example",
+                  "title": { "fr": "SVO en action", "en": "SVO in action", "mg": "SVO amin'ny asa" },
+                  "text": {
+                    "fr": "The cat (S) eats (V) fish (O).",
+                    "en": "The cat (S) eats (V) fish (O).",
+                    "mg": "The cat (S) eats (V) fish (O)."
+                  },
+                  "translation": {
+                    "fr": "Le chat mange du poisson.",
+                    "en": "The cat eats fish.",
+                    "mg": "Mihinana trondro ny saka."
+                  }
+                }
+              ],
+              "exercises": [
+                {
+                  "id": "ex-svo-mc-1",
+                  "type": "multiple-choice",
+                  "points": 1,
+                  "prompt": {
+                    "fr": "Dans « The dog runs », quel est le sujet ?",
+                    "en": "In « The dog runs », what is the subject?",
+                    "mg": "Amin'ny « The dog runs », inona no mpanao?"
+                  },
+                  "choices": [
+                    { "id": "a", "text": { "fr": "The dog", "en": "The dog", "mg": "The dog" } },
+                    { "id": "b", "text": { "fr": "runs", "en": "runs", "mg": "runs" } },
+                    { "id": "c", "text": { "fr": "The", "en": "The", "mg": "The" } }
+                  ],
+                  "correctChoiceId": "a",
+                  "explanation": {
+                    "fr": "The dog est le sujet qui fait l'action.",
+                    "en": "The dog is the subject performing the action.",
+                    "mg": "The dog no mpanao manao ny asa."
+                  }
+                },
+                {
+                  "id": "ex-svo-tf-1",
+                  "type": "true-false",
+                  "points": 1,
+                  "prompt": {
+                    "fr": "Toute phrase anglaise complète a au moins un verbe.",
+                    "en": "Every complete English sentence has at least one verb.",
+                    "mg": "Ny fehezanteny anglisy feno dia manana matoanteny iray farafahakeliny."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "ex-svo-reorder-1",
+                  "type": "reorder",
+                  "points": 2,
+                  "prompt": {
+                    "fr": "Remettez la phrase dans l'ordre SVO.",
+                    "en": "Reorder into SVO order.",
+                    "mg": "Avereno amin'ny filaharana SVO."
+                  },
+                  "items": [
+                    { "id": "w1", "text": { "fr": "She", "en": "She", "mg": "She" } },
+                    { "id": "w2", "text": { "fr": "reads", "en": "reads", "mg": "reads" } },
+                    { "id": "w3", "text": { "fr": "books", "en": "books", "mg": "books" } }
+                  ],
+                  "correctOrder": ["w1", "w2", "w3"]
+                },
+                {
+                  "id": "ex-svo-fill-1",
+                  "type": "fill-blank",
+                  "points": 1,
+                  "prompt": {
+                    "fr": "Quel mot manque ? Subject + ___ + Object",
+                    "en": "Which word is missing? Subject + ___ + Object",
+                    "mg": "Inona no tsy ampy? Subject + ___ + Object"
+                  },
+                  "sentence": {
+                    "fr": "Subject + ___ + Object",
+                    "en": "Subject + ___ + Object",
+                    "mg": "Subject + ___ + Object"
+                  },
+                  "acceptedAnswers": ["Verb", "verb", "V", "predicate", "Predicate"]
+                }
+              ],
+              "styles": {
+                "very-important": {
+                  "color": "#e63946",
+                  "background": "rgba(230, 57, 70, 0.08)",
+                  "border": "2px solid #e63946",
+                  "padding": "2px 6px",
+                  "borderRadius": "6px",
+                  "fontWeight": "bold"
+                },
+                "important": {
+                  "color": "#457b9d",
+                  "fontWeight": "600",
+                  "background": "rgba(69, 123, 157, 0.08)",
+                  "padding": "1px 5px",
+                  "borderRadius": "4px"
+                },
+                "key-term": {
+                  "color": "#2a9d8f",
+                  "fontWeight": "bold",
+                  "borderBottom": "2px solid #2a9d8f"
+                },
+                "none": {}
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

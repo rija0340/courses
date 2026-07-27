@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Settings, Globe, Languages, Moon, Sun } from 'lucide-react';
+import { Settings, Globe, Languages, Moon, Sun, BookOpen } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { AppContext } from '../App';
 import { CompactMenu, MenuButton, MenuLink, MenuTrigger } from './CompactMenu';
@@ -24,7 +24,8 @@ const Navigation = () => {
   const domainId = vocabMatch ? vocabMatch[1] : null;
   const isAdminRoute = location.pathname.includes('/admin');
   const isHome = location.pathname === '/';
-  const showAdminMenu = (isHome || domainId) && !isAdminRoute;
+  const isCourseRoute = location.pathname.startsWith('/course/');
+  const showAdminMenu = (isHome || domainId || isCourseRoute) && !isAdminRoute;
 
   const handleToggleTheme = () => {
     setTheme(toggleSessionTheme());
@@ -62,7 +63,11 @@ const Navigation = () => {
             >
               <MenuLink to="/admin/vocabs">
                 <Globe size={15} className="text-[#5f6368]" />
-                Admin global
+                Admin vocabs
+              </MenuLink>
+              <MenuLink to="/admin/courses">
+                <Settings size={15} className="text-[#5f6368]" />
+                Admin cours
               </MenuLink>
               {domainId && (
                 <MenuLink to={`/vocabs/${domainId}/admin`}>
@@ -75,12 +80,23 @@ const Navigation = () => {
 
           {showAdminMenu && (
             <Link
+              to="/admin/courses"
+              className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-full border border-[#dadce0] dark:border-[#5f6368] bg-white dark:bg-[#303134] hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043] text-[#5f6368] dark:text-[#e8eaed] text-sm font-medium transition-all shadow-sm shrink-0"
+              title="Admin cours JSON"
+            >
+              <BookOpen size={14} />
+              <span>Admin cours</span>
+            </Link>
+          )}
+
+          {showAdminMenu && (
+            <Link
               to="/admin/vocabs"
               className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-full border border-[#dadce0] dark:border-[#5f6368] bg-white dark:bg-[#303134] hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043] text-[#5f6368] dark:text-[#e8eaed] text-sm font-medium transition-all shadow-sm shrink-0"
               title="Admin global vocabulaires"
             >
               <Globe size={14} />
-              <span>Admin global</span>
+              <span>Admin vocabs</span>
             </Link>
           )}
 

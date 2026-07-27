@@ -1,17 +1,18 @@
 -- =====================================================================
--- SQL SCHEMA FOR SUPABASE (LEARNHUB VOCABULARIES)
+-- SQL SCHEMA FOR SUPABASE (LEARNHUB: VOCABS + COURSE PACKS)
 -- Idempotent: safe to re-run. Run in Supabase SQL Editor.
 --
--- DASHBOARD CHECKLIST (required for image upload):
+-- DASHBOARD CHECKLIST:
 -- 1. Project Settings > API : copy URL + anon key into .env.local
 --      REACT_APP_SUPABASE_URL=...
 --      REACT_APP_SUPABASE_ANON_KEY=...
 --      REACT_APP_STORAGE_PROVIDER=supabase
 -- 2. Authentication > Providers > Email : enable Email (sign up / password)
--- 3. Run THIS entire script in SQL Editor (creates tables + Storage bucket)
+-- 3. Run THIS entire script in SQL Editor (tables + Storage + course_packs)
 -- 4. Storage > Buckets : confirm public bucket "vocab-images" exists
 --    Allowed MIME: image/jpeg, image/png, image/webp, image/gif, image/svg+xml
--- 5. Create an admin user (VocabsAdmin signup) then sign in before uploading
+-- 5. Create an admin user (signup) then sign in before uploading / importing
+-- 6. Course packs: table public.course_packs (section 5) — JSON per course
 -- =====================================================================
 
 -- Enable UUID extension
@@ -205,3 +206,64 @@ CREATE POLICY "vocab_images_auth_update"
 CREATE POLICY "vocab_images_auth_delete"
     ON storage.objects FOR DELETE
     USING (bucket_id = 'vocab-images' AND auth.role() = 'authenticated');
+
+
+-- =====================================================================
+-- SECTION 5: COURSE PACKS (dynamic lessons — JSON import/paste)
+-- =====================================================================
+-- One row per course: full hierarchy levels → chapters → lessons →
+-- sections + exercises stored in payload jsonb.
+-- Run this block in Supabase SQL Editor after the vocab sections above.
+-- =====================================================================
+
+CREATE TABLE IF NOT EXISTS public.course_packs (
+    course_id   TEXT        PRIMARY KEY,                 -- e.g. 'english'
+    payload     JSONB       NOT NULL DEFAULT '{}'::jsonb, -- full course pack document
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_course_packs_updated_at ON public.course_packs(updated_at DESC);
+
+DROP TRIGGER IF EXISTS trigger_update_course_packs_timestamp ON public.course_packs;
+CREATE TRIGGER trigger_update_course_packs_timestamp
+    BEFORE UPDATE ON public.course_packs
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+ALTER TABLE public.course_packs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "public_read_course_packs"  ON public.course_packs;
+DROP POLICY IF EXISTS "auth_insert_course_packs"  ON public.course_packs;
+DROP POLICY IF EXISTS "auth_update_course_packs"  ON public.course_packs;
+DROP POLICY IF EXISTS "auth_delete_course_packs"  ON public.course_packs;
+
+-- Anyone can read course content (learner UI)
+CREATE POLICY "public_read_course_packs"
+    ON public.course_packs FOR SELECT USING (true);
+
+-- Only authenticated admins can write packs (JSON import)
+CREATE POLICY "auth_insert_course_packs"
+    ON public.course_packs FOR INSERT
+    WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "auth_update_course_packs"
+    ON public.course_packs FOR UPDATE
+    USING (auth.role() = 'authenticated')
+    WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "auth_delete_course_packs"
+    ON public.course_packs FOR DELETE
+    USING (auth.role() = 'authenticated');
+
+-- Optional future table (NOT created yet — phase 2 user scores):
+-- CREATE TABLE public.user_exercise_attempts (
+--   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+--   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+--   course_id TEXT NOT NULL,
+--   lesson_id TEXT NOT NULL,
+--   exercise_id TEXT NOT NULL,
+--   score NUMERIC NOT NULL DEFAULT 0,
+--   max_score NUMERIC NOT NULL DEFAULT 0,
+--   answers JSONB,
+--   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- );
