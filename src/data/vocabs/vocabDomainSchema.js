@@ -493,11 +493,68 @@ export function buildItemsOnlyImportTemplate(domain = null) {
 }
 
 /**
- * Validate items-only import against current domain.
+ * Build an items-only template pre-filled for one category + org tab.
+ * @param {object|null} domain
+ * @param {{ categoryId: string, tab: string }} scope
  */
-export function validateItemsOnlyImport(raw, currentDomain = null) {
+export function buildCategoryItemsImportTemplate(domain = null, scope = {}) {
+  const categoryId = scope.categoryId || domain?.organization?.categories?.[0]?.id || '';
+  const tab = scope.tab || domain?.organization?.tabs?.[0]?.id || 'vocab';
+
+  const sample = {
+    ...exampleFromFields(ITEM_FIELDS),
+    id: `nouveau-mot-${categoryId || 'cat'}`,
+    en: 'Example word',
+    fr: 'Mot exemple',
+    mg: 'Ohatra',
+    category: 'Organe',
+    tab,
+    categoryId: categoryId || undefined,
+    phonetic: '',
+  };
+
+  return {
+    items: [sample],
+    _comment: {
+      about: 'Import mots pour une catégorie — vous pouvez garder _comment (retiré à l’import)',
+      notes: [
+        'Seul le tableau items est requis.',
+        `categoryId est fixé sur « ${categoryId || '(vide)'} » à l’import.`,
+        `tab est fixé sur « ${tab} » à l’import.`,
+        'Même id = mise à jour ; nouvel id = ajout.',
+        'Les images se gèrent via upload admin, pas via JSON.',
+      ],
+    },
+  };
+}
+
+export function categoryItemsTemplateToPrettyJson(domain = null, scope = {}) {
+  return JSON.stringify(buildCategoryItemsImportTemplate(domain, scope), null, 2);
+}
+
+/**
+ * Merge imported items into current list (same id → update, else add).
+ */
+export function mergeVocabItems(currentItems, importedItems) {
+  const mergedItems = [...(currentItems || [])];
+  (importedItems || []).forEach((item) => {
+    const idx = mergedItems.findIndex((i) => i.id === item.id);
+    if (idx !== -1) mergedItems[idx] = { ...mergedItems[idx], ...item };
+    else mergedItems.push(item);
+  });
+  return mergedItems;
+}
+
+/**
+ * Validate items-only import against current domain.
+ * @param {object} raw
+ * @param {object|null} currentDomain
+ * @param {{ forceCategoryId?: string, forceTab?: string }} [options]
+ */
+export function validateItemsOnlyImport(raw, currentDomain = null, options = {}) {
   const errors = [];
   const warnings = [];
+  const { forceCategoryId, forceTab } = options;
 
   if (!isPlainObject(raw)) {
     return { ok: false, errors: ['Le JSON doit être un objet'], warnings, data: null, importType: 'items_only' };
@@ -506,7 +563,7 @@ export function validateItemsOnlyImport(raw, currentDomain = null) {
     return { ok: false, errors: ['items: tableau requis'], warnings, data: null, importType: 'items_only' };
   }
 
-  const items = raw.items
+  let items = raw.items
     .map((it, i) => normalizeItem(it, i, errors, warnings))
     .filter(Boolean);
 
@@ -520,11 +577,37 @@ export function validateItemsOnlyImport(raw, currentDomain = null) {
   };
   walk(currentDomain?.organization?.categories || []);
 
+  if (forceCategoryId) {
+    if (catIds.size > 0 && !catIds.has(forceCategoryId)) {
+      errors.push(`categoryId forcé « ${forceCategoryId} » absent de l'arbre`);
+    }
+    items = items.map((it, i) => {
+      if (it.categoryId && it.categoryId !== forceCategoryId) {
+        warnings.push(
+          `items[${i}] (${it.id}): categoryId « ${it.categoryId} » remplacé par « ${forceCategoryId} »`
+        );
+      }
+      return { ...it, categoryId: forceCategoryId };
+    });
+  }
+
+  if (forceTab) {
+    if (tabIds.size > 0 && !tabIds.has(forceTab)) {
+      errors.push(`tab forcé « ${forceTab} » absent du domaine`);
+    }
+    items = items.map((it, i) => {
+      if (it.tab && it.tab !== forceTab) {
+        warnings.push(`items[${i}] (${it.id}): tab « ${it.tab} » remplacé par « ${forceTab} »`);
+      }
+      return { ...it, tab: forceTab };
+    });
+  }
+
   items.forEach((it, i) => {
-    if (it.tab && tabIds.size > 0 && !tabIds.has(it.tab)) {
+    if (!forceTab && it.tab && tabIds.size > 0 && !tabIds.has(it.tab)) {
       warnings.push(`items[${i}] (${it.id}): tab "${it.tab}" absent du domaine`);
     }
-    if (it.categoryId && catIds.size > 0 && !catIds.has(it.categoryId)) {
+    if (!forceCategoryId && it.categoryId && catIds.size > 0 && !catIds.has(it.categoryId)) {
       warnings.push(`items[${i}] (${it.id}): categoryId "${it.categoryId}" absent de l'arbre`);
     }
   });
@@ -547,10 +630,13 @@ export function validateItemsOnlyImport(raw, currentDomain = null) {
 
 /**
  * Route import validation to full or items-only parser.
+ * @param {object} raw
+ * @param {object|null} currentDomain
+ * @param {{ forceCategoryId?: string, forceTab?: string }} [options]
  */
-export function validateImportPayload(raw, currentDomain = null) {
+export function validateImportPayload(raw, currentDomain = null, options = {}) {
   if (isItemsOnlyImport(raw)) {
-    return validateItemsOnlyImport(raw, currentDomain);
+    return validateItemsOnlyImport(raw, currentDomain, options);
   }
   const result = validateAndNormalizeImport(raw);
   if (result.ok && result.data) {

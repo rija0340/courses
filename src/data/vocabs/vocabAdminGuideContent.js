@@ -17,9 +17,9 @@ export const VOCAB_ADMIN_GUIDE = {
   categoriesHub: {
     title: { fr: 'Hub Catégories', en: 'Categories hub', mg: 'Santionan\'ny sokajy' },
     body: {
-      fr: 'L’onglet Catégories regroupe l’arbre, la recherche globale et l’édition inline. Sélectionnez un nœud pour voir et modifier ses mots. La recherche globale navigue automatiquement vers la catégorie et l’onglet du mot trouvé.',
-      en: 'The Categories tab combines the tree, global search and inline editing. Select a node to view and edit its words. Global search navigates to the item’s category and tab.',
-      mg: 'Ny tab Sokajy manambatra ny hazo, fikarohana manontolo ary fanovana mivantana. Safidio ny node hijerena sy hanova ny teny.'
+      fr: 'L’onglet Catégories regroupe l’arbre, la recherche globale et l’édition inline. Sélectionnez un nœud pour voir et modifier ses mots. Depuis le panneau d’une catégorie, vous pouvez ajouter un mot, copier un modèle JSON déjà prérempli (categoryId + onglet), ou coller / importer un fichier JSON limité à cette catégorie.',
+      en: 'The Categories tab combines the tree, global search and inline editing. Select a node to view and edit its words. From a category panel you can add a word, copy a pre-filled JSON template (categoryId + tab), or paste / import a JSON file scoped to that category.',
+      mg: 'Ny tab Sokajy manambatra ny hazo, fikarohana manontolo ary fanovana mivantana. Safidio ny node hijerena sy hanova ny teny. Afaka manampy teny, mandika modèle JSON, na mampiditra JSON ho an\'io sokajy io.'
     }
   },
   tabsOrg: {
@@ -33,9 +33,9 @@ export const VOCAB_ADMIN_GUIDE = {
   import: {
     title: { fr: 'Import JSON', en: 'JSON import', mg: 'Fampidirana JSON' },
     body: {
-      fr: 'Deux modes : « Mots seulement » ajoute ou met à jour des items sans toucher aux catégories ; « Modèle complet » remplace ou fusionne tout le domaine. Prévisualisez les stats (nouveaux / mis à jour) avant de confirmer.',
-      en: 'Two modes: "Words only" adds or updates items without changing categories; "Full template" replaces or merges the whole domain. Preview stats (new / updated) before confirming.',
-      mg: 'Fomba roa : « Teny ihany » na « Modèle feno ». Jereo ny statistika alohan\'ny manamafy.'
+      fr: 'Par catégorie : copiez le modèle dans le hub Catégories, éditez les mots, puis collez ou importez un fichier — categoryId et onglet sont forcés sur la sélection courante. Au niveau domaine (Paramètres → Données) : « Mots seulement » ou « Modèle complet ». Prévisualisez les stats avant de confirmer.',
+      en: 'Per category: copy the template in the Categories hub, edit words, then paste or import a file — categoryId and tab are forced to the current selection. Domain-wide (Settings → Data): "Words only" or "Full template". Preview stats before confirming.',
+      mg: 'Isaky ny sokajy: mandika modèle, ovaina, dia ampidiro. Amin\'ny Paramètres: « Teny ihany » na « Modèle feno ». Jereo ny statistika alohan\'ny manamafy.'
     }
   },
   images: {

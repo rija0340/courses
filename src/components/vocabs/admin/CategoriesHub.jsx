@@ -22,9 +22,11 @@ export default function CategoriesHub({
   updateCategories,
   showToast,
   domainId,
+  domain,
   addItem,
   updateItem,
   deleteItem,
+  refresh,
   urlCategoryId,
   urlOrgTab,
   urlSearch,
@@ -493,11 +495,13 @@ export default function CategoriesHub({
                       categoryId={selectedId}
                       activeOrgTab={activeOrgTab}
                       domainId={domainId}
+                      domain={domain}
                       addItem={addItem}
                       updateItem={updateItem}
                       deleteItem={deleteItem}
                       showToast={showToast}
                       getLabel={getLabel}
+                      refresh={refresh}
                     />
                   )}
                 </>
