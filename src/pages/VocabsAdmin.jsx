@@ -305,9 +305,11 @@ export default function VocabsAdmin() {
           updateCategories={updateCategories}
           showToast={showToast}
           domainId={domainId}
+          domain={domain}
           addItem={addItem}
           updateItem={updateItem}
           deleteItem={deleteItem}
+          refresh={refresh}
           urlCategoryId={adminUrl.cat}
           urlOrgTab={adminUrl.orgTab}
           urlSearch={adminUrl.q}
