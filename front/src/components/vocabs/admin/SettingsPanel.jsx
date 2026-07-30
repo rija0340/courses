@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Save, FileCode, Download,
-  RefreshCw, Database, HelpCircle, Cpu, Activity
+  RefreshCw, Database, HelpCircle, Cpu, Activity, Sparkles
 } from 'lucide-react';
+import { runVocabIngest } from '../../../lib/ragClient';
 import vocabStorage from '../../../services/vocabStorage';
 import {
   buildExportPayload,
@@ -25,6 +26,63 @@ const SETTINGS_TABS = [
   { id: 'consommation', label: 'Consommation IA' },
   { id: 'donnees', label: 'Données' }
 ];
+
+function RagIngestPanel({ domainId }) {
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  if (domainId !== 'medi-vocabs') {
+    return (
+      <Panel title="Index RAG (embeddings)" icon={Sparkles}>
+        <p className="text-[13px] text-[#5f6368]">
+          L’indexation embeddings (gte-small) est limitée à <code className="text-[12px] bg-[#f1f3f4] px-1 rounded">medi-vocabs</code> pour le moment.
+        </p>
+      </Panel>
+    );
+  }
+
+  const handleIngest = async () => {
+    setBusy(true);
+    setError(null);
+    setResult(null);
+    try {
+      const data = await runVocabIngest(domainId);
+      setResult(data);
+    } catch (err) {
+      setError(err.message || 'Échec indexation');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Panel title="Index RAG (embeddings EN)" icon={Sparkles}>
+      <p className="text-[13px] text-[#5f6368] mb-3">
+        Génère les vecteurs <code className="text-[12px] bg-[#f1f3f4] px-1 rounded">gte-small</code> (anglais uniquement)
+        dans <code className="text-[12px] bg-[#f1f3f4] px-1 rounded">vocab_embeddings</code> pour le chatbot.
+      </p>
+      <button
+        type="button"
+        onClick={handleIngest}
+        disabled={busy}
+        className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-[#1a73e8] text-white text-[13px] font-semibold hover:bg-[#1b66c9] disabled:opacity-50"
+      >
+        {busy ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+        {busy ? 'Indexation…' : 'Ré-indexer medi-vocabs'}
+      </button>
+      {error && (
+        <p className="mt-3 text-[12px] text-red-600">{error}</p>
+      )}
+      {result && (
+        <p className="mt-3 text-[12px] text-[#137333]">
+          OK — {result.processed}/{result.total} traités
+          {result.errorCount ? ` · ${result.errorCount} erreur(s)` : ''}
+        </p>
+      )}
+    </Panel>
+  );
+}
 
 function SupabaseConnectionPanel() {
   const [health, setHealth] = useState(null);
@@ -422,6 +480,7 @@ export default function SettingsPanel({ domain, updateMeta, updateOrganization, 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <SupabaseConnectionPanel />
           <AiProvidersPanel />
+          <RagIngestPanel domainId={domain?.id} />
         </div>
       )}
 

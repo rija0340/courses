@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useContext, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Search, X, Filter, Image as ImageIcon, Volume2, BookOpen, Eye, HelpCircle, Link2, Check, Languages, MoreHorizontal, Sparkles } from 'lucide-react';
+import { Search, X, Filter, Image as ImageIcon, Volume2, BookOpen, Eye, HelpCircle, Link2, Check, Languages, MoreHorizontal, Sparkles, MessageCircle } from 'lucide-react';
 import { AppContext } from '../App';
 import Breadcrumb from '../components/Breadcrumb';
 import { CompactMenu, MenuButton, MenuTrigger } from '../components/CompactMenu';
@@ -361,6 +361,16 @@ export default function VocabsView() {
               <span>Image</span>
             </button>
           </div>
+
+          {domainId === 'medi-vocabs' && (
+            <Link
+              to={`/vocabs/${domainId}/chat`}
+              className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-[#dadce0] bg-white text-[12px] sm:text-[13px] font-semibold text-[#1a73e8] hover:bg-[#e8f0fe] shrink-0"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Chat</span>
+            </Link>
+          )}
 
           {isPracticeEnabled() && (
             <Link

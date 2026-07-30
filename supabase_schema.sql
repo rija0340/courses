@@ -2,8 +2,11 @@
 -- SQL SCHEMA FOR SUPABASE (LEARNHUB: VOCABS + COURSE PACKS)
 -- Idempotent: safe to re-run. Run in Supabase SQL Editor.
 --
+-- RAG / pgvector (medi-vocabs embeddings): see
+--   supabase/migrations/20260730120000_enable_pgvector_medi_rag.sql
+--
 -- DASHBOARD CHECKLIST:
--- 1. Project Settings > API : copy URL + anon key into .env.local
+-- 1. Project Settings > API : copy URL + anon key into front/.env.local
 --      REACT_APP_SUPABASE_URL=...
 --      REACT_APP_SUPABASE_ANON_KEY=...
 --      REACT_APP_STORAGE_PROVIDER=supabase

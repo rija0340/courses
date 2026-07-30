@@ -1,15 +1,18 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+node_modules/
+front/node_modules/
+.pnp
 .pnp.js
 
 # testing
-/coverage
+coverage/
+front/coverage/
 
 # production
-/build
+build/
+front/build/
 
 # misc
 .DS_Store
@@ -18,9 +21,15 @@
 .env.development.local
 .env.test.local
 .env.production.local
+front/.env
+front/.env.local
 
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .vercel
-.env*
+front/.vercel
+
+# supabase local
+supabase/.branches
+supabase/.temp

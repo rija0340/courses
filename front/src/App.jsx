@@ -9,6 +9,7 @@ import VocabsGuide from './pages/VocabsGuide';
 import VocabsAdmin from './pages/VocabsAdmin';
 import VocabsAdminGuide from './pages/VocabsAdminGuide';
 import VocabsGlobalAdmin from './pages/VocabsGlobalAdmin';
+import VocabsChat from './pages/VocabsChat';
 import PracticeSimulation from './pages/PracticeSimulation';
 import LessonPractice from './pages/LessonPractice';
 import CoursesAdmin from './pages/CoursesAdmin';
@@ -42,6 +43,7 @@ const App = () => {
             <Route path="/vocabs/:domainId/admin/guide" element={<VocabsAdminGuide />} />
             <Route path="/vocabs/:domainId/admin" element={<VocabsAdmin />} />
             <Route path="/vocabs/:domainId/practice/simulation" element={<PracticeSimulation />} />
+            <Route path="/vocabs/:domainId/chat" element={<VocabsChat />} />
             <Route path="/practice/simulation" element={<PracticeSimulation />} />
             <Route path="/vocabs/:domainId/*" element={<VocabsView />} />
           </Routes>

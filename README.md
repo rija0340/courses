@@ -1,46 +1,44 @@
-# Getting Started with Create React App
+# LearnHub / Raberia Courses
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Monorepo : React (CRA) sur Vercel + Supabase Edge Functions (RAG MediVocabs).
 
-## Available Scripts
+```
+courses/
+├── front/                 # React app (Root Directory Vercel = front)
+│   ├── src/
+│   ├── api/               # Practice AI (Groq / Deepgram) — serverless Vercel
+│   └── ...
+└── supabase/
+    ├── migrations/        # pgvector + vocab_embeddings
+    └── functions/
+        ├── ingest/        # embed English terms (gte-small)
+        └── chat/          # RAG + Groq
+```
 
-In the project directory, you can run:
+## Setup local
 
-### `npm start`
+```bash
+# Env front
+cp front/.env.example front/.env.local
+# Remplir REACT_APP_SUPABASE_* + GROQ_API_KEY (pratique locale)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+cd front && npm install && npm run start:all
+# ou depuis la racine : npm start
+```
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Vercel
 
-### `npm test`
+Dans le projet Vercel : **Root Directory = `front`**.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Variables : `REACT_APP_SUPABASE_URL`, `REACT_APP_SUPABASE_ANON_KEY`, `REACT_APP_STORAGE_PROVIDER=supabase`,
+plus `GROQ_API_KEY` / `DEEPGRAM_API_KEY` pour `front/api/*`.
 
-### `npm run build`
+## Supabase RAG (medi-vocabs)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Appliquer la migration `supabase/migrations/*_enable_pgvector_medi_rag.sql`
+2. Secrets Edge : `GROQ_API_KEY` (obligatoire pour `chat`), optionnel `INGEST_SECRET`
+3. Déployer : `npx supabase functions deploy ingest` et `chat`
+4. Admin → Paramètres → Connexions → **Ré-indexer medi-vocabs**
+5. Front : `/vocabs/medi-vocabs/chat`
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+Embeddings : modèle **gte-small** (384 dims), texte anglais uniquement, stocké dans `vocab_embeddings.embedding`.

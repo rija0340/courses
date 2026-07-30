@@ -1,0 +1,18 @@
+# Supabase local / CLI config (project: vocabs)
+# Link with: npx supabase link --project-ref jytgbkgabrgtuuvascdq
+
+[project]
+id = "jytgbkgabrgtuuvascdq"
+
+[api]
+enabled = true
+
+[db]
+major_version = 17
+
+[functions.ingest]
+# Admin JWT required at gateway; UI uses logged-in session via supabase.functions.invoke
+verify_jwt = true
+
+[functions.chat]
+verify_jwt = true
