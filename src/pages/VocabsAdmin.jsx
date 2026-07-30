@@ -323,7 +323,6 @@ export default function VocabsAdmin() {
           updateMeta={updateMeta}
           updateOrganization={updateOrganization}
           showToast={showToast}
-          refresh={refresh}
         />
       )}
     </div>
