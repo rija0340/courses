@@ -1,20 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Plus, Trash2, Pencil, Search, Image as ImageIcon, ImageOff,
-  LayoutGrid, List, BookOpen, Copy, Check, ClipboardPaste, Upload, ChevronDown
+  LayoutGrid, List, BookOpen
 } from 'lucide-react';
 import VocabForm from '../VocabForm';
 import vocabStorage from '../../../services/vocabStorage';
 import { filterVocabItems } from '../../../utils/vocabFilters';
-import {
-  categoryItemsTemplateToPrettyJson,
-  isItemsOnlyImport,
-  mergeVocabItems,
-  validateItemsOnlyImport,
-  VOCAB_DOMAIN_VERSION,
-} from '../../../data/vocabs/vocabDomainSchema';
 import { EmptyState, ConfirmModal, ImageModal, TYPE_COLORS } from './shared';
-import ImportPreviewModal from './ImportPreviewModal';
 import FullscreenLightbox from '../FullscreenLightbox';
 
 export default function CategoryItemsPanel({
@@ -24,13 +16,11 @@ export default function CategoryItemsPanel({
   categoryId,
   activeOrgTab,
   domainId,
-  domain,
   addItem,
   updateItem,
   deleteItem,
   showToast,
   getLabel,
-  refresh,
 }) {
   const [search, setSearch] = useState('');
   const [view, setView] = useState('list');
@@ -40,11 +30,6 @@ export default function CategoryItemsPanel({
   const [itemImages, setItemImages] = useState({});
   const [imageItemId, setImageItemId] = useState(null);
   const [lightbox, setLightbox] = useState(null);
-  const [showJsonImport, setShowJsonImport] = useState(false);
-  const [pasteJson, setPasteJson] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [importPreview, setImportPreview] = useState(null);
-  const [importMode, setImportMode] = useState('merge');
 
   useEffect(() => {
     async function load() {
@@ -58,12 +43,6 @@ export default function CategoryItemsPanel({
     load();
   }, [items, domainId]);
 
-  useEffect(() => {
-    setShowJsonImport(false);
-    setPasteJson('');
-    setImportPreview(null);
-  }, [categoryId, activeOrgTab]);
-
   const filtered = useMemo(() => {
     const base = filterVocabItems(items, {
       categories,
@@ -74,11 +53,6 @@ export default function CategoryItemsPanel({
     });
     return base;
   }, [items, categories, categoryId, activeOrgTab, search]);
-
-  const importScope = useMemo(
-    () => ({ categoryId, tab: activeOrgTab }),
-    [categoryId, activeOrgTab]
-  );
 
   const handleSave = async (data) => {
     try {
@@ -132,77 +106,6 @@ export default function CategoryItemsPanel({
     }
   };
 
-  const handleCopyTemplate = async () => {
-    const json = categoryItemsTemplateToPrettyJson(domain, importScope);
-    try {
-      await navigator.clipboard.writeText(json);
-      setCopied(true);
-      showToast('Modèle JSON copié (catégorie + onglet préremplis)');
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      showToast('Impossible de copier', 'error');
-    }
-  };
-
-  const processImportText = (text, sourceLabel) => {
-    try {
-      const parsed = JSON.parse(text);
-      if (!isItemsOnlyImport(parsed)) {
-        showToast('Utilisez un JSON { "items": [...] } pour cette catégorie', 'error');
-        return;
-      }
-      const result = validateItemsOnlyImport(parsed, domain, {
-        forceCategoryId: categoryId,
-        forceTab: activeOrgTab,
-      });
-      setImportPreview({ raw: parsed, result, fileName: sourceLabel });
-      setImportMode('merge');
-      if (!result.ok) showToast(result.errors[0] || 'JSON invalide', 'error');
-    } catch (err) {
-      showToast(`JSON invalide: ${err.message}`, 'error');
-    }
-  };
-
-  const handleImportSelect = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      processImportText(event.target.result, file.name);
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
-
-  const handlePasteImport = () => {
-    if (!pasteJson.trim()) {
-      showToast('Collez un JSON d’abord', 'error');
-      return;
-    }
-    processImportText(pasteJson, 'Collé');
-  };
-
-  const executeImport = async () => {
-    if (!importPreview?.result?.ok || !importPreview.result.data || !domain?.id) return;
-    const { data, stats } = importPreview.result;
-    try {
-      const mergedItems = mergeVocabItems(domain.items || items || [], data.items);
-      await vocabStorage.saveDomain(domain.id, {
-        version: VOCAB_DOMAIN_VERSION,
-        meta: domain.meta,
-        organization: domain.organization,
-        items: mergedItems,
-      });
-      showToast(`Import OK — ${stats?.added || 0} nouveau(x), ${stats?.updated || 0} mis à jour`);
-      setImportPreview(null);
-      setPasteJson('');
-      setShowJsonImport(false);
-      if (refresh) await refresh();
-    } catch (err) {
-      showToast(`Erreur d'import: ${err.message}`, 'error');
-    }
-  };
-
   const activeTabLabel = tabs.find(t => t.id === activeOrgTab);
 
   return (
@@ -214,82 +117,15 @@ export default function CategoryItemsPanel({
           </h3>
           <p className="text-[12px] text-[#9aa0a6] mt-0.5">{filtered.length} mot{filtered.length !== 1 ? 's' : ''}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={handleCopyTemplate}
-            className="inline-flex items-center justify-center gap-1.5 h-10 px-3 rounded-xl bg-white border border-[#dadce0] text-[#202124] font-semibold text-[13px] hover:bg-[#f1f3f4]"
-            title="Copier un modèle JSON avec categoryId et tab préremplis"
-          >
-            {copied ? <Check className="w-4 h-4 text-[#137333]" /> : <Copy className="w-4 h-4" />}
-            {copied ? 'Copié' : 'Copier modèle'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowJsonImport(v => !v)}
-            className={`inline-flex items-center justify-center gap-1.5 h-10 px-3 rounded-xl border font-semibold text-[13px] ${
-              showJsonImport
-                ? 'bg-[#E8F0FE] border-[#1a73e8]/40 text-[#1967D2]'
-                : 'bg-white border-[#dadce0] text-[#202124] hover:bg-[#f1f3f4]'
-            }`}
-          >
-            <ClipboardPaste className="w-4 h-4" />
-            Importer JSON
-            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showJsonImport ? 'rotate-180' : ''}`} />
-          </button>
-          <button
-            type="button"
-            onClick={() => { setEditItem(null); setShowForm(true); }}
-            className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl bg-[#1a73e8] text-white font-semibold text-[13px] hover:bg-[#1b66c9] shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Ajouter un mot
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => { setEditItem(null); setShowForm(true); }}
+          className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl bg-[#1a73e8] text-white font-semibold text-[13px] hover:bg-[#1b66c9] shadow-sm shrink-0"
+        >
+          <Plus className="w-4 h-4" />
+          Ajouter un mot
+        </button>
       </div>
-
-      {showJsonImport && (
-        <div className="mb-4 rounded-xl border border-[#dadce0] bg-[#f8f9fa] p-4 space-y-3">
-          <div>
-            <p className="text-[13px] font-semibold text-[#202124]">JSON pour cette catégorie</p>
-            <p className="text-[12px] text-[#5f6368] mt-0.5">
-              Les mots seront importés dans <code className="bg-white px-1 rounded text-[11px]">{categoryId}</code>
-              {' · '}onglet <code className="bg-white px-1 rounded text-[11px]">{activeOrgTab}</code>
-              {' '}(forcé à l’import). Copiez le modèle, éditez-le, puis collez-le ici.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={handleCopyTemplate}
-              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white border border-[#dadce0] text-[12px] font-semibold hover:bg-[#f1f3f4]"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-[#137333]" /> : <Copy className="w-3.5 h-3.5" />}
-              {copied ? 'Copié' : 'Copier modèle'}
-            </button>
-            <label className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white border border-[#dadce0] text-[12px] font-semibold hover:bg-[#f1f3f4] cursor-pointer">
-              <Upload className="w-3.5 h-3.5" />
-              Fichier .json
-              <input type="file" accept=".json,application/json" onChange={handleImportSelect} className="hidden" />
-            </label>
-          </div>
-          <textarea
-            value={pasteJson}
-            onChange={(e) => setPasteJson(e.target.value)}
-            placeholder={`{\n  "items": [\n    { "id": "…", "fr": "…", "en": "…", "mg": "…", "categoryId": "${categoryId}", "tab": "${activeOrgTab}" }\n  ]\n}`}
-            rows={7}
-            className="w-full rounded-xl border border-[#dadce0] bg-white px-3 py-2 text-[12px] font-mono text-[#202124] outline-none focus:border-[#1a73e8] resize-y"
-          />
-          <button
-            type="button"
-            onClick={handlePasteImport}
-            className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl bg-[#1a73e8] text-white text-[13px] font-semibold hover:bg-[#1b66c9]"
-          >
-            <ClipboardPaste className="w-4 h-4" />
-            Importer le texte collé
-          </button>
-        </div>
-      )}
 
       <div className="flex flex-wrap gap-2 mb-4">
         <div className="relative flex-1 min-w-[180px]">
@@ -321,24 +157,15 @@ export default function CategoryItemsPanel({
         <EmptyState
           icon={BookOpen}
           title="Aucun mot dans cet onglet"
-          text="Ajoutez un mot ou importez un JSON — catégorie et onglet seront pré-remplis."
+          text="Ajoutez un mot ici, ou utilisez Import / Export JSON & CSV au-dessus pour importer plusieurs mots."
           action={
-            <div className="flex flex-wrap gap-2 justify-center">
-              <button
-                type="button"
-                onClick={() => { setEditItem(null); setShowForm(true); }}
-                className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl bg-[#1a73e8] text-white text-[13px] font-semibold hover:bg-[#1b66c9]"
-              >
-                <Plus className="w-4 h-4" /> Ajouter un mot
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowJsonImport(true)}
-                className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl bg-white border border-[#dadce0] text-[13px] font-semibold hover:bg-[#f1f3f4]"
-              >
-                <ClipboardPaste className="w-4 h-4" /> Importer JSON
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => { setEditItem(null); setShowForm(true); }}
+              className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl bg-[#1a73e8] text-white text-[13px] font-semibold hover:bg-[#1b66c9]"
+            >
+              <Plus className="w-4 h-4" /> Ajouter un mot
+            </button>
           }
         />
       ) : view === 'list' ? (
@@ -463,18 +290,6 @@ export default function CategoryItemsPanel({
 
       {lightbox && (
         <FullscreenLightbox src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox(null)} />
-      )}
-
-      {importPreview && (
-        <ImportPreviewModal
-          preview={importPreview}
-          importMode={importMode}
-          setImportMode={setImportMode}
-          onCancel={() => setImportPreview(null)}
-          onConfirm={executeImport}
-          title="Importer dans cette catégorie"
-          hideModePicker
-        />
       )}
     </div>
   );

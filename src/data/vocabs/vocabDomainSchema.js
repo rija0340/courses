@@ -493,43 +493,145 @@ export function buildItemsOnlyImportTemplate(domain = null) {
 }
 
 /**
- * Build an items-only template pre-filled for one category + org tab.
+ * Build an items-only template for category / tab / domain import scopes.
  * @param {object|null} domain
- * @param {{ categoryId: string, tab: string }} scope
+ * @param {{ categoryId?: string, tab?: string, mode?: 'single-tab'|'all-tabs'|'domain' }} scope
  */
 export function buildCategoryItemsImportTemplate(domain = null, scope = {}) {
+  const mode = scope.mode || 'single-tab';
   const categoryId = scope.categoryId || domain?.organization?.categories?.[0]?.id || '';
   const tab = scope.tab || domain?.organization?.tabs?.[0]?.id || 'vocab';
+  const tabs = domain?.organization?.tabs?.length
+    ? domain.organization.tabs
+    : [{ id: tab }];
+  const tabIds = tabs.map((t) => t.id);
 
-  const sample = {
+  const makeSample = (catId, tabId, index = 0) => ({
     ...exampleFromFields(ITEM_FIELDS),
-    id: `nouveau-mot-${categoryId || 'cat'}`,
-    en: 'Example word',
-    fr: 'Mot exemple',
-    mg: 'Ohatra',
-    category: 'Organe',
-    tab,
-    categoryId: categoryId || undefined,
+    id: `nouveau-mot-${tabId}${catId ? `-${catId}` : ''}${index > 0 ? `-${index}` : ''}`,
+    en: `Example word (${tabId})`,
+    fr: `Mot exemple (${tabId})`,
+    mg: `Ohatra (${tabId})`,
+    category: index % 2 === 0 ? 'Organe' : 'Maladie',
+    tab: tabId,
+    categoryId: catId || undefined,
     phonetic: '',
-  };
+  });
+
+  let sampleItems;
+  let about;
+  let notes;
+
+  if (mode === 'domain') {
+    sampleItems = tabs.map((t, i) => makeSample(categoryId, t.id, i));
+    about = 'Import mots — tout le domaine';
+    notes = [
+      'Seul le tableau items est requis.',
+      `Onglets disponibles : ${tabIds.join(', ') || '(aucun)'}.`,
+      'Chaque item doit avoir un tab et un categoryId valides.',
+      'Même id = mise à jour ; nouvel id = ajout.',
+      'Les images se gèrent via upload admin, pas via JSON.',
+    ];
+  } else if (mode === 'all-tabs') {
+    sampleItems = tabs.map((t, i) => makeSample(categoryId, t.id, i));
+    about = 'Import mots — tous les onglets de la catégorie';
+    notes = [
+      'Seul le tableau items est requis.',
+      `categoryId est fixé sur « ${categoryId || '(vide)'} » à l’import.`,
+      `Onglets disponibles : ${tabIds.join(', ') || '(aucun)'} — conservez le champ tab.`,
+      'Même id = mise à jour ; nouvel id = ajout.',
+      'Les images se gèrent via upload admin, pas via JSON.',
+    ];
+  } else {
+    sampleItems = [makeSample(categoryId, tab, 0)];
+    about = 'Import mots — un onglet de la catégorie';
+    notes = [
+      'Seul le tableau items est requis.',
+      `categoryId est fixé sur « ${categoryId || '(vide)'} » à l’import.`,
+      `tab est fixé sur « ${tab} » à l’import.`,
+      'Même id = mise à jour ; nouvel id = ajout.',
+      'Les images se gèrent via upload admin, pas via JSON.',
+    ];
+  }
 
   return {
-    items: [sample],
-    _comment: {
-      about: 'Import mots pour une catégorie — vous pouvez garder _comment (retiré à l’import)',
-      notes: [
-        'Seul le tableau items est requis.',
-        `categoryId est fixé sur « ${categoryId || '(vide)'} » à l’import.`,
-        `tab est fixé sur « ${tab} » à l’import.`,
-        'Même id = mise à jour ; nouvel id = ajout.',
-        'Les images se gèrent via upload admin, pas via JSON.',
-      ],
-    },
+    items: sampleItems,
+    _comment: { about, notes },
   };
 }
 
 export function categoryItemsTemplateToPrettyJson(domain = null, scope = {}) {
   return JSON.stringify(buildCategoryItemsImportTemplate(domain, scope), null, 2);
+}
+
+/** CSV columns for vocab item export (Excel-friendly). */
+export const VOCAB_CSV_COLUMNS = ['id', 'fr', 'en', 'mg', 'category', 'tab', 'categoryId', 'phonetic'];
+
+/**
+ * Filter items by export/import UI scope.
+ * @param {object[]} items
+ * @param {{ scope: 'tab'|'category'|'domain', categoryId?: string, tab?: string }} opts
+ */
+export function filterItemsForDataScope(items, { scope, categoryId, tab } = {}) {
+  const list = items || [];
+  if (scope === 'domain') return list;
+  if (scope === 'category') {
+    return list.filter((i) => i.categoryId === categoryId);
+  }
+  // tab
+  return list.filter((i) => i.categoryId === categoryId && i.tab === tab);
+}
+
+function escapeCsvCell(value) {
+  const s = value == null ? '' : String(value);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+/**
+ * Build CSV string (UTF-8 BOM for Excel) from vocab items.
+ */
+export function itemsToCsv(items, columns = VOCAB_CSV_COLUMNS) {
+  const lines = [columns.join(',')];
+  (items || []).forEach((item) => {
+    lines.push(columns.map((key) => escapeCsvCell(item[key] ?? '')).join(','));
+  });
+  return `\uFEFF${lines.join('\n')}`;
+}
+
+/**
+ * Trigger a browser download for text content.
+ */
+export function downloadTextFile(content, filename, mimeType = 'text/plain;charset=utf-8') {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+export function downloadJsonFile(payload, filename) {
+  downloadTextFile(
+    `${JSON.stringify(payload, null, 2)}\n`,
+    filename,
+    'application/json;charset=utf-8'
+  );
+}
+
+/**
+ * Count imported items per tab (for preview).
+ */
+export function computeItemsByTab(items) {
+  const byTab = {};
+  (items || []).forEach((it) => {
+    const key = it.tab || '(sans tab)';
+    byTab[key] = (byTab[key] || 0) + 1;
+  });
+  return byTab;
 }
 
 /**
@@ -549,12 +651,17 @@ export function mergeVocabItems(currentItems, importedItems) {
  * Validate items-only import against current domain.
  * @param {object} raw
  * @param {object|null} currentDomain
- * @param {{ forceCategoryId?: string, forceTab?: string }} [options]
+ * @param {{ forceCategoryId?: string, forceTab?: string, strictTabs?: boolean, strictCategoryIds?: boolean }} [options]
  */
 export function validateItemsOnlyImport(raw, currentDomain = null, options = {}) {
   const errors = [];
   const warnings = [];
-  const { forceCategoryId, forceTab } = options;
+  const {
+    forceCategoryId,
+    forceTab,
+    strictTabs = false,
+    strictCategoryIds = false,
+  } = options;
 
   if (!isPlainObject(raw)) {
     return { ok: false, errors: ['Le JSON doit être un objet'], warnings, data: null, importType: 'items_only' };
@@ -604,11 +711,27 @@ export function validateItemsOnlyImport(raw, currentDomain = null, options = {})
   }
 
   items.forEach((it, i) => {
-    if (!forceTab && it.tab && tabIds.size > 0 && !tabIds.has(it.tab)) {
-      warnings.push(`items[${i}] (${it.id}): tab "${it.tab}" absent du domaine`);
+    if (!forceTab) {
+      if (!it.tab) {
+        const msg = `items[${i}] (${it.id}): tab requis`;
+        if (strictTabs) errors.push(msg);
+        else warnings.push(msg);
+      } else if (tabIds.size > 0 && !tabIds.has(it.tab)) {
+        const msg = `items[${i}] (${it.id}): tab "${it.tab}" absent du domaine`;
+        if (strictTabs) errors.push(msg);
+        else warnings.push(msg);
+      }
     }
-    if (!forceCategoryId && it.categoryId && catIds.size > 0 && !catIds.has(it.categoryId)) {
-      warnings.push(`items[${i}] (${it.id}): categoryId "${it.categoryId}" absent de l'arbre`);
+    if (!forceCategoryId) {
+      if (!it.categoryId) {
+        const msg = `items[${i}] (${it.id}): categoryId requis`;
+        if (strictCategoryIds) errors.push(msg);
+        else warnings.push(msg);
+      } else if (catIds.size > 0 && !catIds.has(it.categoryId)) {
+        const msg = `items[${i}] (${it.id}): categoryId "${it.categoryId}" absent de l'arbre`;
+        if (strictCategoryIds) errors.push(msg);
+        else warnings.push(msg);
+      }
     }
   });
 
@@ -616,7 +739,10 @@ export function validateItemsOnlyImport(raw, currentDomain = null, options = {})
     warnings.push('_comment: retiré automatiquement');
   }
 
-  const stats = computeImportMergeStats(currentDomain?.items || [], items);
+  const stats = {
+    ...computeImportMergeStats(currentDomain?.items || [], items),
+    byTab: computeItemsByTab(items),
+  };
 
   return {
     ok: errors.length === 0,

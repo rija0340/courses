@@ -1,18 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Save, FileCode, Upload, Download, Copy, Check, ChevronsUpDown,
-  RefreshCw, Database, HelpCircle, Cpu, Activity, ClipboardPaste
+  Save, FileCode, Download,
+  RefreshCw, Database, HelpCircle, Cpu, Activity
 } from 'lucide-react';
 import vocabStorage from '../../../services/vocabStorage';
 import {
   buildExportPayload,
-  buildImportTemplate,
-  buildItemsOnlyImportTemplate,
-  getSchemaFieldDocs,
-  mergeVocabItems,
-  templateToPrettyJson,
-  validateImportPayload,
+  downloadJsonFile,
+  itemsToCsv,
+  downloadTextFile,
   VOCAB_DOMAIN_VERSION,
 } from '../../../data/vocabs/vocabDomainSchema';
 import { checkSupabaseHealth } from '../../../services/supabaseHealth';
@@ -20,7 +17,6 @@ import { checkAiProvidersHealth } from '../../../practice/services/aiHealth';
 import { LLM_PROVIDER, SPEECH_PROVIDER } from '../../../practice/config';
 import { getAiUsage, resetAiUsage, totalCalls } from '../../../practice/services/aiUsage';
 import TabEditor from './TabEditor';
-import ImportPreviewModal from './ImportPreviewModal';
 import { Panel } from './shared';
 
 const SETTINGS_TABS = [
@@ -296,20 +292,12 @@ function AiUsagePanel() {
   );
 }
 
-export default function SettingsPanel({ domain, updateMeta, updateOrganization, showToast, refresh }) {
+export default function SettingsPanel({ domain, updateMeta, updateOrganization, showToast }) {
   const [meta, setMeta] = useState(domain?.meta || { title: { fr: '', en: '', mg: '' }, description: { fr: '', en: '', mg: '' } });
   const [org, setOrg] = useState(domain?.organization || { tabs: [], categories: [] });
   const [dirty, setDirty] = useState(false);
-  const [importPreview, setImportPreview] = useState(null);
-  const [importMode, setImportMode] = useState('merge');
-  const [showFields, setShowFields] = useState(false);
-  const [showTemplate, setShowTemplate] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [settingsTab, setSettingsTab] = useState('domaine');
-  const [pasteJson, setPasteJson] = useState('');
 
-  const schemaDocs = useMemo(() => getSchemaFieldDocs(), []);
-  const templateJson = useMemo(() => templateToPrettyJson(domain), [domain]);
   const items = domain?.items || [];
 
   useEffect(() => {
@@ -337,125 +325,24 @@ export default function SettingsPanel({ domain, updateMeta, updateOrganization, 
     showToast('Paramètres sauvegardés');
   };
 
-  const downloadJson = (payload, filename) => {
-    const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(payload, null, 2))}`;
-    const a = document.createElement('a');
-    a.href = dataStr;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  };
-
-  const handleExport = async () => {
+  const handleExportJson = async () => {
     try {
       const data = await vocabStorage.exportAll(domain.id);
-      downloadJson(buildExportPayload(data), `${domain.id}-vocabs.json`);
-      showToast('Export réussi');
+      downloadJsonFile(buildExportPayload(data), `${domain.id}-vocabs.json`);
+      showToast('Export JSON réussi');
     } catch (err) {
       showToast(`Erreur d'export: ${err.message}`, 'error');
     }
   };
 
-  const handleCopyTemplate = async () => {
+  const handleExportCsv = async () => {
     try {
-      await navigator.clipboard.writeText(templateJson);
-      setCopied(true);
-      showToast('Modèle copié');
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      showToast('Impossible de copier', 'error');
-    }
-  };
-
-  const handleDownloadTemplate = () => {
-    const tpl = buildImportTemplate(domain);
-    const { _comment, ...clean } = tpl;
-    downloadJson(clean, `${domain.id || 'domain'}-import-template.json`);
-    showToast('Modèle téléchargé');
-  };
-
-  const handleDownloadItemsTemplate = () => {
-    const tpl = buildItemsOnlyImportTemplate(domain);
-    const { _comment, ...clean } = tpl;
-    downloadJson(clean, `${domain.id || 'domain'}-items-only-template.json`);
-    showToast('Modèle mots seulement téléchargé');
-  };
-
-  const processImportText = (text, sourceLabel) => {
-    try {
-      const parsed = JSON.parse(text);
-      const result = validateImportPayload(parsed, domain);
-      setImportPreview({ raw: parsed, result, fileName: sourceLabel });
-      setImportMode('merge');
-      if (!result.ok) showToast(result.errors[0] || 'JSON invalide', 'error');
+      const data = await vocabStorage.exportAll(domain.id);
+      const csv = itemsToCsv(data.items || []);
+      downloadTextFile(csv, `${domain.id}-vocabs.csv`, 'text/csv;charset=utf-8');
+      showToast(`CSV exporté — ${(data.items || []).length} mot(s)`);
     } catch (err) {
-      showToast(`JSON invalide: ${err.message}`, 'error');
-    }
-  };
-
-  const handleImportSelect = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      processImportText(event.target.result, file.name);
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
-
-  const handlePasteImport = () => {
-    if (!pasteJson.trim()) {
-      showToast('Collez un JSON d’abord', 'error');
-      return;
-    }
-    processImportText(pasteJson, 'Collé');
-  };
-
-  const executeImport = async () => {
-    if (!importPreview?.result?.ok || !importPreview.result.data) return;
-    const { data, importType, stats } = importPreview.result;
-    try {
-      if (importType === 'items_only') {
-        const mergedItems = mergeVocabItems(domain.items || [], data.items);
-        await vocabStorage.saveDomain(domain.id, {
-          version: VOCAB_DOMAIN_VERSION,
-          meta: domain.meta,
-          organization: domain.organization,
-          items: mergedItems,
-        });
-        showToast(`Import OK — ${stats?.added || 0} nouveau(x), ${stats?.updated || 0} mis à jour`);
-      } else if (importMode === 'overwrite') {
-        await vocabStorage.saveDomain(domain.id, data);
-        showToast(`Import OK — ${data.items.length} mots (écrasement)`);
-      } else {
-        const mergedItems = mergeVocabItems(domain.items || [], data.items);
-        const tabMap = new Map((domain.organization?.tabs || []).map(t => [t.id, t]));
-        (data.organization.tabs || []).forEach(t => {
-          tabMap.set(t.id, { ...(tabMap.get(t.id) || {}), ...t, label: { ...(tabMap.get(t.id)?.label || {}), ...t.label } });
-        });
-        await vocabStorage.saveDomain(domain.id, {
-          version: VOCAB_DOMAIN_VERSION,
-          meta: {
-            title: { ...(domain.meta?.title || {}), ...data.meta.title },
-            description: { ...(domain.meta?.description || {}), ...data.meta.description },
-          },
-          organization: {
-            tabs: Array.from(tabMap.values()),
-            categories: data.organization.categories?.length
-              ? data.organization.categories
-              : (domain.organization?.categories || []),
-          },
-          items: mergedItems,
-        });
-        showToast(`Fusion OK — ${stats?.added || 0} nouveau(x), ${stats?.updated || 0} mis à jour`);
-      }
-      setImportPreview(null);
-      setPasteJson('');
-      if (refresh) await refresh();
-    } catch (err) {
-      showToast(`Erreur d'import: ${err.message}`, 'error');
+      showToast(`Erreur d'export: ${err.message}`, 'error');
     }
   };
 
@@ -547,7 +434,7 @@ export default function SettingsPanel({ domain, updateMeta, updateOrganization, 
       {settingsTab === 'donnees' && (
         <div className="max-w-3xl">
           <Panel
-            title="Import / Export JSON"
+            title="Export & données"
             icon={FileCode}
             action={
               <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md bg-[#E8F0FE] text-[#1967D2]">
@@ -555,98 +442,41 @@ export default function SettingsPanel({ domain, updateMeta, updateOrganization, 
               </span>
             }
           >
-            <div className="rounded-xl border border-[#E8F0FE] bg-[#E8F0FE]/40 p-3.5 mb-3 text-[13px] text-[#1967D2] leading-relaxed">
-              <p className="font-semibold mb-1">Ajouter des mots sans tout réimporter</p>
+            <div className="rounded-xl border border-[#E8F0FE] bg-[#E8F0FE]/40 p-3.5 mb-4 text-[13px] text-[#1967D2] leading-relaxed">
+              <p className="font-semibold mb-1">Import JSON</p>
               <p className="text-[#3c4043]">
-                Téléchargez le modèle <strong>Mots seulement</strong>, remplissez <code className="bg-white/80 px-1 rounded text-[12px]">items</code>, puis importez fichier ou collez le JSON.
+                L’import se fait dans l’onglet <strong>Catégories</strong> (bloc Import / Export),
+                par onglet, tous les onglets, ou tout le domaine — avec validation avant confirmation.
               </p>
-            </div>
-
-            <div className="rounded-xl border border-[#dadce0] bg-[#f8f9fa] p-3.5 mb-3">
-              <p className="text-[12px] font-semibold text-[#202124] mb-2">Modèles JSON</p>
-              <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={handleDownloadItemsTemplate} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-[#1a73e8] text-white text-[12px] font-semibold hover:bg-[#1b66c9]">
-                  <Download className="w-3.5 h-3.5" /> Mots seulement
-                </button>
-                <button type="button" onClick={handleDownloadTemplate} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white border border-[#dadce0] text-[12px] font-semibold hover:bg-[#f1f3f4]">
-                  <Download className="w-3.5 h-3.5" /> Modèle complet
-                </button>
-                <button type="button" onClick={handleCopyTemplate} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white border border-[#dadce0] text-[12px] font-semibold hover:bg-[#f1f3f4]">
-                  {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copied ? 'Copié' : 'Copier complet'}
-                </button>
-                <button type="button" onClick={() => setShowTemplate(v => !v)} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl text-[12px] font-semibold text-[#1a73e8] hover:bg-[#E8F0FE]">
-                  <ChevronsUpDown className="w-3.5 h-3.5" />
-                  {showTemplate ? 'Masquer' : 'Aperçu complet'}
-                </button>
-              </div>
-              {showTemplate && (
-                <pre className="mt-3 max-h-56 overflow-auto rounded-xl bg-[#202124] text-[#E8EAED] text-[11px] p-3 font-mono">
-                  {templateJson}
-                </pre>
+              {domain?.id && (
+                <Link
+                  to={`/vocabs/${domain.id}/admin?tab=categories`}
+                  className="inline-flex mt-2 text-[12px] font-semibold text-[#1a73e8] hover:underline"
+                >
+                  Ouvrir Catégories
+                </Link>
               )}
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowFields(v => !v)}
-              className="w-full flex items-center justify-between h-10 px-3 rounded-xl border border-[#dadce0] text-[12px] font-semibold text-[#5f6368] hover:bg-[#f8f9fa] mb-3"
-            >
-              <span>Champs du schéma (items)</span>
-              <ChevronsUpDown className="w-3.5 h-3.5" />
-            </button>
-            {showFields && (
-              <div className="mb-3 rounded-xl border border-[#dadce0] overflow-hidden">
-                <table className="w-full text-left text-[12px]">
-                  <thead className="bg-[#f8f9fa] text-[#9aa0a6]">
-                    <tr>
-                      <th className="px-3 py-2 font-semibold">Champ</th>
-                      <th className="px-3 py-2 font-semibold">Req.</th>
-                      <th className="px-3 py-2 font-semibold">Description</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#f1f3f4]">
-                    {schemaDocs.items.map(f => (
-                      <tr key={f.key}>
-                        <td className="px-3 py-2 font-mono text-[#1967D2]">{f.key}</td>
-                        <td className="px-3 py-2">{f.required ? 'oui' : '—'}</td>
-                        <td className="px-3 py-2 text-[#5f6368]">{f.description}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            <p className="text-[13px] text-[#5f6368] mb-3">
+              Export rapide de tout le domaine ({items.length} mot{items.length !== 1 ? 's' : ''}).
+              Pour un export filtré (catégorie / onglet), utilisez aussi le bloc dans Catégories.
+            </p>
 
-            <div className="flex flex-col sm:flex-row gap-2 mb-4">
-              <button type="button" onClick={handleExport} className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-[#dadce0] text-[13px] font-semibold hover:bg-[#f8f9fa]">
-                <Download className="w-4 h-4" /> Exporter
-              </button>
-              <label className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-[#1a73e8] text-[13px] font-semibold text-white hover:bg-[#1b66c9] cursor-pointer">
-                <Upload className="w-4 h-4" /> Importer fichier
-                <input type="file" accept=".json,application/json" onChange={handleImportSelect} className="hidden" />
-              </label>
-            </div>
-
-            <div className="rounded-xl border border-[#dadce0] p-3.5 space-y-2">
-              <p className="text-[12px] font-semibold text-[#202124] flex items-center gap-1.5">
-                <ClipboardPaste className="w-3.5 h-3.5 text-[#1a73e8]" />
-                Ou coller le JSON
-              </p>
-              <textarea
-                value={pasteJson}
-                onChange={(e) => setPasteJson(e.target.value)}
-                rows={8}
-                placeholder='{ "items": [ ... ] }'
-                className="w-full rounded-xl border border-[#dadce0] px-3 py-2 text-[12px] font-mono outline-none focus:border-[#1a73e8] resize-y bg-[#f8f9fa]"
-              />
+            <div className="flex flex-col sm:flex-row gap-2">
               <button
                 type="button"
-                onClick={handlePasteImport}
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-[#1a73e8] text-white text-[13px] font-semibold hover:bg-[#1b66c9]"
+                onClick={handleExportCsv}
+                className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-[#1a73e8] text-[13px] font-semibold text-white hover:bg-[#1b66c9]"
               >
-                <ClipboardPaste className="w-4 h-4" />
-                Importer le texte collé
+                <Download className="w-4 h-4" /> Exporter CSV
+              </button>
+              <button
+                type="button"
+                onClick={handleExportJson}
+                className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-[#dadce0] text-[13px] font-semibold hover:bg-[#f8f9fa]"
+              >
+                <Download className="w-4 h-4" /> Exporter JSON
               </button>
             </div>
           </Panel>
@@ -663,16 +493,6 @@ export default function SettingsPanel({ domain, updateMeta, updateOrganization, 
           Enregistrer les modifications
         </button>
       </div>
-
-      {importPreview && (
-        <ImportPreviewModal
-          preview={importPreview}
-          importMode={importMode}
-          setImportMode={setImportMode}
-          onCancel={() => setImportPreview(null)}
-          onConfirm={executeImport}
-        />
-      )}
     </section>
   );
 }

@@ -17,9 +17,9 @@ export const VOCAB_ADMIN_GUIDE = {
   categoriesHub: {
     title: { fr: 'Hub Catégories', en: 'Categories hub', mg: 'Santionan\'ny sokajy' },
     body: {
-      fr: 'L’onglet Catégories regroupe l’arbre, la recherche globale et l’édition inline. Sélectionnez un nœud pour voir et modifier ses mots. Depuis le panneau d’une catégorie, vous pouvez ajouter un mot, copier un modèle JSON déjà prérempli (categoryId + onglet), ou coller / importer un fichier JSON limité à cette catégorie.',
-      en: 'The Categories tab combines the tree, global search and inline editing. Select a node to view and edit its words. From a category panel you can add a word, copy a pre-filled JSON template (categoryId + tab), or paste / import a JSON file scoped to that category.',
-      mg: 'Ny tab Sokajy manambatra ny hazo, fikarohana manontolo ary fanovana mivantana. Safidio ny node hijerena sy hanova ny teny. Afaka manampy teny, mandika modèle JSON, na mampiditra JSON ho an\'io sokajy io.'
+      fr: 'L’onglet Catégories regroupe l’arbre, la recherche globale et l’édition inline. Sélectionnez un nœud pour voir ses mots. Le bloc Import / Export (JSON & CSV) permet de copier un modèle, coller un JSON validé, ou exporter — pour cet onglet, tous les onglets de la catégorie, ou tout le domaine.',
+      en: 'The Categories tab combines the tree, global search and inline editing. Select a node to view its words. The Import / Export block (JSON & CSV) lets you copy a template, paste validated JSON, or export — for this tab, all tabs in the category, or the whole domain.',
+      mg: 'Ny tab Sokajy manambatra ny hazo, fikarohana manontolo ary fanovana mivantana. Safidio ny node. Ampiasao Import / Export (JSON & CSV) hanampiana na hanondranana teny.'
     }
   },
   tabsOrg: {
@@ -31,11 +31,11 @@ export const VOCAB_ADMIN_GUIDE = {
     }
   },
   import: {
-    title: { fr: 'Import JSON', en: 'JSON import', mg: 'Fampidirana JSON' },
+    title: { fr: 'Import / Export', en: 'Import / Export', mg: 'Fampidirana / Fanondranana' },
     body: {
-      fr: 'Par catégorie : copiez le modèle dans le hub Catégories, éditez les mots, puis collez ou importez un fichier — categoryId et onglet sont forcés sur la sélection courante. Au niveau domaine (Paramètres → Données) : « Mots seulement » ou « Modèle complet ». Prévisualisez les stats avant de confirmer.',
-      en: 'Per category: copy the template in the Categories hub, edit words, then paste or import a file — categoryId and tab are forced to the current selection. Domain-wide (Settings → Data): "Words only" or "Full template". Preview stats before confirming.',
-      mg: 'Isaky ny sokajy: mandika modèle, ovaina, dia ampidiro. Amin\'ny Paramètres: « Teny ihany » na « Modèle feno ». Jereo ny statistika alohan\'ny manamafy.'
+      fr: 'Dans Catégories uniquement : choisissez la portée (cet onglet / tous les onglets / tout le domaine), copiez le modèle JSON, collez ou importez un fichier, validez l’aperçu, puis confirmez. Exportez en CSV (Excel) ou JSON selon la même portée. Paramètres → Données ne propose plus que l’export global.',
+      en: 'In Categories only: pick the scope (this tab / all tabs / whole domain), copy the JSON template, paste or upload a file, validate the preview, then confirm. Export CSV (Excel) or JSON with the same scope. Settings → Data only offers global export now.',
+      mg: 'Ao amin\'ny Sokajy ihany: safidio ny halehibe, mandika modèle JSON, ampidiro, jereo ny preview. Azo atao ny CSV na JSON. Ny Paramètres dia fanondranana manontolo ihany.'
     }
   },
   images: {
