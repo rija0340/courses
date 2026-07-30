@@ -11,6 +11,7 @@ import {
   findNodeById, getPath
 } from '../../../utils/categoryTree';
 import CategoryItemsPanel from './CategoryItemsPanel';
+import CategoryDataTransfer from './CategoryDataTransfer';
 import FullscreenLightbox from '../FullscreenLightbox';
 import { EmptyState, ImageModal } from './shared';
 
@@ -467,6 +468,17 @@ export default function CategoriesHub({
 
               {tabs.length > 0 && (
                 <>
+                  <CategoryDataTransfer
+                    domain={domain}
+                    items={items}
+                    categoryId={selectedId}
+                    activeOrgTab={activeOrgTab || tabs[0]?.id}
+                    tabs={tabs}
+                    getLabel={getLabel}
+                    showToast={showToast}
+                    refresh={refresh}
+                  />
+
                   <div className="flex flex-wrap gap-2 mt-6 pt-5 border-t border-[#f1f3f4]">
                     {tabs.map(tab => (
                       <button
@@ -495,13 +507,11 @@ export default function CategoriesHub({
                       categoryId={selectedId}
                       activeOrgTab={activeOrgTab}
                       domainId={domainId}
-                      domain={domain}
                       addItem={addItem}
                       updateItem={updateItem}
                       deleteItem={deleteItem}
                       showToast={showToast}
                       getLabel={getLabel}
-                      refresh={refresh}
                     />
                   )}
                 </>

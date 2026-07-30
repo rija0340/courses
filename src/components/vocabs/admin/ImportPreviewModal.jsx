@@ -58,6 +58,23 @@ export default function ImportPreviewModal({
               </div>
             )}
 
+            {stats?.byTab && Object.keys(stats.byTab).length > 0 && (
+              <div className="mb-4 rounded-xl bg-[#f8f9fa] border border-[#dadce0]/60 p-3">
+                <p className="text-[11px] font-semibold uppercase text-[#9aa0a6] mb-2">Répartition par onglet</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.entries(stats.byTab).map(([tabId, count]) => (
+                    <span
+                      key={tabId}
+                      className="inline-flex items-center gap-1 h-7 px-2 rounded-lg bg-white border border-[#dadce0] text-[12px] text-[#202124]"
+                    >
+                      <span className="font-medium">{tabId}</span>
+                      <span className="tabular-nums text-[#5f6368]">{count}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {!isItemsOnly && data?.organization && (
               <div className="grid grid-cols-2 gap-2 mb-4">
                 <div className="rounded-xl bg-[#f8f9fa] p-2.5 text-center">
