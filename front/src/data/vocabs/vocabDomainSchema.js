@@ -3,7 +3,7 @@
  * Change fields here → template, validation, and export pickers update automatically.
  */
 
-export const VOCAB_DOMAIN_VERSION = 2;
+export const VOCAB_DOMAIN_VERSION = 3;
 
 export const I18N_LANGS = ['fr', 'en', 'mg'];
 
@@ -82,6 +82,28 @@ export const ITEM_FIELDS = /** @type {Record<string, FieldDef>} */ ({
     example: '/aɪ/',
     default: null,
     description: 'Prononciation (optionnel)',
+  },
+  // Mini-dialogue (symptoms / conditions) — patient + doctor, 2 tours
+  example: {
+    type: 'object',
+    required: false,
+    default: null,
+    example: {
+      patient: { en: 'I have blurry vision.', fr: "J'ai une vision floue.", mg: '' },
+      doctor: { en: 'How long have you had it?', fr: 'Depuis combien de temps ?', mg: '' },
+    },
+    description: 'Mini-exemple patient/docteur (onglets symptoms & conditions). mg optionnel.',
+  },
+  // Conversation longue (onglet scenarios)
+  dialogue: {
+    type: 'array',
+    required: false,
+    default: null,
+    example: [
+      { role: 'patient', en: 'My vision has been blurry for two weeks.', fr: 'Ma vision est floue depuis deux semaines.', mg: '' },
+      { role: 'doctor', en: 'Does it affect one eye or both?', fr: 'Un œil ou les deux ?', mg: '' },
+    ],
+    description: 'Tours de dialogue patient/docteur (onglet scenarios). mg optionnel par tour.',
   },
   // Images are managed via Storage upload — not part of bulk JSON import by default
   image: {
@@ -269,7 +291,7 @@ export function buildImportTemplate(domain = null) {
     items: (() => {
       const tabs = domain?.organization?.tabs?.length
         ? domain.organization.tabs
-        : [{ id: 'vocab' }, { id: 'maladies' }, { id: 'expressions' }];
+        : [{ id: 'vocab' }, { id: 'symptoms' }, { id: 'conditions' }, { id: 'scenarios' }];
       const firstCat = domain?.organization?.categories?.[0]?.id || 'sub-example';
       return tabs.map((tab, index) => ({
         ...exampleFromFields(ITEM_FIELDS),
@@ -885,8 +907,9 @@ export const VOCAB_TAB_PRESETS = {
   vocabOnly: DEFAULT_VOCAB_TABS,
   full: [
     { id: 'vocab', label: { fr: 'Vocabulaire', en: 'Vocabulary', mg: 'Voaboly' } },
-    { id: 'maladies', label: { fr: 'Maladies', en: 'Illnesses', mg: 'Arety' } },
-    { id: 'expressions', label: { fr: 'Expressions', en: 'Expressions', mg: 'Fitenenana' } }
+    { id: 'symptoms', label: { fr: 'Symptômes', en: 'Symptoms', mg: 'Soritr\'aretina' } },
+    { id: 'conditions', label: { fr: 'Maladies', en: 'Conditions', mg: 'Arety' } },
+    { id: 'scenarios', label: { fr: 'Scénarios', en: 'Scenarios', mg: 'Sehatra' } },
   ]
 };
 

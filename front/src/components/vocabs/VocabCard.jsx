@@ -4,12 +4,15 @@ import RevealableLangRow, { LangRow } from './RevealableLangRow';
 import PronunciationPractice from '../../practice/components/PronunciationPractice';
 import { isPracticeEnabled } from '../../practice/config';
 import { speechService } from '../../practice/services/speechService';
+import ExampleCollapse from './ExampleCollapse';
+import { hasExample } from '../../utils/vocabDialogue';
 
 const CATEGORY_COLORS = {
   Organe: { bg: '#2563EB', accent: '#2563EB' },
   Maladie: { bg: '#EF4444', accent: '#EF4444' },
   'Symptôme': { bg: '#F59E0B', accent: '#F59E0B' },
-  Expression: { bg: '#10B981', accent: '#10B981' }
+  Expression: { bg: '#10B981', accent: '#10B981' },
+  Scénario: { bg: '#7c3aed', accent: '#7c3aed' },
 };
 
 const LANG_ROWS = [
@@ -151,6 +154,11 @@ export default function VocabCard({
             {item.category}
           </span>
         </div>
+
+        {/* Mini patient/doctor example — symptoms & conditions (collapsed by default) */}
+        {hasExample(item.example) && (
+          <ExampleCollapse example={item.example} item={item} />
+        )}
 
         {canPractice && showPractice && (
           <PronunciationPractice targetText={item.en} phonetic={item.phonetic} />

@@ -69,8 +69,8 @@ export const VOCAB_GUIDE = {
       mg: 'Tabs (karazana votoaty)'
     },
     body: {
-      fr: 'Les onglets filtrent les mots par type : vocabulaire, maladies, expressions, etc. Ils occupent toute la largeur au-dessus des cartes et passent à la ligne si nécessaire. La recherche active ignore le filtre d\'onglet.',
-      en: 'Tabs filter words by type: vocabulary, illnesses, expressions, etc. They span the full content width above the cards and wrap when needed. Active search overrides the tab filter.',
+      fr: 'Les onglets filtrent les mots par type : vocabulaire, symptômes, maladies, scénarios, etc. Ils occupent toute la largeur au-dessus des cartes et passent à la ligne si nécessaire. La recherche active ignore le filtre d\'onglet.',
+      en: 'Tabs filter words by type: vocabulary, symptoms, conditions, scenarios, etc. They span the full content width above the cards and wrap when needed. Active search overrides the tab filter.',
       mg: 'Ny tabs manivana ny teny araka ny karazany. Mandrakotra ny sakany manontolo eo ambonin\'ny karatra izy ireo. Ny fikarohana manana laharam-pahamehana noho ny tab.'
     }
   },

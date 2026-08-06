@@ -20,6 +20,9 @@ function mapItem(item) {
     tab: item.tab,
     categoryId: item.category_id,
     phonetic: item.phonetic,
+    // Mini-example (symptoms/conditions) + long dialogue (scenarios)
+    example: item.example ?? null,
+    dialogue: item.dialogue ?? null,
     image: resolveImageSrc(item),
   };
 }
@@ -35,6 +38,8 @@ function mapItemRow(item, domainId) {
     tab: item.tab || '',
     category_id: item.categoryId || null,
     phonetic: item.phonetic || null,
+    example: item.example ?? null,
+    dialogue: Array.isArray(item.dialogue) ? item.dialogue : null,
     // Prefer URL if caller already has a Storage URL; keep legacy base64 only as fallback
     image_url: item.image_url || (isHttpUrl(item.image) ? item.image : null),
     image: isHttpUrl(item.image) ? null : (item.image || null),

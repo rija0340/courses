@@ -5,6 +5,8 @@ import { AppContext } from '../App';
 import Breadcrumb from '../components/Breadcrumb';
 import { CompactMenu, MenuButton, MenuTrigger } from '../components/CompactMenu';
 import VocabCard from '../components/vocabs/VocabCard';
+import ScenarioCard from '../components/vocabs/ScenarioCard';
+import { isScenarioItem } from '../utils/vocabDialogue';
 import CategoryTree from '../components/vocabs/CategoryTree';
 import VocabTabBar from '../components/vocabs/VocabTabBar';
 import FullscreenLightbox from '../components/vocabs/FullscreenLightbox';
@@ -575,17 +577,21 @@ export default function VocabsView() {
           {isTextMode && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredItems.map(item => (
-                  <VocabCard
-                    key={item.id}
-                    item={item}
-                    lang={lang}
-                    mode={viewMode}
-                    revisionLang={revisionLang}
-                    revealAll={revealAll}
-                    onImageClick={openLightbox}
-                  />
-                ))}
+                {filteredItems.map(item =>
+                  isScenarioItem(item) ? (
+                    <ScenarioCard key={item.id} item={item} lang={lang} />
+                  ) : (
+                    <VocabCard
+                      key={item.id}
+                      item={item}
+                      lang={lang}
+                      mode={viewMode}
+                      revisionLang={revisionLang}
+                      revealAll={revealAll}
+                      onImageClick={openLightbox}
+                    />
+                  )
+                )}
               </div>
 
               {filteredItems.length === 0 && (

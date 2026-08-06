@@ -1,10 +1,26 @@
 /**
  * Batch-embed English MediVocabs terms with gte-small → pgvector.
  * Auth: valid JWT (admin session) OR header x-ingest-secret matching INGEST_SECRET.
+ *
+ * Appelé depuis le front admin via supabase.functions.invoke('ingest', …).
+ *
+ * Exemple d'entrée (body POST) :
+ *   { "domainId": "medi-vocabs" }
+ *
+ * Exemple de sortie succès (HTTP 200) :
+ *   {
+ *     "domainId": "medi-vocabs",
+ *     "total": 120,
+ *     "processed": 118,
+ *     "skipped": 0,
+ *     "errorCount": 2,
+ *     "errors": [{ "id": "abc-123", "message": "…" }]
+ *   }
  */
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
+// --- Helpers CORS / réponse JSON ---
 const corsHeaders: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
@@ -12,6 +28,16 @@ const corsHeaders: Record<string, string> = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+/**
+ * Construit une Response HTTP JSON + headers CORS.
+ *
+ * Exemple :
+ *   jsonResponse({ error: 'Unauthorized' }, 401)
+ *   → Response status 401, body '{"error":"Unauthorized"}'
+ *
+ *   jsonResponse({ processed: 10, total: 10 })
+ *   → Response status 200, body '{"processed":10,"total":10}'
+ */
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -19,9 +45,11 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
+// --- Constantes & types ---
 const DEFAULT_DOMAIN = 'medi-vocabs';
 const BATCH_SIZE = 32;
 
+/** Une ligne issue de public.vocab_items (champs utilisés pour l'embed). */
 type VocabItem = {
   id: string;
   domain_id: string;
@@ -34,6 +62,18 @@ type VocabItem = {
   phonetic: string | null;
 };
 
+/**
+ * Texte anglais à embedder : terme + catégorie + onglet (contexte pour la similarité).
+ *
+ * Exemple d'entrée (VocabItem) :
+ *   { en: "Blood pressure", category: "Cardiology", tab: "Symptoms", … }
+ *
+ * Exemple de sortie (string) :
+ *   "Blood pressure. Category: Cardiology. Tab: Symptoms"
+ *
+ * Sans category/tab :
+ *   "Blood pressure"
+ */
 function buildContentEn(item: VocabItem): string {
   const parts = [item.en.trim()];
   if (item.category?.trim()) parts.push(`Category: ${item.category.trim()}`);
@@ -42,6 +82,9 @@ function buildContentEn(item: VocabItem): string {
 }
 
 Deno.serve(async (req) => {
+  // --- Handler HTTP : preflight CORS + POST uniquement ---
+  // OPTIONS → body "ok" (preflight navigateur), status 200
+  // GET/PUT/… → { "error": "Method not allowed" } status 405
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -50,6 +93,8 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // --- Auth : secret x-ingest-secret OU Bearer JWT admin ---
+    // Échec → { "error": "Unauthorized" } status 401
     const ingestSecret = Deno.env.get('INGEST_SECRET') || '';
     const headerSecret = req.headers.get('x-ingest-secret') || '';
     const authHeader = req.headers.get('Authorization') || '';
@@ -59,11 +104,13 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'Unauthorized' }, 401);
     }
 
+    // --- Client Supabase (service_role = bypass RLS pour écrire les embeddings) ---
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // If no ingest secret, require a real user JWT (not only anon)
+    // Sans secret valide : vérifier qu'il y a un vrai utilisateur (pas seulement la clé anon)
+    // Échec → { "error": "Admin session required" } status 401
     if (!secretOk) {
       const anonClient = createClient(
         supabaseUrl,
@@ -76,6 +123,9 @@ Deno.serve(async (req) => {
       }
     }
 
+    // --- Body : domainId (seul medi-vocabs est supporté pour l'instant) ---
+    // Body invalide / vide → domainId = "medi-vocabs" (défaut)
+    // Autre domaine → { "error": "Only domain \"medi-vocabs\" is supported for now" } status 400
     const body = await req.json().catch(() => ({}));
     const domainId = String(body.domainId || DEFAULT_DOMAIN);
     if (domainId !== DEFAULT_DOMAIN) {
@@ -84,6 +134,13 @@ Deno.serve(async (req) => {
       }, 400);
     }
 
+    // --- Fetch : tous les termes EN non vides du domaine ---
+    // Exemple de sortie items :
+    //   [
+    //     { id: "uuid-1", domain_id: "medi-vocabs", en: "Scalpel", fr: "Scalpel",
+    //       mg: "…", category: "Surgery", tab: "Tools", category_id: "…", phonetic: null }
+    //   ]
+    // Erreur SQL → { "error": "<message Postgres>" } status 500
     const { data: items, error: fetchErr } = await supabase
       .from('vocab_items')
       .select('id, domain_id, en, fr, mg, category, tab, category_id, phonetic')
@@ -95,12 +152,22 @@ Deno.serve(async (req) => {
     }
 
     const rows = (items || []) as VocabItem[];
+    // gte-small → vecteur float[] de 384 dimensions, ex. [-0.02, 0.15, …] (384 nombres)
     const model = new Supabase.ai.Session('gte-small');
 
     let processed = 0;
     let skipped = 0;
     const errors: { id: string; message: string }[] = [];
 
+    // --- Boucle embeddings : gte-small par lots → upsert vocab_embeddings ---
+    // Pour chaque item réussi, ligne upsertée dans vocab_embeddings :
+    //   {
+    //     id, domain_id, content_en: "Scalpel. Category: Surgery. Tab: Tools",
+    //     metadata: { en, fr, mg, category, tab, category_id, phonetic },
+    //     embedding: "[-0.02,0.15,…]",   // JSON string du vecteur 384-d
+    //     embedded_at: "2026-08-05T05:00:00.000Z"
+    //   }
+    // Erreur par item → ajoutée dans errors[], sans faire échouer tout le batch
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
       const batch = rows.slice(i, i + BATCH_SIZE);
 
@@ -151,6 +218,10 @@ Deno.serve(async (req) => {
       }
     }
 
+    // --- Réponse : stats pour le front admin ---
+    // Exemple succès :
+    //   { domainId: "medi-vocabs", total: 120, processed: 118, skipped: 0,
+    //     errorCount: 2, errors: [ /* max 20 */ ] }
     return jsonResponse({
       domainId,
       total: rows.length,
@@ -160,6 +231,7 @@ Deno.serve(async (req) => {
       errors: errors.slice(0, 20),
     });
   } catch (e) {
+    // Erreur inattendue → { "error": "<message>" } status 500
     return jsonResponse({
       error: e instanceof Error ? e.message : String(e),
     }, 500);

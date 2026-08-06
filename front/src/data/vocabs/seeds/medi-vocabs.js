@@ -1,5 +1,10 @@
+/**
+ * MediVocabs seed — tabs: vocab | symptoms | conditions | scenarios
+ * - symptoms / conditions: optional mini example { patient, doctor }
+ * - scenarios: long dialogue[] filtered by categoryId (e.g. yeux)
+ */
 const mediVocabsSeed = {
-  version: 2,
+  version: 3,
   meta: {
     title: { fr: 'MediVocabs', en: 'MediVocabs', mg: 'MediVocabs' },
     description: {
@@ -11,8 +16,9 @@ const mediVocabsSeed = {
   organization: {
     tabs: [
       { id: 'vocab', label: { fr: 'Vocabulaire', en: 'Vocabulary', mg: 'Voaboly' } },
-      { id: 'maladies', label: { fr: 'Maladies', en: 'Illnesses', mg: 'Arety' } },
-      { id: 'expressions', label: { fr: 'Expressions', en: 'Expressions', mg: 'Fitenenana' } }
+      { id: 'symptoms', label: { fr: 'Symptômes', en: 'Symptoms', mg: "Soritr'aretina" } },
+      { id: 'conditions', label: { fr: 'Maladies', en: 'Conditions', mg: 'Arety' } },
+      { id: 'scenarios', label: { fr: 'Scénarios', en: 'Scenarios', mg: 'Sehatra' } },
     ],
     categories: [
       {
@@ -52,31 +58,227 @@ const mediVocabsSeed = {
     ]
   },
   items: [
+    // --- Vocab ---
     { id: 'eye', en: 'Eye', fr: 'Œil', mg: 'Maso', category: 'Organe', tab: 'vocab', categoryId: 'yeux', phonetic: '/aɪ/' },
-    { id: 'conjunctivitis', en: 'Conjunctivitis', fr: 'Conjonctivite', mg: 'Mamaivay ny maso', category: 'Maladie', tab: 'maladies', categoryId: 'yeux' },
-    { id: 'cataract', en: 'Cataract', fr: 'Cataracte', mg: 'Katarakta', category: 'Maladie', tab: 'maladies', categoryId: 'yeux' },
-    { id: 'blurry', en: 'Blurry vision', fr: 'Vision floue', mg: 'Manjavo ny maso', category: 'Symptôme', tab: 'maladies', categoryId: 'yeux' },
     { id: 'ear', en: 'Ear', fr: 'Oreille', mg: 'Sofina', category: 'Organe', tab: 'vocab', categoryId: 'oreilles', phonetic: '/ɪər/' },
-    { id: 'earache', en: 'Earache', fr: "Mal d'oreille", mg: 'Marary sofina', category: 'Symptôme', tab: 'maladies', categoryId: 'oreilles' },
-    { id: 'otitis', en: 'Otitis', fr: 'Otite', mg: 'Mamaivay ny sofina', category: 'Maladie', tab: 'maladies', categoryId: 'oreilles' },
     { id: 'nose', en: 'Nose', fr: 'Nez', mg: 'Orona', category: 'Organe', tab: 'vocab', categoryId: 'nez', phonetic: '/noʊz/' },
-    { id: 'runny', en: 'Runny nose', fr: 'Nez qui coule', mg: 'Mandeha ny orona', category: 'Symptôme', tab: 'maladies', categoryId: 'nez' },
     { id: 'mouth', en: 'Mouth', fr: 'Bouche', mg: 'Vava', category: 'Organe', tab: 'vocab', categoryId: 'bouche', phonetic: '/maʊθ/' },
-    { id: 'toothache', en: 'Toothache', fr: 'Mal de dents', mg: 'Marary nify', category: 'Symptôme', tab: 'maladies', categoryId: 'bouche' },
     { id: 'brain', en: 'Brain', fr: 'Cerveau', mg: 'Atidoha', category: 'Organe', tab: 'vocab', categoryId: 'cerveau', phonetic: '/breɪn/' },
     { id: 'heart', en: 'Heart', fr: 'Cœur', mg: 'Fo', category: 'Organe', tab: 'vocab', categoryId: 'coeur', phonetic: '/hɑːrt/' },
-    { id: 'palpitation', en: 'Palpitation', fr: 'Palpitation', mg: 'Mitempo mafy ny fo', category: 'Symptôme', tab: 'maladies', categoryId: 'coeur' },
     { id: 'lung', en: 'Lung', fr: 'Poumon', mg: 'Havokavoka', category: 'Organe', tab: 'vocab', categoryId: 'poumons', phonetic: '/lʌŋ/' },
-    { id: 'cough', en: 'Cough', fr: 'Toux', mg: 'Kohaka', category: 'Symptôme', tab: 'maladies', categoryId: 'poumons' },
     { id: 'stomach', en: 'Stomach', fr: 'Estomac', mg: 'Vavony', category: 'Organe', tab: 'vocab', categoryId: 'estomac', phonetic: '/ˈstʌmək/' },
-    { id: 'stomachache', en: 'Stomachache', fr: 'Mal de ventre', mg: 'Marary kibo', category: 'Symptôme', tab: 'maladies', categoryId: 'estomac' },
     { id: 'arm', en: 'Arm', fr: 'Bras', mg: 'Sandry', category: 'Organe', tab: 'vocab', categoryId: 'bras', phonetic: '/ɑːrm/' },
     { id: 'leg', en: 'Leg', fr: 'Jambe', mg: 'Tongotra', category: 'Organe', tab: 'vocab', categoryId: 'jambes', phonetic: '/lɛɡ/' },
-    { id: 'headache', en: 'I have a headache', fr: "J'ai mal à la tête", mg: 'Marary loha aho', category: 'Expression', tab: 'expressions', categoryId: 'tete' },
-    { id: 'cough_expr', en: 'I have a cough', fr: 'Je tousse', mg: 'Mikohaka aho', category: 'Expression', tab: 'expressions', categoryId: 'poumons' },
-    { id: 'fever', en: 'I have a fever', fr: "J'ai de la fièvre", mg: 'Mafana aho', category: 'Expression', tab: 'expressions' },
-    { id: 'breathing', en: 'I have difficulty breathing', fr: "J'ai du mal à respirer", mg: 'Sarotra miaina aho', category: 'Expression', tab: 'expressions', categoryId: 'poumons' },
-    { id: 'broken', en: 'I broke my arm', fr: 'Je me suis cassé le bras', mg: 'Vaky ny sandriko', category: 'Expression', tab: 'expressions', categoryId: 'bras' }
+
+    // --- Symptoms (with short patient/doctor examples) ---
+    {
+      id: 'blurry',
+      en: 'Blurry vision',
+      fr: 'Vision floue',
+      mg: 'Manjavo ny maso',
+      category: 'Symptôme',
+      tab: 'symptoms',
+      categoryId: 'yeux',
+      example: {
+        patient: { en: 'I have blurry vision in my left eye.', fr: "J'ai une vision floue à l'œil gauche.", mg: '' },
+        doctor: { en: 'How long have you noticed the blurry vision?', fr: 'Depuis combien de temps avez-vous cette vision floue ?', mg: '' },
+      },
+    },
+    {
+      id: 'earache',
+      en: 'Earache',
+      fr: "Mal d'oreille",
+      mg: 'Marary sofina',
+      category: 'Symptôme',
+      tab: 'symptoms',
+      categoryId: 'oreilles',
+      example: {
+        patient: { en: 'I have a bad earache since yesterday.', fr: "J'ai un fort mal d'oreille depuis hier.", mg: '' },
+        doctor: { en: 'Is the earache sharp or more like pressure?', fr: 'Le mal est-il aigu ou plutôt une pression ?', mg: '' },
+      },
+    },
+    {
+      id: 'runny',
+      en: 'Runny nose',
+      fr: 'Nez qui coule',
+      mg: 'Mandeha ny orona',
+      category: 'Symptôme',
+      tab: 'symptoms',
+      categoryId: 'nez',
+    },
+    {
+      id: 'toothache',
+      en: 'Toothache',
+      fr: 'Mal de dents',
+      mg: 'Marary nify',
+      category: 'Symptôme',
+      tab: 'symptoms',
+      categoryId: 'bouche',
+    },
+    {
+      id: 'palpitation',
+      en: 'Palpitation',
+      fr: 'Palpitation',
+      mg: 'Mitempo mafy ny fo',
+      category: 'Symptôme',
+      tab: 'symptoms',
+      categoryId: 'coeur',
+    },
+    {
+      id: 'cough',
+      en: 'Cough',
+      fr: 'Toux',
+      mg: 'Kohaka',
+      category: 'Symptôme',
+      tab: 'symptoms',
+      categoryId: 'poumons',
+      example: {
+        patient: { en: 'This cough keeps me awake at night.', fr: 'Cette toux m\'empêche de dormir la nuit.', mg: '' },
+        doctor: { en: 'Is it a dry cough or with phlegm?', fr: 'Est-ce une toux sèche ou grasse ?', mg: '' },
+      },
+    },
+    {
+      id: 'stomachache',
+      en: 'Stomachache',
+      fr: 'Mal de ventre',
+      mg: 'Marary kibo',
+      category: 'Symptôme',
+      tab: 'symptoms',
+      categoryId: 'estomac',
+    },
+
+    // --- Conditions ---
+    {
+      id: 'conjunctivitis',
+      en: 'Conjunctivitis',
+      fr: 'Conjonctivite',
+      mg: 'Mamaivay ny maso',
+      category: 'Maladie',
+      tab: 'conditions',
+      categoryId: 'yeux',
+      example: {
+        patient: { en: 'My eye is red — is it conjunctivitis?', fr: "Mon œil est rouge — est-ce une conjonctivite ?", mg: '' },
+        doctor: { en: 'It looks like conjunctivitis. Avoid rubbing your eyes.', fr: 'Cela ressemble à une conjonctivite. Évitez de frotter vos yeux.', mg: '' },
+      },
+    },
+    {
+      id: 'cataract',
+      en: 'Cataract',
+      fr: 'Cataracte',
+      mg: 'Katarakta',
+      category: 'Maladie',
+      tab: 'conditions',
+      categoryId: 'yeux',
+      example: {
+        patient: { en: 'Could this be a cataract?', fr: 'Est-ce que ce pourrait être une cataracte ?', mg: '' },
+        doctor: { en: 'A cataract is possible. We will examine the lens.', fr: 'Une cataracte est possible. Nous allons examiner le cristallin.', mg: '' },
+      },
+    },
+    {
+      id: 'otitis',
+      en: 'Otitis',
+      fr: 'Otite',
+      mg: 'Mamaivay ny sofina',
+      category: 'Maladie',
+      tab: 'conditions',
+      categoryId: 'oreilles',
+    },
+
+    // --- Scenarios (replace former expressions) — linked to category ---
+    {
+      id: 'scenario-yeux-vision',
+      en: 'Blurry vision checkup',
+      fr: 'Consultation vision floue',
+      mg: 'Fitsaboana fahitana manjavozavo',
+      category: 'Scénario',
+      tab: 'scenarios',
+      categoryId: 'yeux',
+      dialogue: [
+        {
+          role: 'patient',
+          en: 'Good morning. My vision has been blurry for about two weeks.',
+          fr: 'Bonjour. Ma vision est floue depuis environ deux semaines.',
+          mg: '',
+        },
+        {
+          role: 'doctor',
+          en: 'Good morning. Does the blurry vision affect one eye or both?',
+          fr: 'Bonjour. La vision floue touche un œil ou les deux ?',
+          mg: '',
+        },
+        {
+          role: 'patient',
+          en: 'Mostly the left eye, especially in bright light.',
+          fr: "Surtout l'œil gauche, surtout en pleine lumière.",
+          mg: '',
+        },
+        {
+          role: 'doctor',
+          en: 'That can happen with a cataract. We need to examine the lens.',
+          fr: 'Cela peut arriver avec une cataracte. Nous devons examiner le cristallin.',
+          mg: '',
+        },
+        {
+          role: 'patient',
+          en: 'Will I need surgery?',
+          fr: "Est-ce que j'aurai besoin d'une opération ?",
+          mg: '',
+        },
+        {
+          role: 'doctor',
+          en: 'Not always. First we will check your eyes and follow up in a week.',
+          fr: "Pas toujours. D'abord nous examinerons vos yeux et ferons un suivi dans une semaine.",
+          mg: '',
+        },
+      ],
+    },
+    {
+      id: 'scenario-poumons-cough',
+      en: 'Persistent cough visit',
+      fr: 'Consultation toux persistante',
+      mg: '',
+      category: 'Scénario',
+      tab: 'scenarios',
+      categoryId: 'poumons',
+      dialogue: [
+        {
+          role: 'patient',
+          en: 'I have had a cough for more than ten days.',
+          fr: "J'ai une toux depuis plus de dix jours.",
+          mg: '',
+        },
+        {
+          role: 'doctor',
+          en: 'Is it a dry cough or do you bring up phlegm?',
+          fr: 'Est-ce une toux sèche ou ramenez-vous des mucosités ?',
+          mg: '',
+        },
+        {
+          role: 'patient',
+          en: 'It is mostly dry, and worse at night.',
+          fr: 'Surtout sèche, et pire la nuit.',
+          mg: '',
+        },
+        {
+          role: 'doctor',
+          en: 'I will listen to your lungs. Tell me if you have difficulty breathing.',
+          fr: 'Je vais ausculter vos poumons. Dites-moi si vous avez du mal à respirer.',
+          mg: '',
+        },
+        {
+          role: 'patient',
+          en: 'Sometimes when I climb stairs.',
+          fr: 'Parfois quand je monte les escaliers.',
+          mg: '',
+        },
+        {
+          role: 'doctor',
+          en: 'We may need a chest exam. Take this medication and follow up if it worsens.',
+          fr: "Nous pourrions avoir besoin d'un examen. Prenez ce traitement et revenez si ça empire.",
+          mg: '',
+        },
+      ],
+    },
   ]
 };
 

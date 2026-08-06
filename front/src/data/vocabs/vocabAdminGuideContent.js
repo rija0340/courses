@@ -25,8 +25,8 @@ export const VOCAB_ADMIN_GUIDE = {
   tabsOrg: {
     title: { fr: 'Onglets d’organisation', en: 'Organization tabs', mg: 'Tabs fandaminana' },
     body: {
-      fr: 'Chaque onglet correspond à un type de contenu (vocabulaire, maladies, expressions…). Réordonnez-les avec les flèches haut/bas dans le panneau de la catégorie sélectionnée. Les compteurs indiquent le nombre de mots par onglet.',
-      en: 'Each tab is a content type (vocabulary, illnesses, expressions…). Reorder with up/down arrows in the selected category panel. Counts show words per tab.',
+      fr: 'Chaque onglet correspond à un type de contenu (vocabulaire, symptômes, maladies, scénarios…). Réordonnez-les avec les flèches haut/bas dans le panneau de la catégorie sélectionnée. Les compteurs indiquent le nombre de mots par onglet.',
+      en: 'Each tab is a content type (vocabulary, symptoms, conditions, scenarios…). Reorder with up/down arrows in the selected category panel. Counts show words per tab.',
       mg: 'Ny tab tsirairay dia karazana votoaty. Avereno amboary amin\'ny zana-tsipika ambony/ambany.'
     }
   },

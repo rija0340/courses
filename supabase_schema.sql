@@ -46,6 +46,10 @@ CREATE TABLE IF NOT EXISTS public.vocab_items (
     tab         TEXT        NOT NULL DEFAULT '',   -- tab id: 'vocab', 'maladies', etc.
     category_id TEXT,                              -- references a node id in organization.categories
     phonetic    TEXT,
+    -- Mini patient/doctor example (symptoms/conditions): { patient:{en,fr,mg}, doctor:{en,fr,mg} }
+    example     JSONB,
+    -- Long scenario dialogue: [{ role: 'patient'|'doctor', en, fr, mg }]
+    dialogue    JSONB,
     -- Image stored as Supabase Storage public URL (preferred) or base64 fallback
     image_url   TEXT,                              -- Supabase Storage URL (e.g. https://xxx.supabase.co/storage/v1/object/public/vocab-images/items/...)
     image       TEXT,                              -- Legacy base64 fallback (still supported)
