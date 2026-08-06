@@ -55,36 +55,48 @@ export const mockLlmAdapter = {
 };
 
 function buildLongTopicTurns(topic, words, targetTurns) {
+  // More natural mock: open + weave a few words per exchange, not one Q/A per word
   const out = [
-    { id: 'turn-1', role: 'doctor', text: `Hello. Today we will talk about ${topic}.` },
-    { id: 'turn-2', role: 'patient', text: `Thank you. I have questions about ${topic}.` }
-  ];
-  words.forEach((word, i) => {
-    out.push({
-      id: `turn-d-${i + 1}`,
-      role: 'doctor',
-      text: `Please describe any problem with your ${word}.`
-    });
-    out.push({
-      id: `turn-p-${i + 1}`,
+    { id: 'turn-1', role: 'doctor', text: `Good morning. What brings you in about ${topic} today?` },
+    {
+      id: 'turn-2',
       role: 'patient',
-      text: `My ${word} feels unusual sometimes.`
+      text: words[0]
+        ? `I've been worried — especially about ${words[0]}.`
+        : `I've been worried about ${topic}.`,
+    },
+  ];
+
+  let i = 1;
+  while (i < words.length) {
+    const batch = words.slice(i, i + 2);
+    const joined = batch.join(' and ');
+    out.push({
+      id: `turn-d-${i}`,
+      role: 'doctor',
+      text: `I see. Have you noticed anything with ${joined}?`,
     });
-  });
+    out.push({
+      id: `turn-p-${i}`,
+      role: 'patient',
+      text: `Yes, ${batch[0]} has been bothering me${batch[1] ? `, and also ${batch[1]}` : ''}.`,
+    });
+    i += 2;
+  }
+
   out.push({
     id: 'turn-end-d',
     role: 'doctor',
-    text: 'I will examine you carefully and explain the next steps.'
+    text: 'Thank you. I will examine you and explain the next steps clearly.',
   });
   out.push({
     id: 'turn-end-p',
     role: 'patient',
-    text: 'Thank you, doctor. I feel more confident now.'
+    text: 'That helps. I feel more confident now.',
   });
-  // trim or keep — prefer covering all words over exact turn count
-  if (out.length > Math.max(targetTurns, words.length * 2 + 4)) {
-    return out.slice(0, Math.max(targetTurns, words.length * 2 + 4));
-  }
+
+  const minLen = Math.max(targetTurns || 12, Math.min(out.length, words.length + 4));
+  if (out.length > minLen + 4) return out.slice(0, minLen + 4);
   return out;
 }
 

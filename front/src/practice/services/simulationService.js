@@ -2,7 +2,7 @@ import { usesRemoteLlm } from '../config';
 import { mockLlmAdapter } from '../adapters/mockLlmAdapter';
 import { remoteLlmAdapter } from '../adapters/remoteLlmAdapter';
 import { SIMULATION_PRESETS, getPresetById } from '../data/simulationPresets';
-import { padScriptWithMissingVocabulary, suggestTurnCount } from '../domain/vocabCoverage';
+import { suggestTurnCount } from '../domain/vocabCoverage';
 
 function llmAdapter() {
   return usesRemoteLlm() ? remoteLlmAdapter : mockLlmAdapter;
@@ -32,7 +32,8 @@ export const simulationService = {
     const turnCount =
       turns || suggestTurnCount(vocabulary?.length || 0, length) || preset?.turns || 12;
 
-    let script = await llmAdapter().generateSimulation({
+    // Server (or mock) already soft-pads missing vocab once — avoid double robotic pad
+    return llmAdapter().generateSimulation({
       theme: theme || topicLabel || preset?.theme || 'Conversation practice',
       locale,
       promptId: promptId || null,
@@ -43,12 +44,5 @@ export const simulationService = {
       topicLabel,
       length
     });
-
-    if (vocabulary?.length) {
-      const { script: padded } = padScriptWithMissingVocabulary(script, vocabulary);
-      script = padded;
-    }
-
-    return script;
   }
 };

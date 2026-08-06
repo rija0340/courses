@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { Loader2, Brain, Send, RotateCcw, Mic, Square, CheckCircle2, XCircle } from 'lucide-react';
 import { AppContext } from '../../App';
 import { flattenTree } from '../../utils/categoryTree';
-import { collectTopicVocabulary } from '../domain/topicVocabulary';
+import TopicVocabPicker, { resolveSelectedTopicWords } from './TopicVocabPicker';
 import { buildQuizDeck, buildFreeThemeDeck, EXERCISE_TYPES } from '../domain/quizDeck';
 import {
   loadQuizSession,
@@ -14,6 +14,8 @@ import { usesRemoteLlm } from '../config';
 import { useMicTranscript } from '../hooks/useMicTranscript';
 import WrittenFeedbackPanel from './WrittenFeedbackPanel';
 import { speechService } from '../services/speechService';
+import { simulationUi } from '../data/simulationUiCopy';
+import { MAX_PRACTICE_VOCAB, capVocabularyForGeneration } from '../domain/topicVocabulary';
 
 export default function QuizPracticePanel({
   defaultTheme = '',
@@ -22,12 +24,15 @@ export default function QuizPracticePanel({
   defaultCategoryId = ''
 }) {
   const { lang } = useContext(AppContext);
+  const ui = useMemo(() => simulationUi(lang), [lang]);
   const topicOptions = useMemo(() => flattenTree(categories, lang), [categories, lang]);
   const saved = useMemo(() => loadQuizSession(), []);
   const mic = useMicTranscript({ language: 'en' });
 
   const [source, setSource] = useState(saved?.source || (defaultCategoryId ? 'topic' : 'free'));
   const [categoryId, setCategoryId] = useState(saved?.categoryId || defaultCategoryId || '');
+  const [topicTab, setTopicTab] = useState(saved?.topicTab || 'vocab');
+  const [selectedWordIds, setSelectedWordIds] = useState(saved?.selectedWordIds || []);
   const [theme, setTheme] = useState(saved?.theme || defaultTheme || '');
   const [selectedTypes, setSelectedTypes] = useState(saved?.selectedTypes || ['definition_to_word', 'cloze']);
   const [deck, setDeck] = useState(saved?.deck || []);
@@ -39,9 +44,16 @@ export default function QuizPracticePanel({
   const [lastResult, setLastResult] = useState(saved?.lastResult || null);
   const [scoreboard, setScoreboard] = useState(saved?.scoreboard || { correct: 0, total: 0 });
 
-  const topicVocab = useMemo(
-    () => collectTopicVocabulary(items, categories, categoryId),
-    [items, categories, categoryId]
+  const topicSelection = useMemo(
+    () =>
+      resolveSelectedTopicWords(
+        items,
+        categories,
+        categoryId,
+        topicTab,
+        selectedWordIds
+      ),
+    [items, categories, categoryId, topicTab, selectedWordIds]
   );
 
   const current = deck[index] || null;
@@ -50,6 +62,8 @@ export default function QuizPracticePanel({
     saveQuizSession({
       source,
       categoryId,
+      topicTab,
+      selectedWordIds,
       theme,
       selectedTypes,
       deck,
@@ -58,7 +72,7 @@ export default function QuizPracticePanel({
       lastResult,
       scoreboard
     });
-  }, [source, categoryId, theme, selectedTypes, deck, index, started, lastResult, scoreboard]);
+  }, [source, categoryId, topicTab, selectedWordIds, theme, selectedTypes, deck, index, started, lastResult, scoreboard]);
 
   const toggleType = (id) => {
     setSelectedTypes((prev) => {
@@ -78,22 +92,26 @@ export default function QuizPracticePanel({
     setIndex(0);
     let nextDeck = [];
     if (source === 'topic') {
-      if (!topicVocab.words.length) {
-        setError('Aucun vocabulaire pour ce sujet.');
+      if (!topicSelection.words.length) {
+        setError(ui.needWords);
         return;
       }
+      const { words: capped } = capVocabularyForGeneration(
+        topicSelection.words,
+        MAX_PRACTICE_VOCAB
+      );
       nextDeck = buildQuizDeck({
-        words: topicVocab.words.map((w) => ({
-          id: w.en,
+        words: capped.map((w) => ({
+          id: w.id || w.en,
           en: w.en,
           fr: w.fr,
           mg: w.mg,
           phonetic: w.phonetic
         })),
         types: selectedTypes,
-        limit: Math.min(10, topicVocab.words.length)
+        limit: Math.min(10, capped.length)
       });
-      if (!theme.trim()) setTheme(topicVocab.topicLabel || '');
+      if (!theme.trim()) setTheme(topicSelection.topicLabel || '');
     } else {
       if (!theme.trim()) {
         setError('Indiquez un thème libre.');
@@ -126,8 +144,8 @@ export default function QuizPracticePanel({
         prompt: current.prompt,
         expected: current.expected,
         learnerAnswer: draft.trim(),
-        theme: theme || topicVocab.topicLabel || '',
-        vocabulary: source === 'topic' ? topicVocab.words : [],
+        theme: theme || topicSelection.topicLabel || '',
+        vocabulary: source === 'topic' ? topicSelection.words : [],
         level: 'beginner'
       });
       setLastResult(result);
@@ -168,16 +186,16 @@ export default function QuizPracticePanel({
 
   const canStart =
     selectedTypes.length > 0 &&
-    (source === 'free' ? !!theme.trim() : !!categoryId && topicVocab.words.length > 0);
+    (source === 'free' ? !!theme.trim() : !!categoryId && topicSelection.words.length > 0);
 
   return (
     <div className="space-y-5">
       <div className="rounded-2xl border border-[#dadce0] dark:border-[#3c4043] bg-white dark:bg-[#202124] p-5 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-[18px] font-semibold text-[#202124] dark:text-[#e8eaed]">Quiz / exercices</h2>
+            <h2 className="text-[18px] font-semibold text-[#202124] dark:text-[#e8eaed]">{ui.quizTitle}</h2>
             <p className="text-[13px] text-[#5f6368] dark:text-[#9aa0a6] mt-1">
-              Mémorisation active avec retour pédagogique riche.
+              {ui.quizHint}
               {usesRemoteLlm() ? ' · Groq' : ' · mock'}
             </p>
           </div>
@@ -188,39 +206,48 @@ export default function QuizPracticePanel({
           <>
             <div className="flex flex-wrap gap-2">
               <ModeChip active={source === 'topic'} onClick={() => setSource('topic')} disabled={!topicOptions.length}>
-                Par sujet
+                {ui.byTopic}
               </ModeChip>
               <ModeChip active={source === 'free'} onClick={() => setSource('free')}>
-                Thème libre
+                {ui.freeTheme}
               </ModeChip>
             </div>
 
             {source === 'topic' && (
-              <label className="block">
-                <span className="text-[12px] font-semibold text-[#5f6368]">Sujet / catégorie</span>
-                <select
-                  value={categoryId}
-                  onChange={(e) => {
-                    const id = e.target.value;
-                    setCategoryId(id);
-                    const opt = topicOptions.find((t) => t.id === id);
-                    if (opt) setTheme(opt.label);
-                  }}
-                  className="mt-1 w-full rounded-xl border border-[#dadce0] dark:border-[#5f6368] dark:bg-[#303134] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8] bg-white"
-                >
-                  <option value="">Choisir…</option>
-                  {topicOptions.map((t) => (
-                    <option key={t.id} value={t.id}>{'—'.repeat(t.depth)} {t.label}</option>
-                  ))}
-                </select>
-                {categoryId && (
-                  <p className="text-[12px] text-[#5f6368] mt-1">{topicVocab.words.length} mots disponibles</p>
-                )}
-              </label>
+              <div className="space-y-3">
+                <label className="block">
+                  <span className="text-[12px] font-semibold text-[#5f6368]">{ui.topicCategory}</span>
+                  <select
+                    value={categoryId}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setCategoryId(id);
+                      const opt = topicOptions.find((t) => t.id === id);
+                      if (opt) setTheme(opt.label);
+                    }}
+                    className="mt-1 w-full rounded-xl border border-[#dadce0] dark:border-[#5f6368] dark:bg-[#303134] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8] bg-white"
+                  >
+                    <option value="">{ui.selectTopic}</option>
+                    {topicOptions.map((t) => (
+                      <option key={t.id} value={t.id}>{'—'.repeat(t.depth)} {t.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <TopicVocabPicker
+                  items={items}
+                  categories={categories}
+                  categoryId={categoryId}
+                  topicTab={topicTab}
+                  onTopicTabChange={setTopicTab}
+                  selectedWordIds={selectedWordIds}
+                  onSelectedWordIdsChange={setSelectedWordIds}
+                  ui={ui}
+                />
+              </div>
             )}
 
             <label className="block">
-              <span className="text-[12px] font-semibold text-[#5f6368]">Thème</span>
+              <span className="text-[12px] font-semibold text-[#5f6368]">{ui.theme}</span>
               <input
                 value={theme}
                 onChange={(e) => setTheme(e.target.value)}

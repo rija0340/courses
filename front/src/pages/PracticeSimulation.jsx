@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { AppContext } from '../App';
@@ -8,6 +8,7 @@ import WrittenSimulationPanel from '../practice/components/WrittenSimulationPane
 import QuizPracticePanel from '../practice/components/QuizPracticePanel';
 import { isPracticeEnabled } from '../practice/config';
 import useVocabDomain from '../hooks/useVocabDomain';
+import { simulationUi } from '../practice/data/simulationUiCopy';
 
 function initialModalityFromParams(params) {
   const mode = params.get('mode');
@@ -20,6 +21,7 @@ export default function PracticeSimulation() {
   const { domainId } = useParams();
   const [params] = useSearchParams();
   const { lang } = useContext(AppContext);
+  const ui = useMemo(() => simulationUi(lang), [lang]);
   const theme = params.get('theme') || '';
   const categoryId = params.get('category') || '';
   const [modality, setModality] = useState(() => initialModalityFromParams(params));
@@ -28,18 +30,18 @@ export default function PracticeSimulation() {
   if (!isPracticeEnabled()) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-10">
-        <p className="text-[#5f6368]">Practice is disabled.</p>
+        <p className="text-[#5f6368]">{ui.practiceDisabled}</p>
         <Link to={domainId ? `/vocabs/${domainId}` : '/'} className="text-[#1a73e8] text-sm mt-2 inline-block">
-          Back
+          {ui.back}
         </Link>
       </div>
     );
   }
 
   const crumbs = [
-    { label: lang === 'fr' ? 'Accueil' : 'Home', path: '/' },
-    domainId ? { label: 'Vocabs', path: `/vocabs/${domainId}` } : null,
-    { label: 'Simulation' }
+    { label: ui.home, path: '/' },
+    domainId ? { label: ui.vocabs, path: `/vocabs/${domainId}` } : null,
+    { label: ui.simulation }
   ].filter(Boolean);
 
   const categories = domain?.organization?.categories || [];
@@ -53,22 +55,22 @@ export default function PracticeSimulation() {
           className="inline-flex items-center gap-1.5 text-[13px] text-[#5f6368] dark:text-[#9aa0a6] hover:text-[#202124]"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back
+          {ui.back}
         </Link>
       </div>
       {loading ? (
-        <p className="text-[14px] text-[#5f6368]">Loading vocabulary…</p>
+        <p className="text-[14px] text-[#5f6368]">{ui.loading}</p>
       ) : (
         <>
           <div className="flex flex-wrap gap-2 mb-5">
             <ModalityChip active={modality === 'oral'} onClick={() => setModality('oral')}>
-              Écoute
+              {ui.listening}
             </ModalityChip>
             <ModalityChip active={modality === 'written'} onClick={() => setModality('written')}>
-              Écrit et oral
+              {ui.writtenOral}
             </ModalityChip>
             <ModalityChip active={modality === 'quiz'} onClick={() => setModality('quiz')}>
-              Quiz
+              {ui.quiz}
             </ModalityChip>
           </div>
           {modality === 'oral' && (

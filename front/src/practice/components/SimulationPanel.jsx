@@ -3,23 +3,29 @@ import { Sparkles, Loader2 } from 'lucide-react';
 import { AppContext } from '../../App';
 import { simulationService } from '../services/simulationService';
 import ConversationPlayer from './ConversationPlayer';
+import TopicVocabPicker, { resolveSelectedTopicWords } from './TopicVocabPicker';
 import { usesRemoteLlm } from '../config';
 import { flattenTree } from '../../utils/categoryTree';
-import { collectTopicVocabulary } from '../domain/topicVocabulary';
+import {
+  MAX_PRACTICE_VOCAB,
+  capVocabularyForGeneration,
+} from '../domain/topicVocabulary';
 import { suggestTurnCount } from '../domain/vocabCoverage';
 import {
   loadSimulationSession,
-  saveSimulationSession
+  saveSimulationSession,
 } from '../domain/simulationSession';
 import { stopPlayback } from '../services/speechService';
+import { simulationUi } from '../data/simulationUiCopy';
 
 export default function SimulationPanel({
   defaultTheme = '',
   categories = [],
   items = [],
-  defaultCategoryId = ''
+  defaultCategoryId = '',
 }) {
   const { lang } = useContext(AppContext);
+  const ui = useMemo(() => simulationUi(lang), [lang]);
   const presets = useMemo(() => simulationService.listPresets(), []);
   const topicOptions = useMemo(
     () => flattenTree(categories, lang),
@@ -32,7 +38,13 @@ export default function SimulationPanel({
     saved?.mode || (defaultCategoryId ? 'topic' : 'preset')
   );
   const [promptId, setPromptId] = useState(saved?.promptId || presets[0]?.id || '');
-  const [categoryId, setCategoryId] = useState(saved?.categoryId || defaultCategoryId || '');
+  const [categoryId, setCategoryId] = useState(
+    saved?.categoryId || defaultCategoryId || ''
+  );
+  const [topicTab, setTopicTab] = useState(saved?.topicTab || 'vocab');
+  const [selectedWordIds, setSelectedWordIds] = useState(
+    saved?.selectedWordIds || []
+  );
   const [theme, setTheme] = useState(
     saved?.theme || defaultTheme || presets[0]?.theme || ''
   );
@@ -44,9 +56,16 @@ export default function SimulationPanel({
 
   const selected = presets.find((p) => p.id === promptId);
 
-  const topicVocab = useMemo(
-    () => collectTopicVocabulary(items, categories, categoryId),
-    [items, categories, categoryId]
+  const topicSelection = useMemo(
+    () =>
+      resolveSelectedTopicWords(
+        items,
+        categories,
+        categoryId,
+        topicTab,
+        selectedWordIds
+      ),
+    [items, categories, categoryId, topicTab, selectedWordIds]
   );
 
   useEffect(() => {
@@ -54,12 +73,24 @@ export default function SimulationPanel({
       mode,
       promptId,
       categoryId,
+      topicTab,
+      selectedWordIds,
       theme,
       customPrompt,
       length,
-      script
+      script,
     });
-  }, [mode, promptId, categoryId, theme, customPrompt, length, script]);
+  }, [
+    mode,
+    promptId,
+    categoryId,
+    topicTab,
+    selectedWordIds,
+    theme,
+    customPrompt,
+    length,
+    script,
+  ]);
 
   const handlePresetChange = (id) => {
     setPromptId(id);
@@ -76,28 +107,44 @@ export default function SimulationPanel({
   const buildGenerateArgs = () => {
     const useTopic = mode === 'topic' && categoryId;
     const useCustom = mode === 'custom';
-    const vocabulary = useTopic ? topicVocab.words : [];
+    const { words: capped, truncated } = useTopic
+      ? capVocabularyForGeneration(topicSelection.words, MAX_PRACTICE_VOCAB)
+      : { words: [], truncated: false };
+
     return {
-      theme: theme.trim() || topicVocab.topicLabel || selected?.theme,
+      theme: theme.trim() || topicSelection.topicLabel || selected?.theme,
       locale: 'en',
       promptId: useCustom || useTopic ? null : promptId,
       customPrompt:
-        useCustom || (useTopic && customPrompt.trim()) ? customPrompt.trim() : null,
-      turns: suggestTurnCount(vocabulary.length, length),
+        useCustom || (useTopic && customPrompt.trim())
+          ? customPrompt.trim()
+          : null,
+      turns: suggestTurnCount(capped.length, length),
       level: selected?.level || 'beginner',
-      vocabulary,
-      topicLabel: useTopic ? topicVocab.topicLabel : null,
-      length
+      vocabulary: capped,
+      topicLabel: useTopic ? topicSelection.topicLabel : null,
+      length,
+      _truncated: truncated,
     };
   };
 
   const handleGenerate = async () => {
+    if (mode === 'topic' && !topicSelection.words.length) {
+      setError(ui.needWords);
+      return;
+    }
     stopPlayback();
     setLoading(true);
     setError(null);
     try {
-      const result = await simulationService.generate(buildGenerateArgs());
+      const args = buildGenerateArgs();
+      const result = await simulationService.generate(args);
       setScript(result);
+      if (args._truncated) {
+        setError(
+          ui.t('truncatedWarn', { max: MAX_PRACTICE_VOCAB, n: MAX_PRACTICE_VOCAB })
+        );
+      }
     } catch (err) {
       setError(err.message || 'Generation failed');
     } finally {
@@ -105,15 +152,12 @@ export default function SimulationPanel({
     }
   };
 
-  const handleGenerateAnother = async () => {
-    await handleGenerate();
-  };
-
   const label = (preset) =>
     preset.title?.[lang] || preset.title?.en || preset.theme;
 
   const canGenerate =
-    !!theme.trim() && !(mode === 'topic' && !topicVocab.words.length);
+    !!theme.trim() &&
+    !(mode === 'topic' && !topicSelection.words.length);
 
   const coverage = script?.meta?.vocabularyCoverage || null;
 
@@ -122,10 +166,11 @@ export default function SimulationPanel({
       <div className="rounded-2xl border border-[#dadce0] bg-white p-5 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-[18px] font-semibold text-[#202124]">Simulation</h2>
+            <h2 className="text-[18px] font-semibold text-[#202124]">
+              {ui.simulation}
+            </h2>
             <p className="text-[13px] text-[#5f6368] mt-1">
-              Longer doctor ↔ patient dialogue, dual voices, full topic vocab. Session only
-              (no DB).
+              {ui.simulationHint}
               {usesRemoteLlm() ? ' · Groq' : ' · mock'}
             </p>
           </div>
@@ -134,17 +179,17 @@ export default function SimulationPanel({
 
         <div className="flex flex-wrap gap-2">
           <ModeChip active={mode === 'preset'} onClick={() => setMode('preset')}>
-            Preset
+            {ui.preset}
           </ModeChip>
           <ModeChip
             active={mode === 'topic'}
             onClick={() => setMode('topic')}
             disabled={!topicOptions.length}
           >
-            Topic vocab
+            {ui.topicVocab}
           </ModeChip>
           <ModeChip active={mode === 'custom'} onClick={() => setMode('custom')}>
-            Custom prompt
+            {ui.customPrompt}
           </ModeChip>
         </div>
 
@@ -178,14 +223,14 @@ export default function SimulationPanel({
           <div className="space-y-3">
             <label className="block">
               <span className="text-[12px] font-semibold text-[#5f6368]">
-                Topic / category
+                {ui.topicCategory}
               </span>
               <select
                 value={categoryId}
                 onChange={(e) => handleTopicChange(e.target.value)}
                 className="mt-1 w-full rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8] bg-white"
               >
-                <option value="">Select a topic…</option>
+                <option value="">{ui.selectTopic}</option>
                 {topicOptions.map((t) => (
                   <option key={t.id} value={t.id}>
                     {'—'.repeat(t.depth)} {t.label}
@@ -193,63 +238,49 @@ export default function SimulationPanel({
                 ))}
               </select>
             </label>
-            {categoryId && (
-              <div className="rounded-xl bg-[#f8f9fa] border border-[#dadce0] p-3">
-                <div className="text-[12px] font-semibold text-[#5f6368] mb-2">
-                  {topicVocab.words.length} word{topicVocab.words.length !== 1 ? 's' : ''} — all
-                  will be included
-                </div>
-                {topicVocab.words.length === 0 ? (
-                  <p className="text-[13px] text-[#c5221f]">
-                    No vocabulary for this topic.
-                  </p>
-                ) : (
-                  <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
-                    {topicVocab.words.map((w) => (
-                      <span
-                        key={w.en}
-                        className="text-[11px] px-2 py-0.5 rounded-full bg-white border border-[#dadce0] text-[#3c4043]"
-                      >
-                        {w.en}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+            <TopicVocabPicker
+              items={items}
+              categories={categories}
+              categoryId={categoryId}
+              topicTab={topicTab}
+              onTopicTabChange={setTopicTab}
+              selectedWordIds={selectedWordIds}
+              onSelectedWordIdsChange={setSelectedWordIds}
+              ui={ui}
+            />
           </div>
         )}
 
         {mode === 'custom' && (
           <label className="block">
-            <span className="text-[12px] font-semibold text-[#5f6368]">Custom instructions</span>
+            <span className="text-[12px] font-semibold text-[#5f6368]">
+              {ui.customInstructions}
+            </span>
             <textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
               rows={3}
-              placeholder="e.g. Only eye anatomy, patient describes blurry vision…"
               className="mt-1 w-full rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8] resize-y"
             />
           </label>
         )}
 
         <label className="block">
-          <span className="text-[12px] font-semibold text-[#5f6368]">Theme / title</span>
+          <span className="text-[12px] font-semibold text-[#5f6368]">{ui.theme}</span>
           <input
             value={theme}
             onChange={(e) => setTheme(e.target.value)}
-            placeholder="e.g. Eye exam at the clinic"
             className="mt-1 w-full rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8]"
           />
         </label>
 
         <label className="block">
-          <span className="text-[12px] font-semibold text-[#5f6368]">Length</span>
+          <span className="text-[12px] font-semibold text-[#5f6368]">{ui.length}</span>
           <div className="mt-1 flex flex-wrap gap-2">
             {[
-              { id: 'short', label: 'Short' },
-              { id: 'medium', label: 'Medium' },
-              { id: 'long', label: 'Long' }
+              { id: 'short', label: ui.short },
+              { id: 'medium', label: ui.medium },
+              { id: 'long', label: ui.long },
             ].map((opt) => (
               <button
                 key={opt.id}
@@ -270,13 +301,12 @@ export default function SimulationPanel({
         {mode === 'topic' && (
           <label className="block">
             <span className="text-[12px] font-semibold text-[#5f6368]">
-              Extra instructions (optional)
+              {ui.extraInstructions}
             </span>
             <textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
               rows={2}
-              placeholder="e.g. Beginner level…"
               className="mt-1 w-full rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8] resize-y"
             />
           </label>
@@ -288,8 +318,12 @@ export default function SimulationPanel({
           disabled={loading || !canGenerate}
           className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] text-white text-[13px] font-semibold px-4 py-2 hover:bg-[#1557b0] disabled:opacity-50"
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-          {loading ? 'Generating…' : script ? 'Generate new dialogue' : 'Generate dialogue'}
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Sparkles className="w-4 h-4" />
+          )}
+          {loading ? ui.generating : script ? ui.generateNew : ui.generate}
         </button>
 
         {error && <div className="text-[13px] text-[#c5221f]">{error}</div>}
@@ -300,7 +334,7 @@ export default function SimulationPanel({
           turns={script.turns}
           title={script.theme || 'Generated simulation'}
           coverage={coverage}
-          onGenerateAnother={handleGenerateAnother}
+          onGenerateAnother={handleGenerate}
           generating={loading}
         />
       )}

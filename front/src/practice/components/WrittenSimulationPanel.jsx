@@ -5,7 +5,7 @@ import { writtenSimulationService } from '../services/writtenSimulationService';
 import { simulationService } from '../services/simulationService';
 import { usesRemoteLlm } from '../config';
 import { flattenTree } from '../../utils/categoryTree';
-import { collectTopicVocabulary } from '../domain/topicVocabulary';
+import TopicVocabPicker, { resolveSelectedTopicWords } from './TopicVocabPicker';
 import {
   loadWrittenSimulationSession,
   saveWrittenSimulationSession,
@@ -14,6 +14,7 @@ import {
 import WrittenFeedbackPanel from './WrittenFeedbackPanel';
 import { speechService } from '../services/speechService';
 import { useMicTranscript } from '../hooks/useMicTranscript';
+import { simulationUi } from '../data/simulationUiCopy';
 
 export default function WrittenSimulationPanel({
   defaultTheme = '',
@@ -22,6 +23,7 @@ export default function WrittenSimulationPanel({
   defaultCategoryId = ''
 }) {
   const { lang } = useContext(AppContext);
+  const ui = useMemo(() => simulationUi(lang), [lang]);
   const presets = useMemo(() => simulationService.listPresets(), []);
   const topicOptions = useMemo(
     () => flattenTree(categories, lang),
@@ -33,6 +35,8 @@ export default function WrittenSimulationPanel({
   const [mode, setMode] = useState(saved?.mode || (defaultCategoryId ? 'topic' : 'preset'));
   const [promptId, setPromptId] = useState(saved?.promptId || presets[0]?.id || '');
   const [categoryId, setCategoryId] = useState(saved?.categoryId || defaultCategoryId || '');
+  const [topicTab, setTopicTab] = useState(saved?.topicTab || 'vocab');
+  const [selectedWordIds, setSelectedWordIds] = useState(saved?.selectedWordIds || []);
   const [theme, setTheme] = useState(saved?.theme || defaultTheme || presets[0]?.theme || '');
   const [customPrompt, setCustomPrompt] = useState(saved?.customPrompt || '');
   const [learnerRole, setLearnerRole] = useState(saved?.learnerRole || 'patient');
@@ -46,9 +50,16 @@ export default function WrittenSimulationPanel({
   const mic = useMicTranscript({ language: 'en' });
 
   const selected = presets.find((p) => p.id === promptId);
-  const topicVocab = useMemo(
-    () => collectTopicVocabulary(items, categories, categoryId),
-    [items, categories, categoryId]
+  const topicSelection = useMemo(
+    () =>
+      resolveSelectedTopicWords(
+        items,
+        categories,
+        categoryId,
+        topicTab,
+        selectedWordIds
+      ),
+    [items, categories, categoryId, topicTab, selectedWordIds]
   );
 
   const learnerTurnCount = history.filter((t) => t.role === learnerRole).length;
@@ -58,6 +69,8 @@ export default function WrittenSimulationPanel({
       mode,
       promptId,
       categoryId,
+      topicTab,
+      selectedWordIds,
       theme,
       customPrompt,
       learnerRole,
@@ -66,20 +79,20 @@ export default function WrittenSimulationPanel({
       started,
       done
     });
-  }, [mode, promptId, categoryId, theme, customPrompt, learnerRole, history, lastFeedback, started, done]);
+  }, [mode, promptId, categoryId, topicTab, selectedWordIds, theme, customPrompt, learnerRole, history, lastFeedback, started, done]);
 
   const buildArgs = (learnerText, turnIndex) => {
     const useTopic = mode === 'topic' && categoryId;
     const useCustom = mode === 'custom';
     return {
-      theme: theme.trim() || topicVocab.topicLabel || selected?.theme,
+      theme: theme.trim() || topicSelection.topicLabel || selected?.theme,
       locale: 'en',
       level: selected?.level || 'beginner',
       learnerRole,
       learnerText,
       history,
-      vocabulary: useTopic ? topicVocab.words : [],
-      topicLabel: useTopic ? topicVocab.topicLabel : null,
+      vocabulary: useTopic ? topicSelection.words : [],
+      topicLabel: useTopic ? topicSelection.topicLabel : null,
       customPrompt: useCustom || (useTopic && customPrompt.trim()) ? customPrompt.trim() : null,
       turnIndex
     };
@@ -167,16 +180,16 @@ export default function WrittenSimulationPanel({
   const label = (preset) =>
     preset.title?.[lang] || preset.title?.en || preset.theme;
 
-  const canStart = !!theme.trim() && !(mode === 'topic' && !topicVocab.words.length);
+  const canStart = !!theme.trim() && !(mode === 'topic' && !topicSelection.words.length);
 
   return (
     <div className="space-y-5">
       <div className="rounded-2xl border border-[#dadce0] bg-white p-5 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-[18px] font-semibold text-[#202124]">Écrit et oral</h2>
+            <h2 className="text-[18px] font-semibold text-[#202124]">{ui.writtenTitle}</h2>
             <p className="text-[13px] text-[#5f6368] mt-1">
-              Dialogue patient–médecin : écrivez ou dictez votre réponse, puis recevez un retour pédagogique détaillé.
+              {ui.writtenHint}
               {usesRemoteLlm() ? ' · Groq' : ' · mock'}
             </p>
           </div>
@@ -186,11 +199,11 @@ export default function WrittenSimulationPanel({
         {!started && (
           <>
             <div className="flex flex-wrap gap-2">
-              <ModeChip active={mode === 'preset'} onClick={() => setMode('preset')}>Preset</ModeChip>
+              <ModeChip active={mode === 'preset'} onClick={() => setMode('preset')}>{ui.preset}</ModeChip>
               <ModeChip active={mode === 'topic'} onClick={() => setMode('topic')} disabled={!topicOptions.length}>
-                Topic vocab
+                {ui.topicVocab}
               </ModeChip>
-              <ModeChip active={mode === 'custom'} onClick={() => setMode('custom')}>Custom prompt</ModeChip>
+              <ModeChip active={mode === 'custom'} onClick={() => setMode('custom')}>{ui.customPrompt}</ModeChip>
             </div>
 
             {mode === 'preset' && (
@@ -213,24 +226,36 @@ export default function WrittenSimulationPanel({
             )}
 
             {mode === 'topic' && (
-              <label className="block">
-                <span className="text-[12px] font-semibold text-[#5f6368]">Topic / category</span>
-                <select
-                  value={categoryId}
-                  onChange={(e) => {
-                    const id = e.target.value;
-                    setCategoryId(id);
-                    const opt = topicOptions.find((t) => t.id === id);
-                    if (opt) setTheme(`Conversation about ${opt.label}`);
-                  }}
-                  className="mt-1 w-full rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8] bg-white"
-                >
-                  <option value="">Select a topic…</option>
-                  {topicOptions.map((t) => (
-                    <option key={t.id} value={t.id}>{'—'.repeat(t.depth)} {t.label}</option>
-                  ))}
-                </select>
-              </label>
+              <div className="space-y-3">
+                <label className="block">
+                  <span className="text-[12px] font-semibold text-[#5f6368]">{ui.topicCategory}</span>
+                  <select
+                    value={categoryId}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setCategoryId(id);
+                      const opt = topicOptions.find((t) => t.id === id);
+                      if (opt) setTheme(`Conversation about ${opt.label}`);
+                    }}
+                    className="mt-1 w-full rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8] bg-white"
+                  >
+                    <option value="">{ui.selectTopic}</option>
+                    {topicOptions.map((t) => (
+                      <option key={t.id} value={t.id}>{'—'.repeat(t.depth)} {t.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <TopicVocabPicker
+                  items={items}
+                  categories={categories}
+                  categoryId={categoryId}
+                  topicTab={topicTab}
+                  onTopicTabChange={setTopicTab}
+                  selectedWordIds={selectedWordIds}
+                  onSelectedWordIdsChange={setSelectedWordIds}
+                  ui={ui}
+                />
+              </div>
             )}
 
             {mode === 'custom' && (
@@ -238,13 +263,13 @@ export default function WrittenSimulationPanel({
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
                 rows={2}
-                placeholder="Instructions personnalisées…"
+                placeholder={ui.customInstructions}
                 className="w-full rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8] resize-y"
               />
             )}
 
             <label className="block">
-              <span className="text-[12px] font-semibold text-[#5f6368]">Theme / title</span>
+              <span className="text-[12px] font-semibold text-[#5f6368]">{ui.theme}</span>
               <input
                 value={theme}
                 onChange={(e) => setTheme(e.target.value)}

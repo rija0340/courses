@@ -7,7 +7,7 @@ function getApiKey() {
   return process.env.GROQ_API_KEY || '';
 }
 
-const SYSTEM_PROMPT = `You generate spoken doctor–patient role-play simulations for language practice.
+const SYSTEM_PROMPT = `You generate spoken doctor–patient role-play simulations for English language practice.
 Return ONLY valid JSON matching this shape:
 {
   "theme": "string",
@@ -18,10 +18,9 @@ Return ONLY valid JSON matching this shape:
 }
 Rules:
 - Alternate speakers naturally (prefer doctor ↔ patient)
-- Natural conversational English unless locale says otherwise
+- Write natural, realistic clinic conversation — not a vocabulary quiz
 - Keep each turn under 30 words
-- When a vocabulary list is provided: EVERY English term from the list MUST appear at least once somewhere in the dialogue (exact word/phrase). Do not skip any.
-- Make the dialogue long enough to fit all required vocabulary
+- When a vocabulary list is provided: weave those English terms into the dialogue naturally (about 1–2 terms per turn when possible). Prefer clinical context over checklist questions. Use the exact English spelling of each term at least once if you can do so without sounding forced.
 - Stay focused on the given topic
 - No markdown, no code fences, JSON only`;
 
@@ -47,18 +46,19 @@ function padMissingOnServer(script, vocabulary) {
     };
   }
 
+  // Soft clinical pad — only for terms the LLM missed (keep short)
   const extra = [];
   missing.forEach((word, idx) => {
     extra.push({
       id: `pad-doc-${idx + 1}`,
       role: 'doctor',
-      text: `Can you tell me about your ${word}?`,
+      text: `I'd also like to check anything related to ${word}.`,
       listenHint: `vocab: ${word}`
     });
     extra.push({
       id: `pad-pat-${idx + 1}`,
       role: 'patient',
-      text: `Yes, my ${word} has been a concern.`,
+      text: `Yes, ${word} has been on my mind lately.`,
       listenHint: `vocab: ${word}`
     });
   });
@@ -125,9 +125,11 @@ async function generateSimulation({
       return `- ${en}${fr}`;
     });
     userParts.push(
-      `REQUIRED vocabulary — include EVERY term at least once (exact English spelling):\n${lines.join('\n')}`
+      `Vocabulary to weave in naturally (aim to use each English term once in context):\n${lines.join('\n')}`
     );
-    userParts.push(`Checklist count: ${vocabCount} terms. Omitting any term is a failure.`);
+    userParts.push(
+      `Write a believable clinic visit. Do not ask "tell me about X" for every term. Spread terms across the dialogue.`
+    );
   }
 
   if (customPrompt) {

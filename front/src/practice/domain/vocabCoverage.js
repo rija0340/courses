@@ -38,8 +38,8 @@ function escapeReg(s) {
 }
 
 /**
- * Append short doctor/patient turns that mention each missing word.
- * Keeps conversation longer and guarantees coverage in-session.
+ * Soft pad for missing vocabulary (used by tests / optional tools).
+ * Prefer clinical phrasing over checklist tone.
  */
 export function padScriptWithMissingVocabulary(script, vocabulary = []) {
   if (!script?.turns?.length) return { script, missing: extractEnList(vocabulary), covered: [] };
@@ -70,13 +70,13 @@ export function padScriptWithMissingVocabulary(script, vocabulary = []) {
     extra.push({
       id: `pad-doc-${i}`,
       role: 'doctor',
-      text: `Can you tell me about your ${word}?`,
+      text: `I'd also like to check anything related to ${word}.`,
       listenHint: `vocab: ${word}`
     });
     extra.push({
       id: `pad-pat-${i}`,
       role: 'patient',
-      text: `Yes, my ${word} has been a concern.`,
+      text: `Yes, ${word} has been on my mind lately.`,
       listenHint: `vocab: ${word}`
     });
   }
