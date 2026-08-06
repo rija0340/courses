@@ -1,47 +1,31 @@
 /**
  * Collapsible mini patient/doctor example on VocabCard (symptoms & conditions).
- * Mobile-first: large tap target, collapsed by default. MG lines hidden if empty.
+ * Uses DialogueLangLines for FR/EN/MG badges, TTS, and per-line oral practice.
  */
 import React, { useState } from 'react';
 import { ChevronDown, MessageCircle } from 'lucide-react';
-import { hasExample, hasText, highlightCollocation } from '../../utils/vocabDialogue';
+import { hasExample, hasText } from '../../utils/vocabDialogue';
+import DialogueLangLines from './DialogueLangLines';
 
 function SpeakerBlock({ label, side, align = 'start', highlightTerms }) {
   if (!side) return null;
-  const en = side.en?.trim();
-  const fr = side.fr?.trim();
-  const mg = side.mg?.trim();
-  if (!en && !fr && !mg) return null;
+  if (!hasText(side.en) && !hasText(side.fr) && !hasText(side.mg)) return null;
 
   const isDoctor = align === 'end';
 
   return (
     <div className={`flex ${isDoctor ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`max-w-[92%] sm:max-w-[85%] rounded-2xl px-3.5 py-2.5 ${
+        className={`w-full max-w-[100%] sm:max-w-[95%] rounded-2xl px-3 py-2.5 ${
           isDoctor
             ? 'bg-[#e8f0fe] rounded-br-md'
             : 'bg-[#f1f3f4] rounded-bl-md'
         }`}
       >
-        <p className="text-[10px] font-bold uppercase tracking-wider text-[#9aa0a6] mb-1">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[#9aa0a6] mb-1.5 px-1.5">
           {label}
         </p>
-        {hasText(en) && (
-          <p className="text-[14px] text-[#202124] leading-snug">
-            {highlightCollocation(en, highlightTerms?.en)}
-          </p>
-        )}
-        {hasText(fr) && (
-          <p className="text-[13px] text-[#5f6368] italic mt-1 leading-snug">
-            {highlightCollocation(fr, highlightTerms?.fr)}
-          </p>
-        )}
-        {hasText(mg) && (
-          <p className="text-[12px] text-[#0d9488] mt-1 leading-snug">
-            {highlightCollocation(mg, highlightTerms?.mg)}
-          </p>
-        )}
+        <DialogueLangLines line={side} highlightTerms={highlightTerms} />
       </div>
     </div>
   );
