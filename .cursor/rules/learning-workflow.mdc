@@ -1,0 +1,17 @@
+---
+description: Workflow d'apprentissage accéléré — explore, plan, validate, build, verify, log
+alwaysApply: true
+---
+
+# Learning workflow
+
+Suis le contrat complet dans `AGENTS.md` à la racine du repo.
+
+Rappels courts :
+
+- Micro-tâche → BUILD direct (+ 1 ligne journal si utile).
+- Non-trivial → EXPLORE → PLAN → **stop VALIDATE** → BUILD → VERIFY → LOG.
+- Ne code pas sans « ok » explicite (sauf `mode: rapide`).
+- LOG : `docs/learnings/decisions.md` + `journal.md` ; ADR seulement si gros choix ; `pitfalls.md` si piège notable.
+- **Apprentissage ciblé** : chaque PLAN/LOG non trivial porte 1–3 **tags** (`docs/learnings/domains.md`) + une **bonne pratique nommée** (pas vague). Diagramme Mermaid si le flux n'est pas clair en 3 phrases.
+- Objectif : après chaque feature, l'humain doit pouvoir dire le **concept**, le **domaine**, la **pratique**, et **pourquoi pas l'autre option**.
