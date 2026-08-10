@@ -28,7 +28,7 @@ export default function VocabsAdmin() {
   const adminUrl = useMemo(() => parseAdminSearchParams(searchParams), [searchParams]);
   const {
     domain, items, loading, error, refresh,
-    addItem, updateItem, deleteItem,
+    addItem, updateItem, deleteItem, deleteItems,
     updateCategories, updateMeta, updateOrganization
   } = useVocabDomain(domainId);
 
@@ -309,6 +309,7 @@ export default function VocabsAdmin() {
           addItem={addItem}
           updateItem={updateItem}
           deleteItem={deleteItem}
+          deleteItems={deleteItems}
           refresh={refresh}
           urlCategoryId={adminUrl.cat}
           urlOrgTab={adminUrl.orgTab}

@@ -621,6 +621,91 @@ export function itemsToCsv(items, columns = VOCAB_CSV_COLUMNS) {
   return `\uFEFF${lines.join('\n')}`;
 }
 
+/** Normalize text for duplicate comparison (trim + lowercase). */
+export function normalizeVocabText(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+/**
+ * Clipboard-friendly EN/FR pairs (tab-separated, no header).
+ * @param {object[]} items
+ * @returns {string}
+ */
+export function itemsToEnFrTsv(items) {
+  return (items || [])
+    .map((item) => `${item?.en ?? ''}\t${item?.fr ?? ''}`)
+    .join('\n');
+}
+
+/**
+ * Find text duplicates among imported items vs existing domain items (and within import).
+ * A row is a duplicate if lowercase en OR fr matches another item.
+ * @param {object[]} importedItems
+ * @param {object[]} currentItems
+ * @returns {{ groups: object[], duplicateImportIndexes: number[], duplicateCount: number }}
+ */
+export function findTextDuplicates(importedItems, currentItems = []) {
+  const imported = importedItems || [];
+  const current = currentItems || [];
+
+  /** @type {Map<string, { field: 'en'|'fr', value: string, importedIndexes: number[], existingIds: string[] }>} */
+  const byKey = new Map();
+
+  const push = (field, rawValue, meta) => {
+    const value = normalizeVocabText(rawValue);
+    if (!value) return;
+    const key = `${field}:${value}`;
+    let group = byKey.get(key);
+    if (!group) {
+      group = { key, field, value, importedIndexes: [], existingIds: [] };
+      byKey.set(key, group);
+    }
+    if (meta.importedIndex != null) {
+      if (!group.importedIndexes.includes(meta.importedIndex)) {
+        group.importedIndexes.push(meta.importedIndex);
+      }
+    }
+    if (meta.existingId != null) {
+      if (!group.existingIds.includes(meta.existingId)) {
+        group.existingIds.push(meta.existingId);
+      }
+    }
+  };
+
+  current.forEach((item) => {
+    if (!item) return;
+    push('en', item.en, { existingId: item.id });
+    push('fr', item.fr, { existingId: item.id });
+  });
+
+  imported.forEach((item, index) => {
+    if (!item) return;
+    push('en', item.en, { importedIndex: index });
+    push('fr', item.fr, { importedIndex: index });
+  });
+
+  const groups = [];
+  const duplicateImportIndexes = new Set();
+
+  byKey.forEach((group) => {
+    const hasExisting = group.existingIds.length > 0;
+    const multiImport = group.importedIndexes.length > 1;
+    const importVsExisting = hasExisting && group.importedIndexes.length > 0;
+    if (!importVsExisting && !multiImport) return;
+
+    groups.push(group);
+    group.importedIndexes.forEach((i) => duplicateImportIndexes.add(i));
+  });
+
+  groups.sort((a, b) => a.key.localeCompare(b.key));
+
+  return {
+    groups,
+    duplicateImportIndexes: [...duplicateImportIndexes].sort((a, b) => a - b),
+    duplicateCount: duplicateImportIndexes.size,
+  };
+}
+
 /**
  * Trigger a browser download for text content.
  */
