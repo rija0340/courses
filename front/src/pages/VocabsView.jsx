@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useContext, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Search, X, Filter, Image as ImageIcon, Volume2, BookOpen, Eye, HelpCircle, Link2, Check, Languages, MoreHorizontal, Sparkles, MessageCircle } from 'lucide-react';
+import { Search, X, Filter, ChevronDown, Image as ImageIcon, Volume2, BookOpen, Eye, HelpCircle, Link2, Check, Languages, MoreHorizontal, Sparkles, MessageCircle } from 'lucide-react';
 import { AppContext } from '../App';
 import Breadcrumb from '../components/Breadcrumb';
 import { CompactMenu, MenuButton, MenuTrigger } from '../components/CompactMenu';
@@ -463,7 +463,9 @@ export default function VocabsView() {
               type="button"
               onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
               aria-expanded={mobileDrawerOpen}
-              className="w-full flex items-center gap-2 px-3 h-11 rounded-xl bg-white border border-[#dadce0] text-[15px] font-semibold text-[#3c4043] shadow-sm hover:bg-[#f8f9fa] transition-all"
+              className={`w-full flex items-center gap-2 px-3 h-11 bg-white border border-[#dadce0] text-[15px] font-semibold text-[#3c4043] hover:bg-[#f8f9fa] transition-all ${
+                mobileDrawerOpen ? 'rounded-t-xl rounded-b-none border-b-transparent' : 'rounded-xl'
+              }`}
             >
               <Filter className="w-4 h-4 text-[#5f6368] shrink-0" />
               <span className="flex-1 min-w-0 truncate text-left">
@@ -482,20 +484,15 @@ export default function VocabsView() {
                   <X className="w-3.5 h-3.5" />
                 </span>
               )}
+              <ChevronDown
+                className={`w-4 h-4 text-[#5f6368] shrink-0 transition-transform ${
+                  mobileDrawerOpen ? 'rotate-180' : ''
+                }`}
+              />
             </button>
 
             {mobileDrawerOpen && (
-              <div className="mt-2 w-full bg-white border border-[#dadce0] rounded-2xl shadow-sm overflow-hidden animate-fade-in">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-[#dadce0]">
-                  <p className="font-medium text-[15px] text-[#202124]">Catégories</p>
-                  <button
-                    type="button"
-                    onClick={() => setMobileDrawerOpen(false)}
-                    className="p-1 rounded-full hover:bg-[#f1f3f4]"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+              <div className="w-full bg-white border border-[#dadce0] border-t-0 rounded-b-xl overflow-hidden">
                 <div className="p-3 overflow-y-auto" style={{ maxHeight: '60vh' }}>
                   {sidebarContent}
                 </div>
