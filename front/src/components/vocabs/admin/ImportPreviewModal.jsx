@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 /**
  * Shared preview modal for vocab JSON import (items-only or full domain).
+ * Supports excluding text duplicates (en/fr lowercase match) before confirm.
  */
 export default function ImportPreviewModal({
   preview,
@@ -12,12 +13,67 @@ export default function ImportPreviewModal({
   title = 'Importer JSON',
   hideModePicker = false,
 }) {
-  const { result, fileName } = preview;
+  const { result, fileName, duplicates } = preview;
   const ok = result?.ok;
   const data = result?.data;
   const stats = result?.stats;
   const isItemsOnly = result?.importType === 'items_only';
   const showModePicker = !hideModePicker && !isItemsOnly;
+  const items = data?.items || [];
+  const itemCount = items.length;
+  const groups = duplicates?.groups || [];
+  const duplicateIndexes = useMemo(
+    () => new Set(duplicates?.duplicateImportIndexes || []),
+    [duplicates]
+  );
+
+  const [includedIndexes, setIncludedIndexes] = useState(() => new Set());
+
+  useEffect(() => {
+    if (!ok) return;
+    const next = new Set();
+    for (let index = 0; index < itemCount; index += 1) {
+      if (!duplicateIndexes.has(index)) next.add(index);
+    }
+    setIncludedIndexes(next);
+  }, [ok, itemCount, duplicateIndexes, fileName]);
+
+  const existingById = useMemo(() => {
+    const map = new Map();
+    (duplicates?.currentItems || []).forEach((item) => {
+      if (item?.id) map.set(item.id, item);
+    });
+    return map;
+  }, [duplicates]);
+
+  const includedCount = includedIndexes.size;
+  const excludedDupes = [...duplicateIndexes].filter((i) => !includedIndexes.has(i)).length;
+
+  const toggleInclude = (index) => {
+    setIncludedIndexes((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
+
+  const excludeAllDuplicates = () => {
+    setIncludedIndexes((prev) => {
+      const next = new Set(prev);
+      duplicateIndexes.forEach((i) => next.delete(i));
+      return next;
+    });
+  };
+
+  const includeAll = () => {
+    setIncludedIndexes(new Set(items.map((_, i) => i)));
+  };
+
+  const handleConfirm = () => {
+    const selectedItems = items.filter((_, index) => includedIndexes.has(index));
+    onConfirm(selectedItems);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -42,7 +98,7 @@ export default function ImportPreviewModal({
         ) : (
           <>
             {stats && (
-              <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className={`grid gap-2 mb-4 ${duplicates?.duplicateCount ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
                 <div className="rounded-xl bg-[#E6F4EA] p-2.5 text-center">
                   <p className="text-[18px] font-semibold tabular-nums text-[#137333]">{stats.added}</p>
                   <p className="text-[10px] font-semibold uppercase text-[#137333]">Nouveaux</p>
@@ -55,6 +111,12 @@ export default function ImportPreviewModal({
                   <p className="text-[18px] font-semibold tabular-nums">{stats.total}</p>
                   <p className="text-[10px] font-semibold uppercase text-[#9aa0a6]">Dans le fichier</p>
                 </div>
+                {duplicates?.duplicateCount > 0 && (
+                  <div className="rounded-xl bg-[#FCE8E6] p-2.5 text-center">
+                    <p className="text-[18px] font-semibold tabular-nums text-[#C5221F]">{duplicates.duplicateCount}</p>
+                    <p className="text-[10px] font-semibold uppercase text-[#C5221F]">Doublons texte</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -97,6 +159,76 @@ export default function ImportPreviewModal({
               </div>
             )}
 
+            {groups.length > 0 && (
+              <div className="mb-4 rounded-xl border border-[#F9AB00]/50 bg-[#FEF7E0]/60 p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                  <div>
+                    <p className="text-[13px] font-semibold text-[#202124]">Doublons EN/FR</p>
+                    <p className="text-[11px] text-[#5f6368] mt-0.5">
+                      Correspondance exacte (minuscules) sur en ou fr. Décochés par défaut.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={excludeAllDuplicates}
+                      className="h-7 px-2 rounded-lg bg-white border border-[#dadce0] text-[11px] font-semibold text-[#5f6368] hover:bg-[#f1f3f4]"
+                    >
+                      Exclure tous les doublons
+                    </button>
+                    <button
+                      type="button"
+                      onClick={includeAll}
+                      className="h-7 px-2 rounded-lg bg-white border border-[#dadce0] text-[11px] font-semibold text-[#5f6368] hover:bg-[#f1f3f4]"
+                    >
+                      Tout inclure
+                    </button>
+                  </div>
+                </div>
+                <ul className="space-y-2 max-h-48 overflow-y-auto">
+                  {groups.map((group) => (
+                    <li key={group.key} className="rounded-lg bg-white border border-[#dadce0]/80 p-2.5">
+                      <p className="text-[12px] font-semibold text-[#202124] mb-1.5">
+                        {group.field.toUpperCase()} « {group.value} »
+                      </p>
+                      {group.existingIds.length > 0 && (
+                        <p className="text-[11px] text-[#5f6368] mb-1.5">
+                          Déjà en base :{' '}
+                          {group.existingIds.map((id) => {
+                            const ex = existingById.get(id);
+                            return ex ? `${ex.en || '—'} / ${ex.fr || '—'}` : id;
+                          }).join(' · ')}
+                        </p>
+                      )}
+                      <div className="space-y-1">
+                        {group.importedIndexes.map((index) => {
+                          const item = items[index];
+                          if (!item) return null;
+                          return (
+                            <label
+                              key={`${group.key}-${index}`}
+                              className="flex items-start gap-2 text-[12px] text-[#202124] cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={includedIndexes.has(index)}
+                                onChange={() => toggleInclude(index)}
+                                className="mt-0.5 w-3.5 h-3.5 rounded border-[#dadce0] text-[#1a73e8] focus:ring-[#1a73e8]"
+                              />
+                              <span>
+                                Inclure « {item.en || '—'} » / « {item.fr || '—'} »
+                                <span className="text-[#9aa0a6]"> · id {item.id || '?'}</span>
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {showModePicker && (
               <div className="space-y-2 mb-5">
                 {[
@@ -124,6 +256,11 @@ export default function ImportPreviewModal({
             {isItemsOnly && (
               <p className="text-[13px] text-[#5f6368] mb-5 rounded-xl bg-[#f8f9fa] p-3 border border-[#dadce0]/60">
                 Les mots existants seront conservés. Seuls les nouveaux ids seront ajoutés ; les ids déjà présents seront mis à jour.
+                {groups.length > 0 && (
+                  <> {includedCount} mot{includedCount !== 1 ? 's' : ''} seront importé{includedCount !== 1 ? 's' : ''}
+                    {excludedDupes > 0 ? ` (${excludedDupes} doublon${excludedDupes !== 1 ? 's' : ''} exclu${excludedDupes !== 1 ? 's' : ''})` : ''}.
+                  </>
+                )}
               </p>
             )}
 
@@ -131,12 +268,13 @@ export default function ImportPreviewModal({
               <button type="button" onClick={onCancel} className="flex-1 h-11 rounded-xl bg-[#f1f3f4] text-[#5f6368] font-semibold text-[13px]">Annuler</button>
               <button
                 type="button"
-                onClick={onConfirm}
-                className={`flex-1 h-11 rounded-xl text-white font-semibold text-[13px] ${
+                onClick={handleConfirm}
+                disabled={includedCount === 0}
+                className={`flex-1 h-11 rounded-xl text-white font-semibold text-[13px] disabled:opacity-50 disabled:cursor-not-allowed ${
                   importMode === 'overwrite' ? 'bg-red-500 hover:bg-red-600' : 'bg-[#1a73e8] hover:bg-[#1b66c9]'
                 }`}
               >
-                Confirmer
+                Confirmer ({includedCount})
               </button>
             </div>
           </>

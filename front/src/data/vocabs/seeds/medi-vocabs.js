@@ -54,6 +54,28 @@ const mediVocabsSeed = {
           { id: 'bras', label: { fr: 'Bras', en: 'Arms', mg: 'Sandry' }, image: null, visuals: [], children: [] },
           { id: 'jambes', label: { fr: 'Jambes', en: 'Legs', mg: 'Tongotra' }, image: null, visuals: [], children: [] }
         ]
+      },
+      {
+        id: 'specialty',
+        label: { fr: 'Spécialité', en: 'Specialty', mg: 'Specialty' },
+        image: null,
+        visuals: [],
+        children: [
+          {
+            id: 'ophthalmology',
+            label: { fr: 'Ophtalmologie', en: 'Ophthalmology', mg: 'Ophtalmolojia' },
+            image: null,
+            visuals: [],
+            children: []
+          },
+          {
+            id: 'dentistry',
+            label: { fr: 'Dentisterie', en: 'Dentistry', mg: 'Dentistry' },
+            image: null,
+            visuals: [],
+            children: []
+          }
+        ]
       }
     ]
   },

@@ -9,6 +9,7 @@ import {
   downloadJsonFile,
   downloadTextFile,
   filterItemsForDataScope,
+  findTextDuplicates,
   isItemsOnlyImport,
   itemsToCsv,
   mergeVocabItems,
@@ -131,9 +132,19 @@ export default function CategoryDataTransfer({
         return;
       }
       const result = validateItemsOnlyImport(parsed, domain, validationOptions);
-      setImportPreview({ raw: parsed, result, fileName: sourceLabel });
+      const currentItems = domain?.items || items || [];
+      const duplicates = result.ok
+        ? {
+            ...findTextDuplicates(result.data?.items || [], currentItems),
+            currentItems,
+          }
+        : null;
+      setImportPreview({ raw: parsed, result, fileName: sourceLabel, duplicates });
       setImportMode('merge');
       if (!result.ok) showToast(result.errors[0] || 'JSON invalide', 'error');
+      else if (duplicates?.duplicateCount > 0) {
+        showToast(`${duplicates.duplicateCount} doublon(s) EN/FR détecté(s) — vérifiez avant d’importer`);
+      }
     } catch (err) {
       showToast(`JSON invalide: ${err.message}`, 'error');
     }
@@ -158,18 +169,31 @@ export default function CategoryDataTransfer({
     processImportText(pasteJson, 'Collé');
   };
 
-  const executeImport = async () => {
+  const executeImport = async (selectedItems) => {
     if (!importPreview?.result?.ok || !importPreview.result.data || !domain?.id) return;
-    const { data, stats } = importPreview.result;
+    const toImport = Array.isArray(selectedItems)
+      ? selectedItems
+      : (importPreview.result.data.items || []);
+    if (toImport.length === 0) {
+      showToast('Aucun mot à importer', 'error');
+      return;
+    }
     try {
-      const mergedItems = mergeVocabItems(domain.items || items || [], data.items);
+      const mergedItems = mergeVocabItems(domain.items || items || [], toImport);
+      const currentIds = new Set((domain.items || items || []).map((i) => i.id));
+      let added = 0;
+      let updated = 0;
+      toImport.forEach((item) => {
+        if (currentIds.has(item.id)) updated += 1;
+        else added += 1;
+      });
       await vocabStorage.saveDomain(domain.id, {
         version: VOCAB_DOMAIN_VERSION,
         meta: domain.meta,
         organization: domain.organization,
         items: mergedItems,
       });
-      showToast(`Import OK — ${stats?.added || 0} nouveau(x), ${stats?.updated || 0} mis à jour`);
+      showToast(`Import OK — ${added} nouveau(x), ${updated} mis à jour`);
       setImportPreview(null);
       setPasteJson('');
       if (refresh) await refresh();

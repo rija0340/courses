@@ -27,6 +27,7 @@ export default function CategoriesHub({
   addItem,
   updateItem,
   deleteItem,
+  deleteItems,
   refresh,
   urlCategoryId,
   urlOrgTab,
@@ -510,6 +511,7 @@ export default function CategoriesHub({
                       addItem={addItem}
                       updateItem={updateItem}
                       deleteItem={deleteItem}
+                      deleteItems={deleteItems}
                       showToast={showToast}
                       getLabel={getLabel}
                     />

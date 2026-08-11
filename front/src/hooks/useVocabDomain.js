@@ -63,6 +63,16 @@ export default function useVocabDomain(domainId) {
     setItems(prev => prev.filter(i => i.id !== id));
   }, [domainId]);
 
+  const deleteItems = useCallback(async (ids) => {
+    const idList = [...new Set((ids || []).filter(Boolean))];
+    if (idList.length === 0) return;
+    for (const id of idList) {
+      await vocabStorage.deleteItem(domainId, id);
+    }
+    const removed = new Set(idList);
+    setItems(prev => prev.filter(i => !removed.has(i.id)));
+  }, [domainId]);
+
   const updateOrganization = useCallback(async (organization) => {
     await vocabStorage.updateOrganization(domainId, organization);
     setDomain(prev => prev ? { ...prev, organization } : prev);
@@ -90,6 +100,7 @@ const updateCategories = useCallback(async (categories) => {
     addItem,
     updateItem,
     deleteItem,
+    deleteItems,
     updateOrganization,
     updateCategories,
     updateMeta
