@@ -432,7 +432,7 @@ export default function VocabsView() {
         {isTextMode && (
           <form
             onSubmit={(e) => handleSearchSubmit(e, desktopSearchRef)}
-            className="hidden md:flex relative flex-1 items-center min-w-[220px]"
+            className="hidden md:block relative w-full max-w-xl"
           >
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aa0a6] pointer-events-none" />
             <input
