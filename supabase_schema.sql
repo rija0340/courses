@@ -50,6 +50,8 @@ CREATE TABLE IF NOT EXISTS public.vocab_items (
     example     JSONB,
     -- Long scenario dialogue: [{ role: 'patient'|'doctor', en, fr, mg }]
     dialogue    JSONB,
+    -- Profile extras: synonyms, antonyms, context, particle, pattern, register, notes
+    attrs       JSONB       DEFAULT '{}'::jsonb,
     -- Image stored as Supabase Storage public URL (preferred) or base64 fallback
     image_url   TEXT,                              -- Supabase Storage URL (e.g. https://xxx.supabase.co/storage/v1/object/public/vocab-images/items/...)
     image       TEXT,                              -- Legacy base64 fallback (still supported)

@@ -10,7 +10,20 @@ import {
 } from '../imageUpload';
 import { requireAuthSession } from '../supabaseHealth';
 
+function pickItemAttrs(item = {}) {
+  return {
+    synonyms: Array.isArray(item.synonyms) ? item.synonyms : [],
+    antonyms: Array.isArray(item.antonyms) ? item.antonyms : [],
+    context: item.context ?? null,
+    particle: item.particle || '',
+    pattern: item.pattern || '',
+    register: item.register || '',
+    notes: item.notes ?? null,
+  };
+}
+
 function mapItem(item) {
+  const attrs = item.attrs && typeof item.attrs === 'object' ? item.attrs : {};
   return {
     id: item.id,
     en: item.en,
@@ -23,6 +36,13 @@ function mapItem(item) {
     // Mini-example (symptoms/conditions) + long dialogue (scenarios)
     example: item.example ?? null,
     dialogue: item.dialogue ?? null,
+    synonyms: attrs.synonyms ?? [],
+    antonyms: attrs.antonyms ?? [],
+    context: attrs.context ?? null,
+    particle: attrs.particle || '',
+    pattern: attrs.pattern || '',
+    register: attrs.register || '',
+    notes: attrs.notes ?? null,
     image: resolveImageSrc(item),
   };
 }
@@ -40,6 +60,7 @@ function mapItemRow(item, domainId) {
     phonetic: item.phonetic || null,
     example: item.example ?? null,
     dialogue: Array.isArray(item.dialogue) ? item.dialogue : null,
+    attrs: pickItemAttrs(item),
     // Prefer URL if caller already has a Storage URL; keep legacy base64 only as fallback
     image_url: item.image_url || (isHttpUrl(item.image) ? item.image : null),
     image: isHttpUrl(item.image) ? null : (item.image || null),
@@ -328,6 +349,21 @@ const supabaseProvider = {
     if (data.tab !== undefined) updateData.tab = data.tab;
     if (data.categoryId !== undefined) updateData.category_id = data.categoryId;
     if (data.phonetic !== undefined) updateData.phonetic = data.phonetic;
+    if (data.example !== undefined) updateData.example = data.example;
+    if (data.dialogue !== undefined) {
+      updateData.dialogue = Array.isArray(data.dialogue) ? data.dialogue : null;
+    }
+    if (
+      data.synonyms !== undefined
+      || data.antonyms !== undefined
+      || data.context !== undefined
+      || data.particle !== undefined
+      || data.pattern !== undefined
+      || data.register !== undefined
+      || data.notes !== undefined
+    ) {
+      updateData.attrs = pickItemAttrs(data);
+    }
     if (data.image !== undefined) {
       if (isHttpUrl(data.image)) {
         updateData.image_url = data.image;

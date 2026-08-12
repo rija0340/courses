@@ -10,6 +10,16 @@ export {
   templateToPrettyJson,
 } from './vocabDomainSchema';
 
+export {
+  ITEM_PROFILES,
+  ITEM_PROFILE_OPTIONS,
+  DEFAULT_ITEM_PROFILE,
+  resolveItemProfile,
+  getItemDisplayWord,
+  getFilledLangRows,
+  hasAnyLanguage,
+} from './vocabItemProfiles';
+
 const domainRegistry = {
   'medi-vocabs': {
     seed: mediVocabsSeed,

@@ -7,6 +7,7 @@ import VocabForm from '../VocabForm';
 import vocabStorage from '../../../services/vocabStorage';
 import { filterVocabItems } from '../../../utils/vocabFilters';
 import { itemsToEnFrTsv } from '../../../data/vocabs/vocabDomainSchema';
+import { getItemDisplayWord, DEFAULT_ITEM_PROFILE } from '../../../data/vocabs/vocabItemProfiles';
 import { EmptyState, ConfirmModal, ImageModal, TYPE_COLORS } from './shared';
 import FullscreenLightbox from '../FullscreenLightbox';
 
@@ -16,6 +17,7 @@ export default function CategoryItemsPanel({
   tabs,
   categoryId,
   activeOrgTab,
+  itemProfile = DEFAULT_ITEM_PROFILE,
   domainId,
   addItem,
   updateItem,
@@ -331,8 +333,13 @@ export default function CategoryItemsPanel({
                       )}
                     </button>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-medium text-[#202124] truncate">{item.fr}</p>
-                      <p className="text-[12px] text-[#5f6368] truncate">{item.en} · {item.mg}</p>
+                      <p className="text-[14px] font-medium text-[#202124] truncate">
+                        {getItemDisplayWord(item, 'fr')}
+                      </p>
+                      <p className="text-[12px] text-[#5f6368] truncate">
+                        {[item.en, item.fr, item.mg].filter((t) => t && t.trim()).filter((t, i, a) => a.indexOf(t) === i && t !== getItemDisplayWord(item, 'fr')).join(' · ')
+                          || (item.synonyms?.length ? `syn. ${item.synonyms.slice(0, 3).join(', ')}` : item.id)}
+                      </p>
                     </div>
                     {item.category && (
                       <span className={`hidden sm:inline text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${typeClass}`}>{item.category}</span>
@@ -444,13 +451,14 @@ export default function CategoryItemsPanel({
           defaultTab={activeOrgTab}
           lockCategory={!editItem}
           lockTab={!editItem}
+          itemProfile={itemProfile}
         />
       )}
 
       {confirmDelete && (
         <ConfirmModal
           title="Supprimer ce mot ?"
-          text={`« ${confirmDelete.fr} » (${confirmDelete.en}) sera définitivement supprimé.`}
+          text={`« ${getItemDisplayWord(confirmDelete, 'fr')} » sera définitivement supprimé.`}
           onCancel={() => setConfirmDelete(null)}
           onConfirm={() => handleDelete(confirmDelete.id)}
           confirmText="Supprimer"

@@ -41,3 +41,11 @@ sequenceDiagram
   Supabase->>Hook: SIGNED_IN (recovery)
   Hook->>Hook: hadSession? skip refresh
 ```
+
+### 2026-08-12 - Vocab profils flexibles + traductions optionnelles
+**Tags :** `data-modeling` `ux` `solid`
+**Bonne pratique :** Open/Closed ; single source of truth ; progressive disclosure
+**Concept :** catalogue de champs + `itemProfile` par catégorie ; fiche verticale ; langues optionnelles (label seulement si rempli).
+**Pourquoi :** adjectifs ≠ phrasal verbs ≠ collocations sans tabs MediVocabs ni table scroll-X.
+**Pas choisi :** schéma unique figé ; JSON `extra` libre ; tableau Excel mobile.
+**À retenir :** données tabulaires, UI empilée ; profil sur le thème, pas sur chaque mot.
