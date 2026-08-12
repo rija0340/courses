@@ -36,7 +36,7 @@ export const mockQuizLlmAdapter = {
           'La réponse attendue est différente. Comparez le sens et l’orthographe avec la cible.',
         partOfSpeech: 'nom / expression',
         errorType: 'réponse hors cible',
-        rule: 'Pour ce type d’exercice, privilégiez le terme exact du thème ou un synonyme médical précis.',
+        rule: 'Pour ce type d’exercice, privilégiez le terme exact du thème ou un synonyme précis.',
         formation: 'Repartir du prompt, identifier le concept, produire le mot EN exact.',
         steps: [
           'Relisez le prompt / la définition.',
@@ -70,7 +70,7 @@ export const mockQuizLlmAdapter = {
 
     const written = createWrittenTurnResult({
       partnerTurn: {
-        role: 'doctor',
+        role: 'coach',
         text: correct
           ? 'Well done — that matches the target.'
           : `Not quite. The expected answer is "${expected || '…'}".`

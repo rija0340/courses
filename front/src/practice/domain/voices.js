@@ -19,6 +19,14 @@ export const ROLE_VOICES = {
     deepgram: 'aura-asteria-en',
     browser: { pitch: 1.15, rate: 1, prefer: /female|samantha|zira/i }
   },
+  a: {
+    deepgram: 'aura-asteria-en',
+    browser: { pitch: 1.15, rate: 1, prefer: /female|samantha|zira/i }
+  },
+  b: {
+    deepgram: 'aura-arcas-en',
+    browser: { pitch: 0.9, rate: 1, prefer: /male|daniel|david/i }
+  },
   learner: {
     deepgram: 'aura-asteria-en',
     browser: { pitch: 1.15, rate: 1, prefer: /female|samantha|zira/i }
@@ -40,8 +48,8 @@ export function resolveRoleVoice(role) {
   if (/doctor|physician|clinician/.test(r)) return ROLE_VOICES.doctor;
   if (/nurse|paramedic|pharmacist/.test(r)) return ROLE_VOICES.nurse;
   if (/reception|admin/.test(r)) return ROLE_VOICES.receptionist;
-  if (/patient|learner|student/.test(r)) return ROLE_VOICES.patient;
-  if (/partner|friend|tutor|teacher|interviewer/.test(r)) return ROLE_VOICES.partner;
+  if (/^a$|patient|learner|student/.test(r)) return ROLE_VOICES.a;
+  if (/^b$|partner|friend|tutor|teacher|interviewer/.test(r)) return ROLE_VOICES.b;
   return ROLE_VOICES.speaker;
 }
 

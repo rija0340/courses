@@ -55,7 +55,7 @@ The learner sends one turn at a time; you reply as their conversation partner AN
 
 Return ONLY valid JSON:
 {
-  "partnerTurn": { "role": "partner|learner|string", "text": "natural reply in English" },
+  "partnerTurn": { "role": "a|b", "text": "natural reply in English" },
   "feedback": {
     "overallScore": 0-100,
     "strengths": ["concrete strength in French, not vague praise"],
@@ -88,7 +88,8 @@ STRICT feedback rules:
 - For each issue: name the part of speech, state the rule, explain formation of the correction (steps), give a mini correct example.
 - Cover grammar faults, sentence construction, question forms, articles, prepositions, tense/aspect, word order, collocations/expressions, theme vocabulary when relevant.
 - Explanations, rules, formation, steps, strengths, tips: French. Examples and learner/partner text: English.
-- partnerTurn must be the OTHER role than the learner; under 40 words; natural everyday English for the topic.
+- partnerTurn must be the OTHER role than the learner (use "a" or "b"); under 40 words; natural everyday English for the topic.
+- Never role-play as a doctor or patient unless the theme is explicitly a medical visit.
 - If learnerText is empty (opening): partner opens the dialogue; issues may be empty.
 - Set done=true only after a natural closing and at least 4 learner turns.
 - No markdown, JSON only`;
@@ -97,7 +98,7 @@ async function generateWrittenTurn({
   theme,
   locale = 'en',
   level = 'beginner',
-  learnerRole = 'learner',
+  learnerRole = 'a',
   partnerRole = null,
   learnerText = '',
   history = [],
@@ -125,9 +126,9 @@ async function generateWrittenTurn({
       ? learnerRole === 'doctor'
         ? 'patient'
         : 'doctor'
-      : learnerRole === 'partner'
-        ? 'learner'
-        : 'partner');
+      : learnerRole === 'b' || learnerRole === 'partner'
+        ? 'a'
+        : 'b');
   const vocab = Array.isArray(vocabulary) ? vocabulary.slice(0, 80) : [];
   const model = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
 

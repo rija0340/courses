@@ -16,7 +16,7 @@ describe('vocabCoverage', () => {
   it('pads script so all words appear', () => {
     const script = {
       theme: 'eyes',
-      turns: [{ id: '1', role: 'doctor', text: 'Hello' }],
+      turns: [{ id: '1', role: 'b', text: 'Hello' }],
       meta: {}
     };
     const { script: padded, missing } = padScriptWithMissingVocabulary(script, vocab);

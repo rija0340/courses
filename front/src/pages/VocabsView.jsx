@@ -312,8 +312,7 @@ export default function VocabsView() {
         <p className="text-lg sm:text-xl text-[#5f6368] leading-relaxed">{getLabel(meta?.description)}</p>
       </div>
 
-      <div className="flex flex-col gap-3 mb-5">
-        {/* Row 1: modes + simulation + revision controls */}
+      <div className="flex flex-col gap-2 mb-5">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex gap-[2px] p-[2px] bg-[#f1f3f4] rounded-xl shrink-0">
             <button
@@ -357,17 +356,17 @@ export default function VocabsView() {
           {domainId === 'medi-vocabs' && (
             <Link
               to={`/vocabs/${domainId}/chat`}
-              className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-[#dadce0] bg-white text-[12px] sm:text-[13px] font-semibold text-[#1a73e8] hover:bg-[#e8f0fe] shrink-0"
+              className="inline-flex items-center gap-1.5 px-2.5 h-9 rounded-xl border border-[#dadce0] bg-white text-[12px] sm:text-[13px] font-semibold text-[#1a73e8] hover:bg-[#e8f0fe] shrink-0"
             >
               <MessageCircle className="w-4 h-4" />
-              <span>Chat</span>
+              <span className="hidden xs:inline sm:inline">Chat</span>
             </Link>
           )}
 
           {isPracticeEnabled() && (
             <Link
               to={`/vocabs/${domainId}/practice/simulation`}
-              className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-[#dadce0] bg-white text-[12px] sm:text-[13px] font-semibold text-[#1a73e8] hover:bg-[#e8f0fe] shrink-0"
+              className="inline-flex items-center gap-1.5 px-2.5 h-9 rounded-xl border border-[#dadce0] bg-white text-[12px] sm:text-[13px] font-semibold text-[#1a73e8] hover:bg-[#e8f0fe] shrink-0"
             >
               <Sparkles className="w-4 h-4" />
               <span>Simulation</span>
@@ -423,48 +422,46 @@ export default function VocabsView() {
               </button>
             </>
           )}
+
+          {isTextMode && (
+            <form
+              onSubmit={(e) => handleSearchSubmit(e, desktopSearchRef)}
+              className="hidden md:block relative flex-1 min-w-[12rem] max-w-md"
+            >
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aa0a6] pointer-events-none" />
+              <input
+                ref={desktopSearchRef}
+                type="search"
+                enterKeyHint="search"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Rechercher..."
+                className="w-full h-9 pl-9 pr-8 rounded-xl bg-white border border-[#dadce0] focus:border-[#1a73e8] focus:shadow-sm outline-none text-[14px] transition-all placeholder:text-[#9aa0a6]"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-zinc-100 rounded-full hover:bg-zinc-200"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </form>
+          )}
         </div>
 
         {modeHint && (
-          <p className="text-[13px] text-[#5f6368]">{modeHint}</p>
+          <p className="text-[12px] text-[#9aa0a6] leading-snug">{modeHint}</p>
         )}
 
-        {/* Row 2: desktop search */}
-        {isTextMode && (
-          <form
-            onSubmit={(e) => handleSearchSubmit(e, desktopSearchRef)}
-            className="hidden md:block relative w-full max-w-xl"
-          >
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aa0a6] pointer-events-none" />
-            <input
-              ref={desktopSearchRef}
-              type="search"
-              enterKeyHint="search"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Rechercher..."
-              className="w-full h-10 pl-9 pr-8 rounded-xl bg-white border border-[#dadce0] focus:border-[#1a73e8] focus:shadow-sm outline-none text-[15px] transition-all placeholder:text-[#9aa0a6]"
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-zinc-100 rounded-full hover:bg-zinc-200"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
-          </form>
-        )}
-
-        {/* Mobile: full-width category selector (in-flow, not floating) */}
         {hasSidebar && (
           <div ref={drawerRef} className="md:hidden w-full">
             <button
               type="button"
               onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
               aria-expanded={mobileDrawerOpen}
-              className={`w-full flex items-center gap-2 px-3 h-11 bg-white border border-[#dadce0] text-[15px] font-semibold text-[#3c4043] hover:bg-[#f8f9fa] transition-all ${
+              className={`w-full flex items-center gap-2 px-3 h-10 bg-white border border-[#dadce0] text-[14px] font-semibold text-[#3c4043] hover:bg-[#f8f9fa] transition-all ${
                 mobileDrawerOpen ? 'rounded-t-xl rounded-b-none border-b-transparent' : 'rounded-xl'
               }`}
             >
@@ -515,7 +512,7 @@ export default function VocabsView() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Rechercher : eye, maso, yeux..."
-              className="w-full h-11 pl-9 pr-8 rounded-xl bg-white border border-[#dadce0] focus:border-[#1a73e8] focus:shadow-sm outline-none text-[15px] transition-all placeholder:text-[#9aa0a6]"
+              className="w-full h-10 pl-9 pr-8 rounded-xl bg-white border border-[#dadce0] focus:border-[#1a73e8] focus:shadow-sm outline-none text-[15px] transition-all placeholder:text-[#9aa0a6]"
             />
             {search && (
               <button

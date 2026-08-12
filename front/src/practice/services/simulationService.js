@@ -17,8 +17,8 @@ export const simulationService = {
     return getPresetById(domainId, id);
   },
 
-  getProfile(domainId) {
-    return getScenarioProfile(domainId);
+  getProfile(domainId, promptId = null) {
+    return getScenarioProfile(domainId, promptId);
   },
 
   async generate({
@@ -34,7 +34,7 @@ export const simulationService = {
     domainId = null,
     scenarioKind = null,
   }) {
-    const profile = getScenarioProfile(domainId);
+    const profile = getScenarioProfile(domainId, promptId);
     const kind = scenarioKind || profile.kind;
     const preset = promptId ? getPresetById(domainId, promptId) : null;
     const turnCount =

@@ -15,6 +15,7 @@ import { useMicTranscript } from '../hooks/useMicTranscript';
 import WrittenFeedbackPanel from './WrittenFeedbackPanel';
 import { speechService } from '../services/speechService';
 import { simulationUi } from '../data/simulationUiCopy';
+import { getScenarioProfile } from '../data/scenarioProfiles';
 import { MAX_PRACTICE_VOCAB, capVocabularyForGeneration } from '../domain/topicVocabulary';
 import {
   PracticeCard,
@@ -38,7 +39,7 @@ export default function QuizPracticePanel({
 }) {
   const { lang } = useContext(AppContext);
   const scenarioKind = useMemo(
-    () => (domainId === 'medi-vocabs' ? 'medical' : 'general'),
+    () => getScenarioProfile(domainId).kind,
     [domainId]
   );
   const ui = useMemo(() => simulationUi(lang, scenarioKind), [lang, scenarioKind]);

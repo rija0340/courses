@@ -16,7 +16,7 @@ export const mockLlmAdapter = {
     roles = null,
   }) {
     await delay(400);
-    const profile = getScenarioProfile(domainId);
+    const profile = getScenarioProfile(domainId, promptId);
     const kind = scenarioKind || profile.kind;
     const partner = roles?.partner || profile.padPartnerRole;
     const learner = roles?.learner || profile.padLearnerRole;

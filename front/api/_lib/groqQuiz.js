@@ -7,8 +7,7 @@ function getApiKey() {
   return process.env.GROQ_API_KEY || '';
 }
 
-const QUIZ_SYSTEM_PROMPT = `You are a meticulous English vocabulary coach for medical / domain learning.
-Evaluate the learner's answer to a quiz item and return rich pedagogical feedback.
+const QUIZ_SYSTEM_PROMPT = `Evaluate the learner's answer to a quiz item and return rich pedagogical feedback.
 
 Return ONLY valid JSON:
 {

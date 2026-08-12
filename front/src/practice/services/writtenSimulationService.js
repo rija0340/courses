@@ -11,7 +11,7 @@ export const writtenSimulationService = {
     theme,
     locale = 'en',
     level = 'beginner',
-    learnerRole = 'learner',
+    learnerRole = 'a',
     partnerRole = null,
     learnerText = '',
     history = [],

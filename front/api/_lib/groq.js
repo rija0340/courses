@@ -37,7 +37,8 @@ Return ONLY valid JSON matching this shape:
   ]
 }
 Rules:
-- Alternate speakers naturally between "${partnerRole}" and "${learnerRole}"
+- Alternate speakers naturally between "${partnerRole}" and "${learnerRole}" only
+- Never use doctor, patient, nurse, or clinic roles unless the theme is explicitly a medical visit
 - Write a natural everyday / topic conversation — not a vocabulary quiz checklist
 - Keep each turn under 30 words
 - When a vocabulary list is provided: weave those English terms into the dialogue naturally (about 1–2 terms per turn when possible). Prefer authentic context over "define this word" questions. Use the exact English spelling of each term at least once if you can do so without sounding forced.
@@ -67,8 +68,8 @@ function padMissingOnServer(script, vocabulary, roles, kind) {
     };
   }
 
-  const partner = roles?.partner || (kind === 'medical' ? 'doctor' : 'partner');
-  const learner = roles?.learner || (kind === 'medical' ? 'patient' : 'learner');
+  const partner = roles?.partner || (kind === 'medical' ? 'doctor' : 'b');
+  const learner = roles?.learner || (kind === 'medical' ? 'patient' : 'a');
   const medical = kind === 'medical';
 
   const extra = [];
@@ -131,8 +132,8 @@ async function generateSimulation({
   }
 
   const kind = scenarioKind === 'medical' ? 'medical' : 'general';
-  const partnerRole = roles?.partner || (kind === 'medical' ? 'doctor' : 'partner');
-  const learnerRole = roles?.learner || (kind === 'medical' ? 'patient' : 'learner');
+  const partnerRole = roles?.partner || (kind === 'medical' ? 'doctor' : 'b');
+  const learnerRole = roles?.learner || (kind === 'medical' ? 'patient' : 'a');
 
   const vocab = Array.isArray(vocabulary) ? vocabulary.slice(0, 80) : [];
   const vocabCount = vocab.length;

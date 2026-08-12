@@ -15,7 +15,20 @@ import {
   hasText,
   listEntryPrimary,
   coercePhoneticString,
+  coerceDisplayText,
 } from '../../data/vocabs/vocabItemStructure';
+
+const BLOCK_FIELD_IDS = new Set(['context', 'notes']);
+const LONG_TEXT_THRESHOLD = 56;
+
+function isBlockStructureField(field, item) {
+  if (BLOCK_FIELD_IDS.has(field.id)) return true;
+  if (field.type === 'list') return false;
+  const text = field.translate
+    ? pickI18nText(item[field.id])
+    : coerceDisplayText(item[field.id]);
+  return text.length > LONG_TEXT_THRESHOLD;
+}
 
 const FIELD_SOFT = {
   synonyms: { bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE' },
@@ -35,8 +48,23 @@ const LANG_ROWS = [
   { code: 'MG', key: 'mg', field: 'mg' },
 ];
 
-function Section({ label, children, soft }) {
+function Section({ label, children, soft, compact = false }) {
   const tone = soft || DEFAULT_FIELD_SOFT;
+  if (compact) {
+    return (
+      <div className="flex flex-col items-center text-center px-2 py-1 min-w-[7rem] max-w-full">
+        <p
+          className="text-[10px] font-bold uppercase tracking-wider mb-1"
+          style={{ color: tone.text }}
+        >
+          {label}
+        </p>
+        <div className="text-[14px] sm:text-[15px] text-[#3c4043] leading-snug w-full flex justify-center">
+          {children}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="mt-2.5 pt-2.5 border-t border-[#e8eaed]">
       <p
@@ -65,26 +93,30 @@ export default function VocabCard({
   const structured = Boolean(itemStructure);
   const structureLangs = structured ? structureHeadLangs(itemStructure) : ['fr', 'mg'];
   const phonetic = coercePhoneticString(item.phonetic);
+  const textEn = coerceDisplayText(item.en);
+  const textFr = coerceDisplayText(item.fr);
+  const textMg = coerceDisplayText(item.mg);
+  const langText = { en: textEn, fr: textFr, mg: textMg };
 
   // Lecture: English is always the title (lexique EN-first).
-  const titleEn = hasText(item.en) ? item.en.trim() : '';
+  const titleEn = hasText(textEn) ? textEn : '';
   const fallbackTitle = (() => {
-    if (hasText(item[lang])) return item[lang].trim();
+    if (hasText(langText[lang])) return langText[lang];
     for (const code of ['fr', 'mg']) {
-      if (hasText(item[code])) return item[code].trim();
+      if (hasText(langText[code])) return langText[code];
     }
     return item.id || '';
   })();
 
   const isRevision = mode === 'revision';
-  const revisionWord = hasText(item[revisionLang])
-    ? item[revisionLang].trim()
+  const revisionWord = hasText(langText[revisionLang])
+    ? langText[revisionLang]
     : (titleEn || fallbackTitle);
   const displayTitle = isRevision ? revisionWord : (titleEn || fallbackTitle);
   const imageAlt = titleEn || displayTitle;
 
   const otherLangRows = LANG_ROWS.filter((r) => {
-    if (!hasText(item[r.field])) return false;
+    if (!hasText(langText[r.field])) return false;
     if (isRevision) {
       if (structured && r.key !== 'en' && !structureLangs.includes(r.key)) return false;
       return true;
@@ -177,81 +209,98 @@ export default function VocabCard({
                 <RevealableLangRow
                   key={key}
                   code={code}
-                  text={item[field]}
+                  text={langText[field]}
                   langKey={key}
                   revisionLang={revisionLang}
                   forceRevealed={revealAll}
                   isActive={lang === key}
                 />
               ) : (
-                <LangRow key={key} code={code} text={item[field]} isActive={lang === key} />
+                <LangRow key={key} code={code} text={langText[field]} isActive={lang === key} />
               )
             )}
           </div>
         )}
 
-        {structured && (itemStructure.fields || []).map((f) => {
-          if (f.id === 'phonetic') return null;
-          if (!fieldHasContent(item, f)) return null;
-          const label = structureFieldLabel(f, lang);
-          const soft = FIELD_SOFT[f.id] || DEFAULT_FIELD_SOFT;
-          if (f.type === 'list') {
-            const entries = normalizeListField(item[f.id], f.translate);
-            return (
-              <Section key={f.id} label={label} soft={soft}>
-                <div className="flex flex-wrap gap-1.5">
-                  {entries.map((entry, i) => {
-                    const primary = listEntryPrimary(entry);
-                    const extra = f.translate && typeof entry === 'object'
-                      ? structureLangs
-                        .map((c) => entry[c])
-                        .filter(hasText)
-                        .join(' · ')
-                      : '';
-                    return (
-                      <span
-                        key={`${f.id}-${i}`}
-                        className="inline-flex flex-col text-[13px] sm:text-[14px] px-2 py-1 rounded-md border"
-                        style={{
-                          background: soft.bg,
-                          color: soft.text,
-                          borderColor: soft.border,
-                        }}
-                      >
-                        <span className="font-medium leading-snug">{primary}</span>
-                        {extra && (
-                          <span className="text-[12px] opacity-80 leading-snug">{extra}</span>
-                        )}
-                      </span>
-                    );
-                  })}
-                </div>
-              </Section>
-            );
-          }
-          if (f.translate) {
-            return (
-              <Section key={f.id} label={label} soft={soft}>
-                <p
-                  className="italic px-2 py-1.5 rounded-md border leading-snug"
-                  style={{ background: soft.bg, borderColor: soft.border }}
-                >
-                  {pickI18nText(item[f.id], lang)}
-                </p>
-              </Section>
-            );
-          }
-          return (
-            <Section key={f.id} label={label} soft={soft}>
-              <span
-                className="inline-block px-2 py-1 rounded-md border leading-snug"
-                style={{ background: soft.bg, borderColor: soft.border, color: soft.text }}
-              >
-                {typeof item[f.id] === 'string' ? item[f.id].trim() : ''}
-              </span>
-            </Section>
+        {structured && (() => {
+          const visible = (itemStructure.fields || []).filter(
+            (f) => f.id !== 'phonetic' && fieldHasContent(item, f)
           );
-        })}
+          const compactFields = visible.filter((f) => !isBlockStructureField(f, item));
+          const blockFields = visible.filter((f) => isBlockStructureField(f, item));
+
+          const renderField = (f, compact) => {
+            const label = structureFieldLabel(f, lang);
+            const soft = FIELD_SOFT[f.id] || DEFAULT_FIELD_SOFT;
+            if (f.type === 'list') {
+              const entries = normalizeListField(item[f.id], f.translate);
+              return (
+                <Section key={f.id} label={label} soft={soft} compact={compact}>
+                  <div className={`flex flex-wrap gap-1.5 ${compact ? 'justify-center' : ''}`}>
+                    {entries.map((entry, i) => {
+                      const primary = listEntryPrimary(entry);
+                      const extra = f.translate && typeof entry === 'object'
+                        ? structureLangs
+                          .map((c) => coerceDisplayText(entry[c]))
+                          .filter(hasText)
+                          .join(' · ')
+                        : '';
+                      return (
+                        <span
+                          key={`${f.id}-${i}`}
+                          className="inline-flex flex-col text-[13px] sm:text-[14px] px-2 py-1 rounded-md border"
+                          style={{
+                            background: soft.bg,
+                            color: soft.text,
+                            borderColor: soft.border,
+                          }}
+                        >
+                          <span className="font-medium leading-snug">{primary}</span>
+                          {extra && (
+                            <span className="text-[12px] opacity-80 leading-snug">{extra}</span>
+                          )}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </Section>
+              );
+            }
+            if (f.translate) {
+              return (
+                <Section key={f.id} label={label} soft={soft} compact={compact}>
+                  <p
+                    className="italic px-2 py-1.5 rounded-md border leading-snug"
+                    style={{ background: soft.bg, borderColor: soft.border }}
+                  >
+                    {pickI18nText(item[f.id], lang)}
+                  </p>
+                </Section>
+              );
+            }
+            return (
+              <Section key={f.id} label={label} soft={soft} compact={compact}>
+                <span
+                  className="inline-block px-2 py-1 rounded-md border leading-snug"
+                  style={{ background: soft.bg, borderColor: soft.border, color: soft.text }}
+                >
+                  {coerceDisplayText(item[f.id])}
+                </span>
+              </Section>
+            );
+          };
+
+          return (
+            <>
+              {compactFields.length > 0 && (
+                <div className="mt-2.5 pt-2.5 border-t border-[#e8eaed] flex flex-wrap justify-center gap-x-3 gap-y-2">
+                  {compactFields.map((f) => renderField(f, true))}
+                </div>
+              )}
+              {blockFields.map((f) => renderField(f, false))}
+            </>
+          );
+        })()}
 
         {hasExample(item.example) && <ExampleCollapse example={item.example} item={item} />}
         {canPractice && showPractice && (

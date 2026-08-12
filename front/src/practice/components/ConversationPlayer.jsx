@@ -7,6 +7,8 @@ const ROLE_STYLE = {
   doctor: { bubble: 'bg-sky-50 border-sky-100', badge: 'bg-sky-100 text-sky-800', align: 'start' },
   nurse: { bubble: 'bg-violet-50 border-violet-100', badge: 'bg-violet-100 text-violet-800', align: 'start' },
   receptionist: { bubble: 'bg-emerald-50 border-emerald-100', badge: 'bg-emerald-100 text-emerald-800', align: 'start' },
+  a: { bubble: 'bg-teal-50 border-teal-100', badge: 'bg-teal-100 text-teal-900', align: 'end' },
+  b: { bubble: 'bg-slate-50 border-slate-200', badge: 'bg-slate-200 text-slate-800', align: 'start' },
   partner: { bubble: 'bg-slate-50 border-slate-200', badge: 'bg-slate-200 text-slate-800', align: 'start' },
   patient: { bubble: 'bg-amber-50 border-amber-100', badge: 'bg-amber-100 text-amber-900', align: 'end' },
   learner: { bubble: 'bg-teal-50 border-teal-100', badge: 'bg-teal-100 text-teal-900', align: 'end' },
@@ -15,10 +17,10 @@ const ROLE_STYLE = {
 function roleStyle(role) {
   const r = String(role || '').toLowerCase();
   if (ROLE_STYLE[r]) return ROLE_STYLE[r];
-  if (/doctor|physician|partner|tutor|teacher|nurse|reception/.test(r)) {
-    return ROLE_STYLE.partner;
+  if (/doctor|physician|partner|tutor|teacher|nurse|reception|^b$/.test(r)) {
+    return ROLE_STYLE.b;
   }
-  if (/patient|learner|student/.test(r)) return ROLE_STYLE.learner;
+  if (/patient|learner|student|^a$/.test(r)) return ROLE_STYLE.a;
   return {
     bubble: 'bg-[#f8fafc] border-[#e2e8f0]',
     badge: 'bg-[#f1f5f9] text-[#475569]',

@@ -18,6 +18,7 @@ import {
   structureFieldLabel,
   structureHeadLangs,
   coercePhoneticString,
+  coerceDisplayText,
 } from '../../data/vocabs/vocabItemStructure';
 
 const EXAMPLE_TABS = new Set(['symptoms', 'conditions', 'maladies']);
@@ -138,9 +139,9 @@ export default function VocabForm({
     if (item) {
       const next = {
         id: item.id || '',
-        en: item.en || '',
-        fr: item.fr || '',
-        mg: item.mg || '',
+        en: coerceDisplayText(item.en),
+        fr: coerceDisplayText(item.fr),
+        mg: coerceDisplayText(item.mg),
         category: item.category || '',
         tab: item.tab || defaultTab || 'vocab',
         categoryId: item.categoryId || defaultCategoryId || '',

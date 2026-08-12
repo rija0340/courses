@@ -38,16 +38,7 @@ export default function SimulationPanel({
   domainId = null,
 }) {
   const { lang } = useContext(AppContext);
-  const profile = useMemo(() => simulationService.getProfile(domainId), [domainId]);
-  const ui = useMemo(() => simulationUi(lang, profile.kind), [lang, profile.kind]);
   const presets = useMemo(() => simulationService.listPresets(domainId), [domainId]);
-
-  useEffect(() => {
-    if (!presets.some((p) => p.id === promptId) && presets[0]) {
-      setPromptId(presets[0].id);
-      setTheme((t) => t || presets[0].theme);
-    }
-  }, [presets, promptId]);
 
   const topicOptions = useMemo(
     () => flattenTree(categories, lang),
@@ -75,6 +66,19 @@ export default function SimulationPanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [script, setScript] = useState(saved?.script || null);
+
+  const profile = useMemo(
+    () => simulationService.getProfile(domainId, mode === 'preset' ? promptId : null),
+    [domainId, mode, promptId]
+  );
+  const ui = useMemo(() => simulationUi(lang, profile.kind), [lang, profile.kind]);
+
+  useEffect(() => {
+    if (!presets.some((p) => p.id === promptId) && presets[0]) {
+      setPromptId(presets[0].id);
+      setTheme((t) => t || presets[0].theme);
+    }
+  }, [presets, promptId]);
 
   const selected = presets.find((p) => p.id === promptId);
 

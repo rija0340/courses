@@ -9,6 +9,7 @@ import QuizPracticePanel from '../practice/components/QuizPracticePanel';
 import { isPracticeEnabled } from '../practice/config';
 import useVocabDomain from '../hooks/useVocabDomain';
 import { simulationUi } from '../practice/data/simulationUiCopy';
+import { getScenarioProfile } from '../practice/data/scenarioProfiles';
 import {
   PracticePageShell,
   SegmentedControl,
@@ -25,7 +26,7 @@ export default function PracticeSimulation() {
   const { domainId } = useParams();
   const [params] = useSearchParams();
   const { lang } = useContext(AppContext);
-  const scenarioKind = domainId === 'medi-vocabs' ? 'medical' : 'general';
+  const scenarioKind = getScenarioProfile(domainId).kind;
   const ui = useMemo(() => simulationUi(lang, scenarioKind), [lang, scenarioKind]);
   const theme = params.get('theme') || '';
   const categoryId = params.get('category') || '';
@@ -69,7 +70,7 @@ export default function PracticeSimulation() {
         <p className="text-[14px] text-[#64748b] mt-1">
           {domainTitle}
           <span className="text-[#cbd5e1]"> · </span>
-          {scenarioKind === 'medical' ? 'Profil médical' : 'Profil général'}
+          {scenarioKind === 'medical' ? 'Profil médical' : 'Vocabulaire · A / B'}
         </p>
       </div>
 

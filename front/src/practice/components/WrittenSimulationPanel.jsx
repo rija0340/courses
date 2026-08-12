@@ -42,8 +42,6 @@ export default function WrittenSimulationPanel({
   domainId = null,
 }) {
   const { lang } = useContext(AppContext);
-  const profile = useMemo(() => getScenarioProfile(domainId), [domainId]);
-  const ui = useMemo(() => simulationUi(lang, profile.kind), [lang, profile.kind]);
   const presets = useMemo(() => simulationService.listPresets(domainId), [domainId]);
   const topicOptions = useMemo(
     () => flattenTree(categories, lang),
@@ -59,6 +57,11 @@ export default function WrittenSimulationPanel({
   const [selectedWordIds, setSelectedWordIds] = useState(saved?.selectedWordIds || []);
   const [theme, setTheme] = useState(saved?.theme || defaultTheme || presets[0]?.theme || '');
   const [customPrompt, setCustomPrompt] = useState(saved?.customPrompt || '');
+  const profile = useMemo(
+    () => getScenarioProfile(domainId, mode === 'preset' ? promptId : null),
+    [domainId, mode, promptId]
+  );
+  const ui = useMemo(() => simulationUi(lang, profile.kind), [lang, profile.kind]);
   const validSavedRole = profile.roles.some((r) => r.id === saved?.learnerRole)
     ? saved.learnerRole
     : profile.defaultLearnerRole;

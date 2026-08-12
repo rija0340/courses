@@ -32,7 +32,7 @@ module.exports = async function handler(req, res) {
       theme,
       locale = 'en',
       level = 'beginner',
-      learnerRole = 'learner',
+      learnerRole = 'a',
       partnerRole = null,
       learnerText = '',
       history = [],
@@ -54,9 +54,13 @@ module.exports = async function handler(req, res) {
     }
 
     const kind = scenarioKind === 'medical' ? 'medical' : 'general';
-    const role = String(learnerRole || '').trim();
+    let role = String(learnerRole || '').trim();
+    if (kind === 'general') {
+      if (role === 'learner' || role === 'patient') role = 'a';
+      if (role === 'partner' || role === 'doctor') role = 'b';
+    }
     const allowedMedical = ['patient', 'doctor'];
-    const allowedGeneral = ['learner', 'partner'];
+    const allowedGeneral = ['a', 'b'];
     const allowed = kind === 'medical' ? allowedMedical : allowedGeneral;
     if (!allowed.includes(role)) {
       return sendJson(

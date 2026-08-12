@@ -159,19 +159,19 @@ const KIND_HINTS = {
   general: {
     fr: {
       simulationHint:
-        'Dialogue à 2 voix (apprenant ↔ partenaire). Conversation en anglais. Session seule (pas de BDD).',
+        'Dialogue à 2 voix (A ↔ B). Conversation en anglais. Session seule (pas de BDD).',
       writtenHint:
-        'Dialogue libre : écrivez ou dictez en anglais avec le vocabulaire du sujet, puis recevez un retour.',
+        'Dialogue libre A / B : écrivez ou dictez en anglais avec le vocabulaire du sujet, puis recevez un retour.',
     },
     en: {
       simulationHint:
-        'Two-voice dialogue (learner ↔ partner). Conversation in English. Session only (no DB).',
+        'Two-voice dialogue (A ↔ B). Conversation in English. Session only (no DB).',
       writtenHint:
-        'Open dialogue: type or dictate in English using topic vocabulary, then get feedback.',
+        'Open A/B dialogue: type or dictate in English using topic vocabulary, then get feedback.',
     },
     mg: {
       simulationHint:
-        'Resaka feo roa (mpianatra ↔ namana). Teny anglisy. Session ihany.',
+        'Resaka feo roa (A ↔ B). Teny anglisy. Session ihany.',
       writtenHint:
         'Resaka malalaka amin’ny teny anglisy miaraka amin’ny voambolana, avy eo feedback.',
     },

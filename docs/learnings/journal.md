@@ -99,3 +99,11 @@ sequenceDiagram
 **Tags :** `ux` `visibility`
 **Bonne pratique :** shared design system for a surface ; chat bubbles for dialogue
 **À retenir :** chrome pratique partagé (`practiceUi`) + bulles alignées par rôle + accent teal/sky.
+
+### 2026-08-12 - coerceDisplayText + colonnes wrap + rôles A/B
+**Tags :** `visibility` `ux` `data-modeling`
+**Bonne pratique :** coerce at boundaries ; density by content role ; domain-aware defaults
+**Concept :** extraire une chaîne depuis i18n imbriqué (jamais `String(obj)`) ; champs structure courts en flex-wrap centré ; simulation vocabulaire = interlocuteurs A/B, médical seulement si preset clinique.
+**Pourquoi :** `[object Object]` fuyait encore via `normalizeI18nValue` ; syn/ant empilés gaspillaient la largeur ; `medi-vocabs` forçait doctor/patient sur tout le vocab.
+**Pas choisi :** patch render-only ; CSS grid `1fr` ; supprimer le profil médical.
+**À retenir :** frontières = texte affichable ; colonnes courtes partagent une rangée ; A/B est le défaut, le cabinet est un preset.

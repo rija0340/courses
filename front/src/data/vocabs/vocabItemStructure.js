@@ -72,45 +72,74 @@ export function emptyI18nEntry() {
 }
 
 export function hasText(value) {
-  return typeof value === 'string' && value.trim().length > 0;
+  return typeof value === 'string' && value.trim().length > 0 && value.trim() !== '[object Object]';
 }
 
+const OBJECT_OBJECT_RE = /^\[object Object\]$/i;
+
 /**
- * IPA column is always a plain string (EN-first).
- * Accepts legacy import shapes:
- * - "/ˈhæpi/"
- * - { en: "/ˈhæpi/", fr: "...", mg: "..." } → prefers en, then fr/mg
- * - JSON string of that object (if a driver stringified it)
- * Rejects the corrupted literal "[object Object]".
+ * Extract a displayable string from nested i18n / JSON / corrupted objects.
+ * Never returns the literal "[object Object]".
  */
-export function coercePhoneticString(value) {
-  if (value == null || value === '') return '';
+export function coerceDisplayText(value, preferredKeys = ['en', 'fr', 'mg'], depth = 0) {
+  if (value == null || value === '' || depth > 6) return '';
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (typeof value === 'string') {
     const t = value.trim();
-    if (!t || t === '[object Object]') return '';
-    if (t.startsWith('{') && t.includes(':')) {
+    if (!t || OBJECT_OBJECT_RE.test(t)) return '';
+    if ((t.startsWith('{') || t.startsWith('[')) && t.includes(':')) {
       try {
-        return coercePhoneticString(JSON.parse(t));
+        return coerceDisplayText(JSON.parse(t), preferredKeys, depth + 1);
       } catch {
-        /* keep plain string */
+        return t;
       }
     }
     return t;
   }
-  if (typeof value === 'object' && !Array.isArray(value)) {
-    for (const code of ['en', 'fr', 'mg', 'ipa', 'phonetic']) {
-      const v = value[code];
-      if (typeof v === 'string' && v.trim()) return v.trim();
+  if (Array.isArray(value)) {
+    return value
+      .map((v) => coerceDisplayText(v, preferredKeys, depth + 1))
+      .filter(Boolean)
+      .join(', ');
+  }
+  if (typeof value === 'object') {
+    for (const key of preferredKeys) {
+      if (value[key] == null) continue;
+      const t = coerceDisplayText(value[key], preferredKeys, depth + 1);
+      if (t) return t;
+    }
+    for (const key of ['ipa', 'phonetic', 'text', 'value', 'label']) {
+      if (value[key] == null) continue;
+      const t = coerceDisplayText(value[key], preferredKeys, depth + 1);
+      if (t) return t;
+    }
+    for (const v of Object.values(value)) {
+      const t = coerceDisplayText(v, preferredKeys, depth + 1);
+      if (t) return t;
     }
   }
   return '';
 }
 
-/** Normalize phonetic on a vocab item (mutates a shallow copy). */
+/**
+ * IPA column is always a plain string (EN-first).
+ * Accepts "/ˈhæpi/", { en: "/ˈhæpi/" }, nested objects, JSON strings.
+ * Rejects the corrupted literal "[object Object]".
+ */
+export function coercePhoneticString(value) {
+  return coerceDisplayText(value, ['en', 'ipa', 'phonetic', 'fr', 'mg']);
+}
+
+/** Normalize string columns that must never be objects. */
 export function sanitizeItemPhonetic(item) {
   if (!item || typeof item !== 'object') return item;
-  const phonetic = coercePhoneticString(item.phonetic);
-  return { ...item, phonetic: phonetic || null };
+  return {
+    ...item,
+    en: coerceDisplayText(item.en) || '',
+    fr: coerceDisplayText(item.fr),
+    mg: coerceDisplayText(item.mg),
+    phonetic: coercePhoneticString(item.phonetic) || null,
+  };
 }
 
 export function emptyItemStructure() {
@@ -245,15 +274,15 @@ export function structureHeadLangs(structure) {
 export function normalizeI18nValue(value) {
   if (value == null || value === '') return null;
   if (typeof value === 'string') {
-    const t = value.trim();
+    const t = coerceDisplayText(value);
     if (!t) return null;
     return { en: t, fr: '', mg: '' };
   }
-  if (typeof value !== 'object') return null;
+  if (typeof value !== 'object' || Array.isArray(value)) return null;
   const out = {
-    en: value.en != null ? String(value.en) : '',
-    fr: value.fr != null ? String(value.fr) : '',
-    mg: value.mg != null ? String(value.mg) : '',
+    en: coerceDisplayText(value.en),
+    fr: coerceDisplayText(value.fr),
+    mg: coerceDisplayText(value.mg),
   };
   if (!hasText(out.en) && !hasText(out.fr) && !hasText(out.mg)) return null;
   return out;
@@ -282,8 +311,8 @@ export function normalizeListField(value, translate) {
   if (!translate) {
     return value
       .map((v) => {
-        if (typeof v === 'string') return v.trim();
-        if (v && typeof v === 'object') return String(v.en || v.fr || v.mg || '').trim();
+        if (typeof v === 'string') return coerceDisplayText(v);
+        if (v && typeof v === 'object') return coerceDisplayText(v);
         return '';
       })
       .filter(Boolean);
@@ -322,7 +351,7 @@ export function fieldHasContent(item, fieldDef) {
   if (fieldDef.translate) {
     return Boolean(pickI18nText(raw));
   }
-  return hasText(raw);
+  return hasText(typeof raw === 'string' ? raw : coerceDisplayText(raw));
 }
 
 /** Persist any non-core keys (presets + custom) into attrs. */

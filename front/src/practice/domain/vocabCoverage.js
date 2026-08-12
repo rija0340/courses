@@ -63,8 +63,8 @@ export function padScriptWithMissingVocabulary(script, vocabulary = [], roles = 
     };
   }
 
-  const partner = roles?.partner || 'partner';
-  const learner = roles?.learner || 'learner';
+  const partner = roles?.partner || 'b';
+  const learner = roles?.learner || 'a';
   const medical = partner === 'doctor' || learner === 'patient';
 
   const extra = [];

@@ -3,7 +3,7 @@ import { createWrittenTurnResult } from '../contracts';
 export const mockWrittenLlmAdapter = {
   async generateWrittenTurn({
     theme,
-    learnerRole = 'learner',
+    learnerRole = 'a',
     partnerRole = null,
     learnerText = '',
     history = [],
@@ -20,9 +20,9 @@ export const mockWrittenLlmAdapter = {
         ? learnerRole === 'doctor'
           ? 'patient'
           : 'doctor'
-        : learnerRole === 'partner'
-          ? 'learner'
-          : 'partner');
+        : learnerRole === 'b' || learnerRole === 'partner'
+          ? 'a'
+          : 'b');
     const vocabWords = (vocabulary || [])
       .map((w) => (typeof w === 'string' ? w : w.en))
       .filter(Boolean);

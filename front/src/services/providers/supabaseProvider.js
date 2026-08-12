@@ -9,7 +9,7 @@ import {
   isAcceptedImageType,
 } from '../imageUpload';
 import { requireAuthSession } from '../supabaseHealth';
-import { pickItemAttrs, mergeAttrsIntoItem, hasItemAttrPayload, coercePhoneticString } from '../../data/vocabs/vocabItemStructure';
+import { pickItemAttrs, mergeAttrsIntoItem, hasItemAttrPayload, coercePhoneticString, coerceDisplayText } from '../../data/vocabs/vocabItemStructure';
 
 function mapItem(item) {
   const extra = mergeAttrsIntoItem(item);
@@ -19,9 +19,9 @@ function mapItem(item) {
   const phonetic = coercePhoneticString(item.phonetic) || coercePhoneticString(attrsPhonetic) || null;
   return {
     id: item.id,
-    en: item.en,
-    fr: item.fr,
-    mg: item.mg,
+    en: coerceDisplayText(item.en),
+    fr: coerceDisplayText(item.fr),
+    mg: coerceDisplayText(item.mg),
     category: item.category || '',
     tab: item.tab,
     categoryId: item.category_id,
@@ -37,9 +37,9 @@ function mapItemRow(item, domainId) {
   return {
     id: item.id || `vocab_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     domain_id: domainId,
-    en: item.en || '',
-    fr: item.fr || '',
-    mg: item.mg || '',
+    en: coerceDisplayText(item.en) || '',
+    fr: coerceDisplayText(item.fr),
+    mg: coerceDisplayText(item.mg),
     category: item.category || '',
     tab: item.tab || '',
     category_id: item.categoryId || null,

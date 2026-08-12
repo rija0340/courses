@@ -79,12 +79,12 @@ export const GENERAL_PRESETS = [
     level: 'beginner',
     turns: 6,
     sampleTurns: [
-      { role: 'partner', text: 'Hi! How are you today?' },
-      { role: 'learner', text: 'I am good, thanks. And you?' },
-      { role: 'partner', text: 'Pretty well. What have you been up to?' },
-      { role: 'learner', text: 'I have been studying English.' },
-      { role: 'partner', text: 'That sounds great. What are you learning?' },
-      { role: 'learner', text: 'New words and short conversations.' },
+      { role: 'b', text: 'Hi! How are you today?' },
+      { role: 'a', text: 'I am good, thanks. And you?' },
+      { role: 'b', text: 'Pretty well. What have you been up to?' },
+      { role: 'a', text: 'I have been studying English.' },
+      { role: 'b', text: 'That sounds great. What are you learning?' },
+      { role: 'a', text: 'New words and short conversations.' },
     ],
   },
   {
@@ -99,12 +99,12 @@ export const GENERAL_PRESETS = [
     level: 'beginner',
     turns: 6,
     sampleTurns: [
-      { role: 'partner', text: 'Can you tell me about this topic?' },
-      { role: 'learner', text: 'Sure. I will explain the main idea.' },
-      { role: 'partner', text: 'What is the most important word here?' },
-      { role: 'learner', text: 'I think this key word matters most.' },
-      { role: 'partner', text: 'Can you give a short example?' },
-      { role: 'learner', text: 'Yes. Here is a simple example.' },
+      { role: 'b', text: 'Can you tell me about this topic?' },
+      { role: 'a', text: 'Sure. I will explain the main idea.' },
+      { role: 'b', text: 'What is the most important word here?' },
+      { role: 'a', text: 'I think this key word matters most.' },
+      { role: 'b', text: 'Can you give a short example?' },
+      { role: 'a', text: 'Yes. Here is a simple example.' },
     ],
   },
   {
@@ -119,12 +119,12 @@ export const GENERAL_PRESETS = [
     level: 'intermediate',
     turns: 6,
     sampleTurns: [
-      { role: 'partner', text: 'What do you think about this idea?' },
-      { role: 'learner', text: 'I think it is useful, but I am not sure.' },
-      { role: 'partner', text: 'Interesting. Why do you feel that way?' },
-      { role: 'learner', text: 'Because it helps me practice new words.' },
-      { role: 'partner', text: 'That makes sense. Would you recommend it?' },
-      { role: 'learner', text: 'Yes, I would recommend it to beginners.' },
+      { role: 'b', text: 'What do you think about this idea?' },
+      { role: 'a', text: 'I think it is useful, but I am not sure.' },
+      { role: 'b', text: 'Interesting. Why do you feel that way?' },
+      { role: 'a', text: 'Because it helps me practice new words.' },
+      { role: 'b', text: 'That makes sense. Would you recommend it?' },
+      { role: 'a', text: 'Yes, I would recommend it to beginners.' },
     ],
   },
 ];
@@ -156,23 +156,35 @@ export const MEDICAL_PROFILE = {
 export const GENERAL_PROFILE = {
   kind: 'general',
   roles: [
-    { id: 'learner', label: { fr: 'Apprenant', en: 'Learner', mg: 'Mpianatra' } },
-    { id: 'partner', label: { fr: 'Partenaire', en: 'Partner', mg: 'Namana' } },
+    { id: 'a', label: { fr: 'Interlocuteur A', en: 'Speaker A', mg: 'Mpiteny A' } },
+    { id: 'b', label: { fr: 'Interlocuteur B', en: 'Speaker B', mg: 'Mpiteny B' } },
   ],
-  defaultLearnerRole: 'learner',
+  defaultLearnerRole: 'a',
   presets: GENERAL_PRESETS,
-  padPartnerRole: 'partner',
-  padLearnerRole: 'learner',
+  padPartnerRole: 'b',
+  padLearnerRole: 'a',
 };
 
 const MEDICAL_DOMAIN_IDS = new Set(['medi-vocabs']);
+const MEDICAL_PRESET_IDS = new Set(MEDICAL_PRESETS.map((p) => p.id));
 
 export function isMedicalDomain(domainId) {
   return MEDICAL_DOMAIN_IDS.has(String(domainId || ''));
 }
 
-export function getScenarioProfile(domainId) {
-  return isMedicalDomain(domainId) ? MEDICAL_PROFILE : GENERAL_PROFILE;
+export function isMedicalPresetId(id) {
+  return MEDICAL_PRESET_IDS.has(String(id || ''));
+}
+
+/**
+ * Default = generic A/B vocabulary dialogue.
+ * Medical doctor/patient only when a clinical preset is selected on medi-vocabs.
+ */
+export function getScenarioProfile(domainId, promptId = null) {
+  if (isMedicalDomain(domainId) && isMedicalPresetId(promptId)) {
+    return MEDICAL_PROFILE;
+  }
+  return GENERAL_PROFILE;
 }
 
 export function roleLabel(profile, roleId, lang = 'fr') {
@@ -184,14 +196,16 @@ export function roleLabel(profile, roleId, lang = 'fr') {
 export function partnerRoleFor(profile, learnerRole) {
   const roles = profile?.roles || [];
   const other = roles.find((r) => r.id !== learnerRole);
-  return other?.id || profile?.padPartnerRole || 'partner';
-}
-
-export function getPresetById(domainId, id) {
-  const profile = getScenarioProfile(domainId);
-  return profile.presets.find((p) => p.id === id) || null;
+  return other?.id || profile?.padPartnerRole || 'b';
 }
 
 export function listPresets(domainId) {
-  return getScenarioProfile(domainId).presets;
+  if (isMedicalDomain(domainId)) {
+    return [...GENERAL_PRESETS, ...MEDICAL_PRESETS];
+  }
+  return GENERAL_PRESETS;
+}
+
+export function getPresetById(domainId, id) {
+  return listPresets(domainId).find((p) => p.id === id) || null;
 }
