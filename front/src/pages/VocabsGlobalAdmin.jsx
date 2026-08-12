@@ -1,4 +1,5 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
+import useSupabaseAdminSession from '../hooks/useSupabaseAdminSession';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Plus, ArrowLeft, AlertCircle, Check, Eye, Settings2, Trash2,
@@ -37,8 +38,8 @@ export default function VocabsGlobalAdmin() {
   const navigate = useNavigate();
   const { domains, loading, error, refresh } = useVocabDomainsList(lang);
 
-  const [session, setSession] = useState(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  const onAuthRefresh = useCallback(() => refresh({ soft: true }), [refresh]);
+  const { session, checkingAuth } = useSupabaseAdminSession(onAuthRefresh);
   const [toast, setToast] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -52,24 +53,6 @@ export default function VocabsGlobalAdmin() {
     color: '#1a73e8',
     tabPreset: 'vocabOnly'
   });
-
-  useEffect(() => {
-    if (ACTIVE_PROVIDER !== STORAGE_PROVIDERS.SUPABASE || !supabase) {
-      setCheckingAuth(false);
-      return;
-    }
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      setCheckingAuth(false);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
-      setSession(s);
-      if (s && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
-        refresh();
-      }
-    });
-    return () => subscription?.unsubscribe();
-  }, [refresh]);
 
   const showToastMsg = (text, type = 'success') => {
     setToast({ text, type });
@@ -158,7 +141,7 @@ export default function VocabsGlobalAdmin() {
         </Link>
         <h1 className="text-2xl font-medium text-[#202124] mb-2">Admin global — Vocabs</h1>
         <p className="text-[14px] text-[#5f6368] mb-6">Connectez-vous pour gérer tous les domaines vocabulaires.</p>
-        <AdminAuth onLoginSuccess={(s) => { setSession(s); refresh(); }} />
+        <AdminAuth />
       </div>
     );
   }

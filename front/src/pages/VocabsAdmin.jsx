@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect, useCallback, useMemo } from 'react';
+import useSupabaseAdminSession from '../hooks/useSupabaseAdminSession';
 import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Plus, ArrowLeft, AlertCircle, Check, Eye, LogOut, Layers, Settings2, Database, HelpCircle, MoreHorizontal
@@ -34,27 +35,9 @@ export default function VocabsAdmin() {
 
   const [activeTab, setActiveTab] = useState(() => adminUrl.tab);
   const [toast, setToast] = useState(null);
-  const [session, setSession] = useState(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
   const [seeding, setSeeding] = useState(false);
-
-  useEffect(() => {
-    if (ACTIVE_PROVIDER !== STORAGE_PROVIDERS.SUPABASE || !supabase) {
-      setCheckingAuth(false);
-      return;
-    }
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      setCheckingAuth(false);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
-      setSession(s);
-      if (s && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
-        refresh();
-      }
-    });
-    return () => subscription?.unsubscribe();
-  }, [refresh]);
+  const onAuthRefresh = useCallback(() => refresh({ soft: true }), [refresh]);
+  const { session, checkingAuth } = useSupabaseAdminSession(onAuthRefresh);
 
   useEffect(() => {
     setActiveTab(adminUrl.tab);
@@ -119,7 +102,7 @@ export default function VocabsAdmin() {
             Aperçu public
           </Link>
         </div>
-        <AdminAuth onLoginSuccess={(sess) => { setSession(sess); refresh(); }} />
+        <AdminAuth />
       </div>
     );
   }

@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
+import useSupabaseAdminSession from '../hooks/useSupabaseAdminSession';
 import { Link } from 'react-router-dom';
 import {
   AlertCircle, Check, LogOut, RefreshCw, BookOpen,
@@ -14,7 +15,7 @@ import LessonExercisesPanel from '../components/lesson/admin/LessonExercisesPane
 import JsonCodeEditor from '../components/lesson/admin/JsonCodeEditor';
 import courseStorage from '../services/courseStorage';
 import { supabase } from '../services/supabaseClient';
-import { ACTIVE_PROVIDER, STORAGE_PROVIDERS } from '../services/storageConfig';
+import { ACTIVE_PROVIDER } from '../services/storageConfig';
 import {
   localize,
   summarizePack,
@@ -141,8 +142,7 @@ export default function CoursesAdmin() {
   const courseOptions = dataRegistry.courses || [];
   const seededIds = listSeededCourseIds();
 
-  const [session, setSession] = useState(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  const { session, checkingAuth, userId, usesSupabaseAuth: needsAuth } = useSupabaseAdminSession();
   const [courseId, setCourseId] = useState(courseOptions[0]?.id || 'english');
   const [pack, setPack] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -153,21 +153,6 @@ export default function CoursesAdmin() {
   const [lessonTab, setLessonTab] = useState('meta');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [packPaste, setPackPaste] = useState('');
-
-  const needsAuth = ACTIVE_PROVIDER === STORAGE_PROVIDERS.SUPABASE && !!supabase;
-
-  useEffect(() => {
-    if (!needsAuth) {
-      setCheckingAuth(false);
-      return undefined;
-    }
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      setCheckingAuth(false);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
-    return () => subscription?.unsubscribe();
-  }, [needsAuth]);
 
   const showToast = (text, type = 'success') => {
     setToast({ text, type });
@@ -189,11 +174,11 @@ export default function CoursesAdmin() {
 
   useEffect(() => {
     if (checkingAuth) return;
-    if (needsAuth && !session) return;
+    if (needsAuth && !userId) return;
     loadPack(courseId);
     setSelection(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId, checkingAuth, session, needsAuth]);
+  }, [courseId, checkingAuth, userId, needsAuth]);
 
   useEffect(() => {
     setLessonTab('meta');
@@ -227,7 +212,7 @@ export default function CoursesAdmin() {
     return (
       <div className="max-w-md mx-auto px-4 pt-10">
         <Breadcrumb items={[{ label: 'Admin', path: '/admin' }, { label: 'Cours' }]} />
-        <div className="mt-6"><AdminAuth onLoginSuccess={setSession} /></div>
+        <div className="mt-6"><AdminAuth /></div>
       </div>
     );
   }

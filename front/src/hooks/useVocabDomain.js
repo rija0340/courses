@@ -9,11 +9,19 @@ export default function useVocabDomain(domainId) {
   const [refreshKey, setRefreshKey] = useState(0);
   const hasLoadedRef = useRef(false);
 
-  const refresh = useCallback(() => setRefreshKey(k => k + 1), []);
+  const refreshOptionsRef = useRef({ soft: false });
+
+  const refresh = useCallback((options = {}) => {
+    refreshOptionsRef.current = { soft: options.soft ?? false };
+    setRefreshKey(k => k + 1);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
-    hasLoadedRef.current = false;
+    const { soft } = refreshOptionsRef.current;
+    if (!soft) {
+      hasLoadedRef.current = false;
+    }
     async function load() {
       if (!domainId) {
         setDomain(null);

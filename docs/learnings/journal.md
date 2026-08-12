@@ -23,3 +23,21 @@ Format :
 ---
 
 <!-- Les entrées commencent ci-dessous -->
+
+### 2026-08-12 - Admin refresh au retour d'onglet
+**Tags :** `effects` `state` `visibility`
+**Bonne pratique :** distinguish side-effect triggers ; stable dependency keys ; soft background refetch
+**Concept :** Supabase émet `SIGNED_IN` lors du `_recoverAndRefresh` au `visibilitychange` — ce n'est pas un vrai login.
+**Pourquoi :** hook `useSupabaseAdminSession` ignore recovery si session déjà présente ; `CoursesAdmin` dépend de `userId` pas de l'objet `session` ; refresh vocab en `soft`.
+**Pas choisi :** `autoRefreshToken: false` (casserait le refresh token) ; React Query `refetchOnWindowFocus: false` (pas dans le stack).
+**À retenir :** ne jamais brancher un reload complet sur `SIGNED_IN` sans vérifier si l'utilisateur était déjà connecté.
+
+```mermaid
+sequenceDiagram
+  participant Tab
+  participant Supabase
+  participant Hook as useSupabaseAdminSession
+  Tab->>Supabase: visibility visible
+  Supabase->>Hook: SIGNED_IN (recovery)
+  Hook->>Hook: hadSession? skip refresh
+```
