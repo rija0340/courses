@@ -7,6 +7,12 @@ import VocabForm from '../VocabForm';
 import vocabStorage from '../../../services/vocabStorage';
 import { filterVocabItems } from '../../../utils/vocabFilters';
 import { itemsToEnFrTsv } from '../../../data/vocabs/vocabDomainSchema';
+import {
+  structureFieldLabel,
+  summarizeListField,
+  pickI18nText,
+  fieldHasContent,
+} from '../../../data/vocabs/vocabItemStructure';
 import { EmptyState, ConfirmModal, ImageModal, TYPE_COLORS } from './shared';
 import FullscreenLightbox from '../FullscreenLightbox';
 
@@ -16,6 +22,7 @@ export default function CategoryItemsPanel({
   tabs,
   categoryId,
   activeOrgTab,
+  itemStructure = null,
   domainId,
   addItem,
   updateItem,
@@ -180,6 +187,18 @@ export default function CategoryItemsPanel({
 
   const activeTabLabel = tabs.find(t => t.id === activeOrgTab);
   const selectedCount = selectedIds.size;
+  const structured = Boolean(itemStructure);
+  const structureFields = itemStructure?.fields || [];
+  const headLangs = itemStructure?.langs || [];
+
+  const cellValue = (item, fieldDef) => {
+    if (!fieldDef) return '';
+    if (fieldDef.type === 'list') {
+      return summarizeListField(item[fieldDef.id], fieldDef.translate);
+    }
+    if (fieldDef.translate) return pickI18nText(item[fieldDef.id], 'en');
+    return item[fieldDef.id] || '';
+  };
 
   return (
     <div className="mt-5 pt-5 border-t border-[#f1f3f4]">
@@ -217,24 +236,25 @@ export default function CategoryItemsPanel({
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Filtrer dans cet onglet…"
+            placeholder="Filtrer…"
             className="w-full h-9 pl-9 pr-8 rounded-xl bg-[#f8f9fa] border border-transparent focus:bg-white focus:border-[#1a73e8] outline-none text-[13px]"
           />
           {search && (
             <button type="button" onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-[#e8eaed]">
-              <span className="sr-only">Effacer</span>
               ×
             </button>
           )}
         </div>
-        <div className="inline-flex p-0.5 rounded-xl bg-[#f1f3f4]">
-          <button type="button" onClick={() => setView('list')} className={`w-9 h-9 rounded-lg flex items-center justify-center ${view === 'list' ? 'bg-white shadow-sm text-[#1a73e8]' : 'text-[#5f6368]'}`}>
-            <List className="w-4 h-4" />
-          </button>
-          <button type="button" onClick={() => setView('grid')} className={`w-9 h-9 rounded-lg flex items-center justify-center ${view === 'grid' ? 'bg-white shadow-sm text-[#1a73e8]' : 'text-[#5f6368]'}`}>
-            <LayoutGrid className="w-4 h-4" />
-          </button>
-        </div>
+        {!structured && (
+          <div className="inline-flex p-0.5 rounded-xl bg-[#f1f3f4]">
+            <button type="button" onClick={() => setView('list')} className={`w-9 h-9 rounded-lg flex items-center justify-center ${view === 'list' ? 'bg-white shadow-sm text-[#1a73e8]' : 'text-[#5f6368]'}`}>
+              <List className="w-4 h-4" />
+            </button>
+            <button type="button" onClick={() => setView('grid')} className={`w-9 h-9 rounded-lg flex items-center justify-center ${view === 'grid' ? 'bg-white shadow-sm text-[#1a73e8]' : 'text-[#5f6368]'}`}>
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       {selectedCount > 0 && (
@@ -271,8 +291,8 @@ export default function CategoryItemsPanel({
       {filtered.length === 0 ? (
         <EmptyState
           icon={BookOpen}
-          title="Aucun mot dans cet onglet"
-          text="Ajoutez un mot ici, ou utilisez Import / Export JSON & CSV au-dessus pour importer plusieurs mots."
+          title="Aucun mot"
+          text="Ajoutez un mot, ou importez via JSON / CSV."
           action={
             <button
               type="button"
@@ -283,70 +303,152 @@ export default function CategoryItemsPanel({
             </button>
           }
         />
+      ) : structured ? (
+        <>
+          {/* Desktop table */}
+          <div className="hidden md:block rounded-xl border border-[#dadce0] overflow-x-auto">
+            <table className="w-full text-left text-[13px]">
+              <thead className="bg-[#f8f9fa] border-b border-[#dadce0]">
+                <tr>
+                  <th className="px-3 py-2 w-10">
+                    <input
+                      type="checkbox"
+                      checked={allFilteredSelected}
+                      ref={(el) => { if (el) el.indeterminate = someFilteredSelected && !allFilteredSelected; }}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded border-[#dadce0] text-[#1a73e8]"
+                    />
+                  </th>
+                  <th className="px-3 py-2 font-semibold text-[#5f6368]">EN</th>
+                  {headLangs.map((l) => (
+                    <th key={l} className="px-3 py-2 font-semibold text-[#5f6368] uppercase">{l}</th>
+                  ))}
+                  {structureFields.map((f) => (
+                    <th key={f.id} className="px-3 py-2 font-semibold text-[#5f6368]">
+                      {structureFieldLabel(f.id, 'fr')}
+                    </th>
+                  ))}
+                  <th className="px-3 py-2 w-28" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#f1f3f4]">
+                {filtered.map((item) => (
+                  <tr key={item.id} className={selectedIds.has(item.id) ? 'bg-[#E8F0FE]/40' : 'hover:bg-[#f8f9fa]'}>
+                    <td className="px-3 py-2.5">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(item.id)}
+                        onChange={() => toggleSelect(item.id)}
+                        className="w-4 h-4 rounded border-[#dadce0] text-[#1a73e8]"
+                      />
+                    </td>
+                    <td className="px-3 py-2.5 font-medium text-[#202124]">{item.en}</td>
+                    {headLangs.map((l) => (
+                      <td key={l} className="px-3 py-2.5 text-[#3c4043]">{item[l] || '—'}</td>
+                    ))}
+                    {structureFields.map((f) => (
+                      <td key={f.id} className="px-3 py-2.5 text-[#3c4043] max-w-[160px] truncate">
+                        {cellValue(item, f) || '—'}
+                      </td>
+                    ))}
+                    <td className="px-3 py-2.5">
+                      <div className="flex gap-1 justify-end">
+                        <button type="button" onClick={() => { setEditItem(item); setShowForm(true); }} className="w-8 h-8 rounded-lg hover:bg-[#e8eaed] flex items-center justify-center text-[#5f6368]">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button type="button" onClick={() => setConfirmDelete(item)} className="w-8 h-8 rounded-lg hover:bg-red-50 flex items-center justify-center text-red-500">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-3">
+            {filtered.map((item) => (
+              <article
+                key={item.id}
+                className={`rounded-xl border p-4 ${selectedIds.has(item.id) ? 'border-[#1a73e8]/40 bg-[#E8F0FE]/30' : 'border-[#dadce0] bg-white'}`}
+              >
+                <div className="flex items-start gap-2 mb-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(item.id)}
+                    onChange={() => toggleSelect(item.id)}
+                    className="w-4 h-4 mt-1 rounded border-[#dadce0] text-[#1a73e8]"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[16px] font-semibold text-[#202124]">{item.en}</p>
+                    {headLangs.map((l) => item[l] ? (
+                      <p key={l} className="text-[13px] text-[#5f6368]">
+                        <span className="uppercase text-[10px] font-bold text-[#9aa0a6] mr-1">{l}</span>
+                        {item[l]}
+                      </p>
+                    ) : null)}
+                  </div>
+                  <div className="flex gap-0.5">
+                    <button type="button" onClick={() => { setEditItem(item); setShowForm(true); }} className="w-9 h-9 rounded-lg hover:bg-[#f1f3f4] flex items-center justify-center">
+                      <Pencil className="w-4 h-4 text-[#5f6368]" />
+                    </button>
+                    <button type="button" onClick={() => setConfirmDelete(item)} className="w-9 h-9 rounded-lg hover:bg-red-50 flex items-center justify-center text-red-500">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2 border-t border-[#f1f3f4] pt-3">
+                  {structureFields.filter((f) => fieldHasContent(item, f)).map((f) => (
+                    <div key={f.id}>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#9aa0a6]">
+                        {structureFieldLabel(f.id, 'fr')}
+                      </p>
+                      <p className="text-[13px] text-[#3c4043]">{cellValue(item, f)}</p>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        </>
       ) : view === 'list' ? (
         <div className="rounded-xl border border-[#dadce0] overflow-hidden">
           <div className="flex items-center gap-3 px-3 py-2 bg-[#f8f9fa] border-b border-[#dadce0]">
             <input
               type="checkbox"
               checked={allFilteredSelected}
-              ref={(el) => {
-                if (el) el.indeterminate = someFilteredSelected && !allFilteredSelected;
-              }}
+              ref={(el) => { if (el) el.indeterminate = someFilteredSelected && !allFilteredSelected; }}
               onChange={toggleSelectAll}
-              className="w-4 h-4 rounded border-[#dadce0] text-[#1a73e8] focus:ring-[#1a73e8]"
+              className="w-4 h-4 rounded border-[#dadce0] text-[#1a73e8]"
               aria-label="Tout sélectionner"
             />
-            <button
-              type="button"
-              onClick={toggleSelectAll}
-              className="text-[12px] font-semibold text-[#5f6368] hover:text-[#202124]"
-            >
+            <button type="button" onClick={toggleSelectAll} className="text-[12px] font-semibold text-[#5f6368]">
               {allFilteredSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
             </button>
           </div>
           <ul className="divide-y divide-[#f1f3f4]">
-            {filtered.map(item => {
+            {filtered.map((item) => {
               const img = itemImages[item.id];
               const typeClass = TYPE_COLORS[item.category] || 'bg-[#f1f3f4] text-[#5f6368]';
               const isSelected = selectedIds.has(item.id);
               return (
-                <li key={item.id} className={`group transition-colors ${isSelected ? 'bg-[#E8F0FE]/50' : 'hover:bg-[#f8f9fa]/80'}`}>
+                <li key={item.id} className={`group ${isSelected ? 'bg-[#E8F0FE]/50' : 'hover:bg-[#f8f9fa]/80'}`}>
                   <div className="flex items-center gap-3 px-3 py-2.5">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => toggleSelect(item.id)}
-                      className="w-4 h-4 rounded border-[#dadce0] text-[#1a73e8] focus:ring-[#1a73e8] shrink-0"
-                      aria-label={`Sélectionner ${item.fr || item.en || item.id}`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => img ? setLightbox({ src: img, alt: item.fr }) : setImageItemId(item.id)}
-                      className="w-11 h-11 rounded-xl overflow-hidden bg-[#f1f3f4] border border-[#dadce0]/80 flex items-center justify-center shrink-0 hover:ring-2 hover:ring-[#1a73e8]/30"
-                    >
-                      {img ? (
-                        <img src={img} alt="" className="w-full h-full object-cover cursor-zoom-in" />
-                      ) : (
-                        <ImageOff className="w-4 h-4 text-[#9aa0a6]" />
-                      )}
+                    <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(item.id)} className="w-4 h-4 rounded border-[#dadce0] text-[#1a73e8]" />
+                    <button type="button" onClick={() => (img ? setLightbox({ src: img, alt: item.fr || item.en }) : setImageItemId(item.id))} className="w-11 h-11 rounded-xl overflow-hidden bg-[#f1f3f4] border border-[#dadce0]/80 flex items-center justify-center shrink-0">
+                      {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <ImageOff className="w-4 h-4 text-[#9aa0a6]" />}
                     </button>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-medium text-[#202124] truncate">{item.fr}</p>
-                      <p className="text-[12px] text-[#5f6368] truncate">{item.en} · {item.mg}</p>
+                      <p className="text-[14px] font-medium text-[#202124] truncate">{item.en || item.fr}</p>
+                      <p className="text-[12px] text-[#5f6368] truncate">{[item.fr, item.mg].filter(Boolean).join(' · ')}</p>
                     </div>
-                    {item.category && (
-                      <span className={`hidden sm:inline text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${typeClass}`}>{item.category}</span>
-                    )}
+                    {item.category && <span className={`hidden sm:inline text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${typeClass}`}>{item.category}</span>}
                     <div className="flex items-center gap-1 shrink-0">
-                      <button type="button" onClick={() => setImageItemId(item.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5f6368] hover:bg-[#e8eaed]">
-                        <ImageIcon className="w-3.5 h-3.5" />
-                      </button>
-                      <button type="button" onClick={() => { setEditItem(item); setShowForm(true); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5f6368] hover:bg-[#e8eaed]">
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button type="button" onClick={() => setConfirmDelete(item)} className="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <button type="button" onClick={() => setImageItemId(item.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5f6368] hover:bg-[#e8eaed]"><ImageIcon className="w-3.5 h-3.5" /></button>
+                      <button type="button" onClick={() => { setEditItem(item); setShowForm(true); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5f6368] hover:bg-[#e8eaed]"><Pencil className="w-3.5 h-3.5" /></button>
+                      <button type="button" onClick={() => setConfirmDelete(item)} className="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </div>
                 </li>
@@ -355,82 +457,26 @@ export default function CategoryItemsPanel({
           </ul>
         </div>
       ) : (
-        <>
-          <div className="flex items-center gap-2 mb-3">
-            <input
-              type="checkbox"
-              checked={allFilteredSelected}
-              ref={(el) => {
-                if (el) el.indeterminate = someFilteredSelected && !allFilteredSelected;
-              }}
-              onChange={toggleSelectAll}
-              className="w-4 h-4 rounded border-[#dadce0] text-[#1a73e8] focus:ring-[#1a73e8]"
-              aria-label="Tout sélectionner"
-            />
-            <button
-              type="button"
-              onClick={toggleSelectAll}
-              className="text-[12px] font-semibold text-[#5f6368] hover:text-[#202124]"
-            >
-              {allFilteredSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
-            </button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {filtered.map(item => {
-              const img = itemImages[item.id];
-              const typeClass = TYPE_COLORS[item.category] || 'bg-[#f1f3f4] text-[#5f6368]';
-              const isSelected = selectedIds.has(item.id);
-              return (
-                <article
-                  key={item.id}
-                  className={`border rounded-xl overflow-hidden flex flex-col ${
-                    isSelected ? 'bg-[#E8F0FE]/40 border-[#1a73e8]/40' : 'bg-[#f8f9fa] border-[#dadce0]'
-                  }`}
-                >
-                  <div className="relative">
-                    <label className="absolute top-2 left-2 z-10 inline-flex items-center justify-center w-8 h-8 rounded-lg bg-white/90 border border-[#dadce0] shadow-sm cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleSelect(item.id)}
-                        className="w-4 h-4 rounded border-[#dadce0] text-[#1a73e8] focus:ring-[#1a73e8]"
-                        aria-label={`Sélectionner ${item.fr || item.en || item.id}`}
-                      />
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => img ? setLightbox({ src: img, alt: item.fr }) : setImageItemId(item.id)}
-                      className="relative aspect-[16/10] w-full bg-[#f1f3f4] flex items-center justify-center group"
-                    >
-                      {img ? (
-                        <img src={img} alt={item.fr} className="w-full h-full object-cover cursor-zoom-in" />
-                      ) : (
-                        <ImageOff className="w-6 h-6 text-[#9aa0a6]" />
-                      )}
-                    </button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {filtered.map((item) => {
+            const img = itemImages[item.id];
+            const isSelected = selectedIds.has(item.id);
+            return (
+              <article key={item.id} className={`border rounded-xl overflow-hidden ${isSelected ? 'bg-[#E8F0FE]/40 border-[#1a73e8]/40' : 'bg-[#f8f9fa] border-[#dadce0]'}`}>
+                <div className="p-3 flex items-start gap-2">
+                  <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(item.id)} className="w-4 h-4 mt-1" />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-[14px] font-medium truncate">{item.en || item.fr}</h4>
+                    <p className="text-[12px] text-[#5f6368] truncate">{[item.fr, item.mg].filter(Boolean).join(' · ')}</p>
                   </div>
-                  <div className="p-3 flex-1 flex flex-col">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h4 className="text-[14px] font-medium truncate">{item.fr}</h4>
-                        <p className="text-[12px] text-[#5f6368] truncate">{item.en} · {item.mg}</p>
-                      </div>
-                      <div className="flex gap-0.5 shrink-0">
-                        <button type="button" onClick={() => { setEditItem(item); setShowForm(true); }} className="w-8 h-8 rounded-lg hover:bg-white flex items-center justify-center">
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button type="button" onClick={() => setConfirmDelete(item)} className="w-8 h-8 rounded-lg hover:bg-red-50 flex items-center justify-center text-red-500">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                    {item.category && <span className={`mt-2 self-start text-[10px] font-semibold px-2 py-0.5 rounded-md ${typeClass}`}>{item.category}</span>}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </>
+                  <button type="button" onClick={() => { setEditItem(item); setShowForm(true); }} className="w-8 h-8 rounded-lg hover:bg-white flex items-center justify-center"><Pencil className="w-3.5 h-3.5" /></button>
+                  <button type="button" onClick={() => setConfirmDelete(item)} className="w-8 h-8 rounded-lg hover:bg-red-50 flex items-center justify-center text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                </div>
+                {img && <img src={img} alt="" className="w-full aspect-[16/10] object-cover" />}
+              </article>
+            );
+          })}
+        </div>
       )}
 
       {showForm && (
@@ -444,13 +490,14 @@ export default function CategoryItemsPanel({
           defaultTab={activeOrgTab}
           lockCategory={!editItem}
           lockTab={!editItem}
+          itemStructure={itemStructure}
         />
       )}
 
       {confirmDelete && (
         <ConfirmModal
           title="Supprimer ce mot ?"
-          text={`« ${confirmDelete.fr} » (${confirmDelete.en}) sera définitivement supprimé.`}
+          text={`« ${confirmDelete.en || confirmDelete.fr || confirmDelete.id} » sera définitivement supprimé.`}
           onCancel={() => setConfirmDelete(null)}
           onConfirm={() => handleDelete(confirmDelete.id)}
           confirmText="Supprimer"

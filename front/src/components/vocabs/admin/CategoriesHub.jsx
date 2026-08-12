@@ -12,8 +12,14 @@ import {
 } from '../../../utils/categoryTree';
 import CategoryItemsPanel from './CategoryItemsPanel';
 import CategoryDataTransfer from './CategoryDataTransfer';
+import CategoryStructureEditor from './CategoryStructureEditor';
 import FullscreenLightbox from '../FullscreenLightbox';
 import { EmptyState, ImageModal } from './shared';
+import {
+  isRootCategory,
+  resolveRootCategory,
+  resolveItemStructure,
+} from '../../../data/vocabs/vocabItemStructure';
 
 export default function CategoriesHub({
   categories,
@@ -138,6 +144,18 @@ export default function CategoriesHub({
     await updateCategories(updated);
     showToast('Nom mis à jour');
     setIsEditing(false);
+  };
+
+  const handleStructureChange = async (itemStructure) => {
+    if (!selectedId || !isRootCategory(categories, selectedId)) return;
+    const updated = updateNode(categories, selectedId, (n) => {
+      const next = { ...n };
+      if (itemStructure) next.itemStructure = itemStructure;
+      else delete next.itemStructure;
+      return next;
+    });
+    await updateCategories(updated);
+    showToast('Structure enregistrée');
   };
 
   const handleDelete = async () => {
@@ -423,6 +441,25 @@ export default function CategoriesHub({
                     ))}
                   </div>
 
+                  <div className="mb-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#9aa0a6] mb-2">
+                      Structure des fiches
+                    </p>
+                    {isRootCategory(categories, selectedId) ? (
+                      <CategoryStructureEditor
+                        value={selectedNode.itemStructure}
+                        onChange={handleStructureChange}
+                      />
+                    ) : (
+                      <p className="text-[13px] text-[#5f6368] rounded-xl border border-[#dadce0] bg-[#f8f9fa] px-3 py-2.5">
+                        Héritée de « {getLabel(resolveRootCategory(categories, selectedId)?.label) || 'racine'} »
+                        {resolveItemStructure(categories, selectedId)
+                          ? ` · ${(resolveItemStructure(categories, selectedId).fields || []).map((f) => f.id).join(', ') || 'aucune colonne'}`
+                          : ' · aucune structure définie'}
+                      </p>
+                    )}
+                  </div>
+
                   <div className="flex flex-wrap gap-2">
                     {!addingChild && (
                       <button
@@ -467,19 +504,22 @@ export default function CategoriesHub({
                 </div>
               </div>
 
-              {tabs.length > 0 && (
+              {(tabs.length > 0 || selectedId) && (
                 <>
-                  <CategoryDataTransfer
-                    domain={domain}
-                    items={items}
-                    categoryId={selectedId}
-                    activeOrgTab={activeOrgTab || tabs[0]?.id}
-                    tabs={tabs}
-                    getLabel={getLabel}
-                    showToast={showToast}
-                    refresh={refresh}
-                  />
+                  {tabs.length > 0 && (
+                    <CategoryDataTransfer
+                      domain={domain}
+                      items={items}
+                      categoryId={selectedId}
+                      activeOrgTab={activeOrgTab || tabs[0]?.id || 'vocab'}
+                      tabs={tabs}
+                      getLabel={getLabel}
+                      showToast={showToast}
+                      refresh={refresh}
+                    />
+                  )}
 
+                  {tabs.length > 1 && (
                   <div className="flex flex-wrap gap-2 mt-6 pt-5 border-t border-[#f1f3f4]">
                     {tabs.map(tab => (
                       <button
@@ -499,37 +539,31 @@ export default function CategoriesHub({
                       </button>
                     ))}
                   </div>
-
-                  {activeOrgTab && (
-                    <CategoryItemsPanel
-                      items={items}
-                      categories={categories}
-                      tabs={tabs}
-                      categoryId={selectedId}
-                      activeOrgTab={activeOrgTab}
-                      domainId={domainId}
-                      addItem={addItem}
-                      updateItem={updateItem}
-                      deleteItem={deleteItem}
-                      deleteItems={deleteItems}
-                      showToast={showToast}
-                      getLabel={getLabel}
-                    />
                   )}
-                </>
-              )}
 
-              {tabs.length === 0 && (
-                <p className="mt-6 text-[13px] text-[#9aa0a6]">
-                  Aucun onglet configuré — ajoutez-en dans Paramètres.
-                </p>
+                  <CategoryItemsPanel
+                    items={items}
+                    categories={categories}
+                    tabs={tabs.length ? tabs : [{ id: 'vocab', label: { fr: 'Vocabulaire', en: 'Vocabulary', mg: 'Voaboly' } }]}
+                    categoryId={selectedId}
+                    activeOrgTab={activeOrgTab || tabs[0]?.id || 'vocab'}
+                    itemStructure={resolveItemStructure(categories, selectedId)}
+                    domainId={domainId}
+                    addItem={addItem}
+                    updateItem={updateItem}
+                    deleteItem={deleteItem}
+                    deleteItems={deleteItems}
+                    showToast={showToast}
+                    getLabel={getLabel}
+                  />
+                </>
               )}
             </div>
           ) : (
             <EmptyState
               icon={FolderOpen}
               title="Sélectionnez une catégorie"
-              text="Choisissez un nœud dans l’arbre pour gérer les mots par onglet, illustrer ou ajouter des sous-catégories."
+              text="Choisissez un nœud dans l’arbre pour gérer les mots, la structure (racine) ou les sous-catégories."
             />
           )}
         </div>

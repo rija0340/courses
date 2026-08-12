@@ -41,3 +41,11 @@ sequenceDiagram
   Supabase->>Hook: SIGNED_IN (recovery)
   Hook->>Hook: hadSession? skip refresh
 ```
+
+### 2026-08-12 - Structure racine + traductions configurables
+**Tags :** `data-modeling` `ux` `solid`
+**Bonne pratique :** single source of truth ; Open/Closed (catalogue + flags translate)
+**Concept :** `itemStructure` sur catégorie racine (`langs` + `fields[{id,type,translate}]`) ; enfants héritent ; EN requis ; colonnes optionnelles ; listes i18n si translate.
+**Pourquoi :** thème ≠ profil figé ; antonymes peuvent avoir FR/MG ; UI table desktop / cartes mobile.
+**Pas choisi :** profils adjective/phrasal ; champs 100% custom ; tabs comme axe principal.
+**À retenir :** configurer la structure sur la racine, pas sur chaque mot ni sous-catégorie.

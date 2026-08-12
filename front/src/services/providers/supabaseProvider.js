@@ -9,8 +9,10 @@ import {
   isAcceptedImageType,
 } from '../imageUpload';
 import { requireAuthSession } from '../supabaseHealth';
+import { pickItemAttrs, mergeAttrsIntoItem, STRUCTURE_ATTR_KEYS } from '../../data/vocabs/vocabItemStructure';
 
 function mapItem(item) {
+  const extra = mergeAttrsIntoItem(item);
   return {
     id: item.id,
     en: item.en,
@@ -20,9 +22,9 @@ function mapItem(item) {
     tab: item.tab,
     categoryId: item.category_id,
     phonetic: item.phonetic,
-    // Mini-example (symptoms/conditions) + long dialogue (scenarios)
     example: item.example ?? null,
     dialogue: item.dialogue ?? null,
+    ...extra,
     image: resolveImageSrc(item),
   };
 }
@@ -40,7 +42,7 @@ function mapItemRow(item, domainId) {
     phonetic: item.phonetic || null,
     example: item.example ?? null,
     dialogue: Array.isArray(item.dialogue) ? item.dialogue : null,
-    // Prefer URL if caller already has a Storage URL; keep legacy base64 only as fallback
+    attrs: pickItemAttrs(item),
     image_url: item.image_url || (isHttpUrl(item.image) ? item.image : null),
     image: isHttpUrl(item.image) ? null : (item.image || null),
   };
@@ -328,6 +330,13 @@ const supabaseProvider = {
     if (data.tab !== undefined) updateData.tab = data.tab;
     if (data.categoryId !== undefined) updateData.category_id = data.categoryId;
     if (data.phonetic !== undefined) updateData.phonetic = data.phonetic;
+    if (data.example !== undefined) updateData.example = data.example;
+    if (data.dialogue !== undefined) {
+      updateData.dialogue = Array.isArray(data.dialogue) ? data.dialogue : null;
+    }
+    if (STRUCTURE_ATTR_KEYS.some((k) => data[k] !== undefined)) {
+      updateData.attrs = pickItemAttrs(data);
+    }
     if (data.image !== undefined) {
       if (isHttpUrl(data.image)) {
         updateData.image_url = data.image;

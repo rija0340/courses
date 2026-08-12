@@ -5,6 +5,7 @@ import { AppContext } from '../App';
 import Breadcrumb from '../components/Breadcrumb';
 import { CompactMenu, MenuButton, MenuTrigger } from '../components/CompactMenu';
 import VocabCard from '../components/vocabs/VocabCard';
+import { resolveItemStructure } from '../data/vocabs/vocabItemStructure';
 import ScenarioCard from '../components/vocabs/ScenarioCard';
 import { isScenarioItem } from '../utils/vocabDialogue';
 import CategoryTree from '../components/vocabs/CategoryTree';
@@ -568,6 +569,7 @@ export default function VocabsView() {
                       revisionLang={revisionLang}
                       revealAll={revealAll}
                       onImageClick={openLightbox}
+                      itemStructure={resolveItemStructure(categories, item.categoryId)}
                     />
                   )
                 )}

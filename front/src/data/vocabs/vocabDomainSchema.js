@@ -2,8 +2,15 @@
  * Single source of truth for vocab domain JSON (import / export / template).
  * Change fields here → template, validation, and export pickers update automatically.
  */
+import {
+  normalizeItemStructure,
+  normalizeListField,
+  normalizeI18nValue,
+  buildSampleItemFromStructure,
+  resolveItemStructure,
+} from './vocabItemStructure';
 
-export const VOCAB_DOMAIN_VERSION = 3;
+export const VOCAB_DOMAIN_VERSION = 4;
 
 export const I18N_LANGS = ['fr', 'en', 'mg'];
 
@@ -41,19 +48,21 @@ export const ITEM_FIELDS = /** @type {Record<string, FieldDef>} */ ({
     type: 'string',
     required: true,
     example: 'Eye',
-    description: 'Mot en anglais',
+    description: 'Mot en anglais (requis)',
   },
   fr: {
     type: 'string',
-    required: true,
+    required: false,
     example: 'Œil',
-    description: 'Mot en français',
+    default: '',
+    description: 'Traduction FR (optionnelle, selon langs de la racine)',
   },
   mg: {
     type: 'string',
-    required: true,
+    required: false,
     example: 'Maso',
-    description: 'Mot en malgache',
+    default: '',
+    description: 'Traduction MG (optionnelle, selon langs de la racine)',
   },
   category: {
     type: 'string',
@@ -104,6 +113,55 @@ export const ITEM_FIELDS = /** @type {Record<string, FieldDef>} */ ({
       { role: 'doctor', en: 'Does it affect one eye or both?', fr: 'Un œil ou les deux ?', mg: '' },
     ],
     description: 'Tours de dialogue patient/docteur (onglet scenarios). mg optionnel par tour.',
+  },
+  synonyms: {
+    type: 'array',
+    required: false,
+    default: [],
+    example: [{ en: 'joyful', fr: 'joyeux', mg: '' }],
+    description: 'Synonymes (string[] ou {en,fr,mg}[] selon structure)',
+  },
+  antonyms: {
+    type: 'array',
+    required: false,
+    default: [],
+    example: [{ en: 'sad', fr: 'triste', mg: '' }],
+    description: 'Antonymes (string[] ou {en,fr,mg}[] selon structure)',
+  },
+  context: {
+    type: 'i18n',
+    required: false,
+    default: null,
+    example: { en: 'She felt happy.', fr: 'Elle était heureuse.', mg: '' },
+    description: 'Contexte / phrase d’usage',
+  },
+  particle: {
+    type: 'string',
+    required: false,
+    default: '',
+    example: 'up',
+    description: 'Particule (phrasal verb)',
+  },
+  pattern: {
+    type: 'string',
+    required: false,
+    default: '',
+    example: 'make a decision',
+    description: 'Schéma de collocation',
+  },
+  register: {
+    type: 'string',
+    required: false,
+    default: '',
+    example: 'formal',
+    description: 'Registre',
+  },
+  notes: {
+    type: 'i18n',
+    required: false,
+    default: null,
+    example: { en: 'Usage tip', fr: 'Astuce', mg: '' },
+    description: 'Notes d’usage',
   },
   // Images are managed via Storage upload — not part of bulk JSON import by default
   image: {
@@ -174,6 +232,19 @@ export const CATEGORY_FIELDS = /** @type {Record<string, FieldDef>} */ ({
     example: [],
     default: [],
     description: 'Sous-catégories (même structure récursive)',
+  },
+  itemStructure: {
+    type: 'object',
+    required: false,
+    default: null,
+    example: {
+      langs: ['fr', 'mg'],
+      fields: [
+        { id: 'synonyms', type: 'list', translate: true },
+        { id: 'antonyms', type: 'list', translate: true },
+      ],
+    },
+    description: 'Structure des fiches (racine seulement) : langs + fields[{id,type,translate}]',
   },
 });
 
@@ -321,13 +392,17 @@ export function buildImportTemplate(domain = null) {
 }
 
 function sanitizeCategoriesForTemplate(nodes) {
-  return (nodes || []).map(n => ({
-    id: n.id,
-    label: { ...emptyI18n(), ...(n.label || {}) },
-    image: null,
-    visuals: Array.isArray(n.visuals) ? [] : [],
-    children: sanitizeCategoriesForTemplate(n.children || []),
-  }));
+  return (nodes || []).map(n => {
+    const structure = normalizeItemStructure(n.itemStructure);
+    return {
+      id: n.id,
+      label: { ...emptyI18n(), ...(n.label || {}) },
+      image: null,
+      visuals: Array.isArray(n.visuals) ? [] : [],
+      ...(structure ? { itemStructure: structure } : {}),
+      children: sanitizeCategoriesForTemplate(n.children || []),
+    };
+  });
 }
 
 /**
@@ -395,18 +470,20 @@ function normalizeCategoryNode(node, path, errors) {
   if (!node.id || typeof node.id !== 'string') {
     errors.push(`${path}: id manquant`);
   }
+  const structure = normalizeItemStructure(node.itemStructure);
   return {
     id: String(node.id || `cat_${Math.random().toString(36).slice(2, 8)}`),
     label: normalizeI18n(node.label, String(node.id || '')),
     image: node.image ?? null,
     visuals: Array.isArray(node.visuals) ? node.visuals : [],
+    ...(structure ? { itemStructure: structure } : {}),
     children: (Array.isArray(node.children) ? node.children : [])
       .map((ch, i) => normalizeCategoryNode(ch, `${path}.children[${i}]`, errors))
       .filter(Boolean),
   };
 }
 
-function normalizeItem(raw, index, errors, warnings) {
+function normalizeItem(raw, index, errors, warnings, structureHint = null) {
   if (!isPlainObject(raw)) {
     errors.push(`items[${index}]: objet attendu`);
     return null;
@@ -414,6 +491,12 @@ function normalizeItem(raw, index, errors, warnings) {
 
   const item = {};
   const importKeys = getItemImportKeys();
+  const listIds = new Set(['synonyms', 'antonyms']);
+  const i18nIds = new Set(['context', 'notes']);
+  const fieldTranslate = {};
+  (structureHint?.fields || []).forEach((f) => {
+    fieldTranslate[f.id] = !!f.translate;
+  });
 
   for (const key of importKeys) {
     const def = ITEM_FIELDS[key];
@@ -425,11 +508,20 @@ function normalizeItem(raw, index, errors, warnings) {
       }
       continue;
     }
-    if (def.type === 'string') item[key] = String(raw[key]);
-    else item[key] = raw[key];
+    if (listIds.has(key)) {
+      const translate = fieldTranslate[key] !== undefined
+        ? fieldTranslate[key]
+        : Array.isArray(raw[key]) && raw[key].some((v) => v && typeof v === 'object');
+      item[key] = normalizeListField(raw[key], translate);
+    } else if (i18nIds.has(key) || def.type === 'i18n') {
+      item[key] = normalizeI18nValue(raw[key]);
+    } else if (def.type === 'string') {
+      item[key] = String(raw[key]);
+    } else {
+      item[key] = raw[key];
+    }
   }
 
-  // Keep unknown keys as warnings only (forward-compat)
   Object.keys(raw).forEach(k => {
     if (!ITEM_FIELDS[k]) warnings.push(`items[${index}].${k}: champ inconnu (ignoré)`);
     else if (ITEM_FIELDS[k].importable === false) {
@@ -440,6 +532,10 @@ function normalizeItem(raw, index, errors, warnings) {
   if (!item.id) {
     item.id = `vocab_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 6)}`;
     warnings.push(`items[${index}]: id généré automatiquement (${item.id})`);
+  }
+
+  if (!item.en || !String(item.en).trim()) {
+    errors.push(`items[${index}] (${item.id}): en (anglais) est requis`);
   }
 
   return item;
@@ -527,52 +623,63 @@ export function buildCategoryItemsImportTemplate(domain = null, scope = {}) {
     ? domain.organization.tabs
     : [{ id: tab }];
   const tabIds = tabs.map((t) => t.id);
+  const categories = domain?.organization?.categories || [];
+  const structure = resolveItemStructure(categories, categoryId);
 
-  const makeSample = (catId, tabId, index = 0) => ({
-    ...exampleFromFields(ITEM_FIELDS),
-    id: `nouveau-mot-${tabId}${catId ? `-${catId}` : ''}${index > 0 ? `-${index}` : ''}`,
-    en: `Example word (${tabId})`,
-    fr: `Mot exemple (${tabId})`,
-    mg: `Ohatra (${tabId})`,
-    category: index % 2 === 0 ? 'Organe' : 'Maladie',
-    tab: tabId,
-    categoryId: catId || undefined,
-    phonetic: '',
-  });
+  const makeSample = (catId, tabId, index = 0) => {
+    if (structure) {
+      const sample = buildSampleItemFromStructure(structure, { categoryId: catId, tab: tabId });
+      sample.id = `nouveau-mot-${tabId}${catId ? `-${catId}` : ''}${index > 0 ? `-${index}` : ''}`;
+      return sample;
+    }
+    return {
+      ...exampleFromFields(ITEM_FIELDS),
+      id: `nouveau-mot-${tabId}${catId ? `-${catId}` : ''}${index > 0 ? `-${index}` : ''}`,
+      en: `Example word (${tabId})`,
+      fr: `Mot exemple (${tabId})`,
+      mg: `Ohatra (${tabId})`,
+      category: index % 2 === 0 ? 'Organe' : 'Maladie',
+      tab: tabId,
+      categoryId: catId || undefined,
+      phonetic: '',
+    };
+  };
 
   let sampleItems;
   let about;
   let notes;
+  const structureNote = structure
+    ? `Structure racine : langs=[${(structure.langs || []).join(',') || '—'}] fields=[${(structure.fields || []).map((f) => f.id).join(', ')}]`
+    : 'Pas de itemStructure sur la racine — template classique.';
 
   if (mode === 'domain') {
     sampleItems = tabs.map((t, i) => makeSample(categoryId, t.id, i));
     about = 'Import mots — tout le domaine';
     notes = [
       'Seul le tableau items est requis.',
+      structureNote,
       `Onglets disponibles : ${tabIds.join(', ') || '(aucun)'}.`,
-      'Chaque item doit avoir un tab et un categoryId valides.',
+      'en (anglais) est requis ; fr/mg selon langs de la racine.',
       'Même id = mise à jour ; nouvel id = ajout.',
-      'Les images se gèrent via upload admin, pas via JSON.',
     ];
   } else if (mode === 'all-tabs') {
     sampleItems = tabs.map((t, i) => makeSample(categoryId, t.id, i));
     about = 'Import mots — tous les onglets de la catégorie';
     notes = [
       'Seul le tableau items est requis.',
+      structureNote,
       `categoryId est fixé sur « ${categoryId || '(vide)'} » à l’import.`,
-      `Onglets disponibles : ${tabIds.join(', ') || '(aucun)'} — conservez le champ tab.`,
-      'Même id = mise à jour ; nouvel id = ajout.',
-      'Les images se gèrent via upload admin, pas via JSON.',
+      'en (anglais) est requis.',
     ];
   } else {
     sampleItems = [makeSample(categoryId, tab, 0)];
     about = 'Import mots — un onglet de la catégorie';
     notes = [
       'Seul le tableau items est requis.',
+      structureNote,
       `categoryId est fixé sur « ${categoryId || '(vide)'} » à l’import.`,
       `tab est fixé sur « ${tab} » à l’import.`,
-      'Même id = mise à jour ; nouvel id = ajout.',
-      'Les images se gèrent via upload admin, pas via JSON.',
+      'en (anglais) est requis.',
     ];
   }
 
@@ -587,7 +694,10 @@ export function categoryItemsTemplateToPrettyJson(domain = null, scope = {}) {
 }
 
 /** CSV columns for vocab item export (Excel-friendly). */
-export const VOCAB_CSV_COLUMNS = ['id', 'fr', 'en', 'mg', 'category', 'tab', 'categoryId', 'phonetic'];
+export const VOCAB_CSV_COLUMNS = [
+  'id', 'en', 'fr', 'mg', 'category', 'tab', 'categoryId', 'phonetic',
+  'synonyms', 'antonyms', 'context', 'particle', 'pattern', 'register', 'notes',
+];
 
 /**
  * Filter items by export/import UI scope.
@@ -610,13 +720,27 @@ function escapeCsvCell(value) {
   return s;
 }
 
+function csvCellFromItem(item, key) {
+  const value = item?.[key];
+  if (key === 'synonyms' || key === 'antonyms') {
+    if (!Array.isArray(value)) return value ?? '';
+    return value.map((v) => (typeof v === 'string' ? v : (v?.en || v?.fr || ''))).filter(Boolean).join('; ');
+  }
+  if (key === 'context' || key === 'notes') {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    return value.en || value.fr || value.mg || '';
+  }
+  return value ?? '';
+}
+
 /**
  * Build CSV string (UTF-8 BOM for Excel) from vocab items.
  */
 export function itemsToCsv(items, columns = VOCAB_CSV_COLUMNS) {
   const lines = [columns.join(',')];
   (items || []).forEach((item) => {
-    lines.push(columns.map((key) => escapeCsvCell(item[key] ?? '')).join(','));
+    lines.push(columns.map((key) => escapeCsvCell(csvCellFromItem(item, key))).join(','));
   });
   return `\uFEFF${lines.join('\n')}`;
 }
@@ -777,8 +901,13 @@ export function validateItemsOnlyImport(raw, currentDomain = null, options = {})
     return { ok: false, errors: ['items: tableau requis'], warnings, data: null, importType: 'items_only' };
   }
 
+  let structureHint = null;
+  if (forceCategoryId && currentDomain?.organization?.categories) {
+    structureHint = resolveItemStructure(currentDomain.organization.categories, forceCategoryId);
+  }
+
   let items = raw.items
-    .map((it, i) => normalizeItem(it, i, errors, warnings))
+    .map((it, i) => normalizeItem(it, i, errors, warnings, structureHint))
     .filter(Boolean);
 
   const tabIds = new Set((currentDomain?.organization?.tabs || []).map(t => t.id));
