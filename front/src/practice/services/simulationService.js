@@ -1,7 +1,7 @@
 import { usesRemoteLlm } from '../config';
 import { mockLlmAdapter } from '../adapters/mockLlmAdapter';
 import { remoteLlmAdapter } from '../adapters/remoteLlmAdapter';
-import { SIMULATION_PRESETS, getPresetById } from '../data/simulationPresets';
+import { getScenarioProfile, listPresets, getPresetById } from '../data/scenarioProfiles';
 import { suggestTurnCount } from '../domain/vocabCoverage';
 
 function llmAdapter() {
@@ -9,12 +9,16 @@ function llmAdapter() {
 }
 
 export const simulationService = {
-  listPresets() {
-    return SIMULATION_PRESETS;
+  listPresets(domainId) {
+    return listPresets(domainId);
   },
 
-  getPreset(id) {
-    return getPresetById(id);
+  getPreset(domainId, id) {
+    return getPresetById(domainId, id);
+  },
+
+  getProfile(domainId) {
+    return getScenarioProfile(domainId);
   },
 
   async generate({
@@ -26,13 +30,16 @@ export const simulationService = {
     level,
     vocabulary = [],
     topicLabel = null,
-    length = 'long'
+    length = 'long',
+    domainId = null,
+    scenarioKind = null,
   }) {
-    const preset = promptId ? getPresetById(promptId) : null;
+    const profile = getScenarioProfile(domainId);
+    const kind = scenarioKind || profile.kind;
+    const preset = promptId ? getPresetById(domainId, promptId) : null;
     const turnCount =
       turns || suggestTurnCount(vocabulary?.length || 0, length) || preset?.turns || 12;
 
-    // Server (or mock) already soft-pads missing vocab once — avoid double robotic pad
     return llmAdapter().generateSimulation({
       theme: theme || topicLabel || preset?.theme || 'Conversation practice',
       locale,
@@ -42,7 +49,13 @@ export const simulationService = {
       level: level || preset?.level || 'beginner',
       vocabulary,
       topicLabel,
-      length
+      length,
+      domainId,
+      scenarioKind: kind,
+      roles: {
+        partner: profile.padPartnerRole,
+        learner: profile.padLearnerRole,
+      },
     });
-  }
+  },
 };

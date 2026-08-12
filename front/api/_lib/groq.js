@@ -7,7 +7,9 @@ function getApiKey() {
   return process.env.GROQ_API_KEY || '';
 }
 
-const SYSTEM_PROMPT = `You generate spoken doctor–patient role-play simulations for English language practice.
+function systemPrompt(kind, partnerRole, learnerRole) {
+  if (kind === 'medical') {
+    return `You generate spoken doctor–patient role-play simulations for English language practice.
 Return ONLY valid JSON matching this shape:
 {
   "theme": "string",
@@ -23,8 +25,27 @@ Rules:
 - When a vocabulary list is provided: weave those English terms into the dialogue naturally (about 1–2 terms per turn when possible). Prefer clinical context over checklist questions. Use the exact English spelling of each term at least once if you can do so without sounding forced.
 - Stay focused on the given topic
 - No markdown, no code fences, JSON only`;
+  }
 
-function padMissingOnServer(script, vocabulary) {
+  return `You generate spoken two-person role-play simulations for English vocabulary practice (NOT medical unless the theme is medical).
+Return ONLY valid JSON matching this shape:
+{
+  "theme": "string",
+  "locale": "en",
+  "turns": [
+    { "id": "turn-1", "role": "${partnerRole}|${learnerRole}", "text": "spoken line", "listenHint": "optional hint" }
+  ]
+}
+Rules:
+- Alternate speakers naturally between "${partnerRole}" and "${learnerRole}"
+- Write a natural everyday / topic conversation — not a vocabulary quiz checklist
+- Keep each turn under 30 words
+- When a vocabulary list is provided: weave those English terms into the dialogue naturally (about 1–2 terms per turn when possible). Prefer authentic context over "define this word" questions. Use the exact English spelling of each term at least once if you can do so without sounding forced.
+- Stay focused on the given topic
+- No markdown, no code fences, JSON only`;
+}
+
+function padMissingOnServer(script, vocabulary, roles, kind) {
   const list = (vocabulary || [])
     .map((w) => (typeof w === 'string' ? w : w?.en || ''))
     .map((s) => String(s).trim())
@@ -46,19 +67,26 @@ function padMissingOnServer(script, vocabulary) {
     };
   }
 
-  // Soft clinical pad — only for terms the LLM missed (keep short)
+  const partner = roles?.partner || (kind === 'medical' ? 'doctor' : 'partner');
+  const learner = roles?.learner || (kind === 'medical' ? 'patient' : 'learner');
+  const medical = kind === 'medical';
+
   const extra = [];
   missing.forEach((word, idx) => {
     extra.push({
       id: `pad-doc-${idx + 1}`,
-      role: 'doctor',
-      text: `I'd also like to check anything related to ${word}.`,
+      role: partner,
+      text: medical
+        ? `I'd also like to check anything related to ${word}.`
+        : `Can you also try using the word ${word}?`,
       listenHint: `vocab: ${word}`
     });
     extra.push({
       id: `pad-pat-${idx + 1}`,
-      role: 'patient',
-      text: `Yes, ${word} has been on my mind lately.`,
+      role: learner,
+      text: medical
+        ? `Yes, ${word} has been on my mind lately.`
+        : `Sure — here is a sentence with ${word}.`,
       listenHint: `vocab: ${word}`
     });
   });
@@ -86,7 +114,9 @@ async function generateSimulation({
   level = 'beginner',
   vocabulary = [],
   topicLabel = null,
-  length = 'long'
+  length = 'long',
+  scenarioKind = 'general',
+  roles = null
 }) {
   const key = getApiKey();
   if (!key) {
@@ -99,6 +129,10 @@ async function generateSimulation({
       }
     };
   }
+
+  const kind = scenarioKind === 'medical' ? 'medical' : 'general';
+  const partnerRole = roles?.partner || (kind === 'medical' ? 'doctor' : 'partner');
+  const learnerRole = roles?.learner || (kind === 'medical' ? 'patient' : 'learner');
 
   const vocab = Array.isArray(vocabulary) ? vocabulary.slice(0, 80) : [];
   const vocabCount = vocab.length;
@@ -113,8 +147,9 @@ async function generateSimulation({
     `Locale: ${locale}`,
     `Level: ${level}`,
     `Length: ${length}`,
+    `Scenario kind: ${kind}`,
     `Target turns: ${targetTurns} (use at least ${Math.max(10, targetTurns - 2)} turns)`,
-    'Roles: use mostly "doctor" and "patient" so two distinct voices can be applied.'
+    `Roles: use mostly "${partnerRole}" and "${learnerRole}" so two distinct voices can be applied.`
   ].filter(Boolean);
 
   if (vocabCount) {
@@ -128,7 +163,9 @@ async function generateSimulation({
       `Vocabulary to weave in naturally (aim to use each English term once in context):\n${lines.join('\n')}`
     );
     userParts.push(
-      `Write a believable clinic visit. Do not ask "tell me about X" for every term. Spread terms across the dialogue.`
+      kind === 'medical'
+        ? `Write a believable clinic visit. Do not ask "tell me about X" for every term. Spread terms across the dialogue.`
+        : `Write a believable everyday / topic conversation. Do not ask "define X" for every term. Spread terms across the dialogue.`
     );
   }
 
@@ -148,7 +185,7 @@ async function generateSimulation({
       max_tokens: 2800,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: systemPrompt(kind, partnerRole, learnerRole) },
         { role: 'user', content: userParts.join('\n') }
       ]
     })
@@ -185,10 +222,11 @@ async function generateSimulation({
         topicLabel: topicLabel || null,
         vocabularyCount: vocabCount,
         length,
+        scenarioKind: kind,
         generatedAt: new Date().toISOString()
       }
     });
-    script = padMissingOnServer(script, vocab);
+    script = padMissingOnServer(script, vocab, { partner: partnerRole, learner: learnerRole }, kind);
     return { data: script };
   } catch (err) {
     return {

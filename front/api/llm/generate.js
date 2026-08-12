@@ -37,7 +37,9 @@ module.exports = async function handler(req, res) {
       level = 'beginner',
       vocabulary = [],
       topicLabel = null,
-      length = 'long'
+      length = 'long',
+      scenarioKind = 'general',
+      roles = null
     } = req.body || {};
 
     const cleanedTheme = String(theme || '').trim();
@@ -51,6 +53,7 @@ module.exports = async function handler(req, res) {
     }
 
     const vocab = Array.isArray(vocabulary) ? vocabulary.slice(0, 80) : [];
+    const kind = scenarioKind === 'medical' ? 'medical' : 'general';
 
     const result = await generateSimulation({
       theme: cleanedTheme.slice(0, 200),
@@ -61,7 +64,9 @@ module.exports = async function handler(req, res) {
       level,
       vocabulary: vocab,
       topicLabel: topicLabel ? String(topicLabel).slice(0, 120) : null,
-      length
+      length,
+      scenarioKind: kind,
+      roles: roles && typeof roles === 'object' ? roles : null
     });
 
     if (result.error) {

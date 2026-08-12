@@ -103,7 +103,7 @@ function normalizeWrittenTurn(raw) {
   return {
     version: 1,
     partnerTurn: {
-      role: partner.role === 'doctor' || partner.role === 'patient' ? partner.role : 'doctor',
+      role: String(partner.role || 'partner').trim() || 'partner',
       text: String(partner.text || '').trim()
     },
     feedback: {

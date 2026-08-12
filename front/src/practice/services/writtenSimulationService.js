@@ -11,25 +11,31 @@ export const writtenSimulationService = {
     theme,
     locale = 'en',
     level = 'beginner',
-    learnerRole = 'patient',
+    learnerRole = 'learner',
+    partnerRole = null,
     learnerText = '',
     history = [],
     vocabulary = [],
     topicLabel = null,
     customPrompt = null,
-    turnIndex = 0
+    turnIndex = 0,
+    domainId = null,
+    scenarioKind = 'general',
   }) {
     return adapter().generateWrittenTurn({
       theme,
       locale,
       level,
       learnerRole,
+      partnerRole,
       learnerText,
       history,
       vocabulary,
       topicLabel,
       customPrompt,
-      turnIndex
+      turnIndex,
+      domainId,
+      scenarioKind,
     });
   }
 };

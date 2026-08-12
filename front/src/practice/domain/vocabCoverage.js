@@ -39,9 +39,9 @@ function escapeReg(s) {
 
 /**
  * Soft pad for missing vocabulary (used by tests / optional tools).
- * Prefer clinical phrasing over checklist tone.
+ * Roles come from scenario profile when provided.
  */
-export function padScriptWithMissingVocabulary(script, vocabulary = []) {
+export function padScriptWithMissingVocabulary(script, vocabulary = [], roles = null) {
   if (!script?.turns?.length) return { script, missing: extractEnList(vocabulary), covered: [] };
 
   const missing = findMissingVocabulary(script.turns, vocabulary);
@@ -63,20 +63,28 @@ export function padScriptWithMissingVocabulary(script, vocabulary = []) {
     };
   }
 
+  const partner = roles?.partner || 'partner';
+  const learner = roles?.learner || 'learner';
+  const medical = partner === 'doctor' || learner === 'patient';
+
   const extra = [];
   let i = 0;
   for (const word of missing) {
     i += 1;
     extra.push({
       id: `pad-doc-${i}`,
-      role: 'doctor',
-      text: `I'd also like to check anything related to ${word}.`,
+      role: partner,
+      text: medical
+        ? `I'd also like to check anything related to ${word}.`
+        : `Can you also try using the word ${word}?`,
       listenHint: `vocab: ${word}`
     });
     extra.push({
       id: `pad-pat-${i}`,
-      role: 'patient',
-      text: `Yes, ${word} has been on my mind lately.`,
+      role: learner,
+      text: medical
+        ? `Yes, ${word} has been on my mind lately.`
+        : `Sure — here is a sentence with ${word}.`,
       listenHint: `vocab: ${word}`
     });
   }

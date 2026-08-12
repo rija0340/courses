@@ -1,11 +1,9 @@
 /**
- * UI copy for practice simulation panels — keyed by AppContext.lang (fr|en|mg).
+ * UI copy for practice simulation — domain-aware via scenario profile kind.
  */
-const COPY = {
+const BASE = {
   fr: {
     simulation: 'Simulation',
-    simulationHint:
-      'Dialogue médecin ↔ patient, voix distinctes. La conversation est en anglais. Session seule (pas de BDD).',
     listening: 'Écoute',
     writtenOral: 'Écrit et oral',
     quiz: 'Quiz',
@@ -40,18 +38,16 @@ const COPY = {
     truncatedWarn: 'Max {max} mots pour un dialogue naturel — les {n} premiers sont utilisés.',
     needWords: 'Sélectionnez au moins un mot.',
     writtenTitle: 'Écrit et oral',
-    writtenHint:
-      'Dialogue patient–médecin : écrivez ou dictez en anglais, puis recevez un retour.',
     quizTitle: 'Quiz / exercices',
     quizHint: 'Mémorisation active avec retour pédagogique.',
     byTopic: 'Par sujet',
     freeTheme: 'Thème libre',
     wordsAvailable: '{n} mots disponibles',
+    yourRole: 'Votre rôle',
+    dualVoices: 'Deux voix distinctes · session seule (pas de BDD)',
   },
   en: {
     simulation: 'Simulation',
-    simulationHint:
-      'Doctor ↔ patient dialogue, dual voices. Conversation is in English. Session only (no DB).',
     listening: 'Listening',
     writtenOral: 'Written & oral',
     quiz: 'Quiz',
@@ -86,18 +82,16 @@ const COPY = {
     truncatedWarn: 'Max {max} words for a natural dialogue — using the first {n}.',
     needWords: 'Select at least one word.',
     writtenTitle: 'Written & oral',
-    writtenHint:
-      'Doctor–patient dialogue: type or dictate in English, then get feedback.',
     quizTitle: 'Quiz / exercises',
     quizHint: 'Active recall with rich feedback.',
     byTopic: 'By topic',
     freeTheme: 'Free theme',
     wordsAvailable: '{n} words available',
+    yourRole: 'Your role',
+    dualVoices: 'Two distinct voices · session only (no DB)',
   },
   mg: {
     simulation: 'Simulation',
-    simulationHint:
-      'Resaka dokotera ↔ marary, feo roa. Ny resaka dia amin\'ny teny anglisy. Session ihany.',
     listening: 'Mihaino',
     writtenOral: 'Soratra sy am-bava',
     quiz: 'Quiz',
@@ -128,16 +122,59 @@ const COPY = {
     selectAll: 'Rehetra',
     clearAll: 'Tsy misy',
     selectedCount: '{n} voafidy',
-    noWords: 'Tsy misy teny amin\'ity onglet / lohahevitra ity.',
+    noWords: 'Tsy misy teny amin’ity onglet / lohahevitra ity.',
     truncatedWarn: 'Max {max} teny — ny {n} voalohany no ampiasaina.',
     needWords: 'Misafidiana teny iray farafahakeliny.',
     writtenTitle: 'Soratra sy am-bava',
-    writtenHint: 'Resaka dokotera–marary amin\'ny teny anglisy, avy eo feedback.',
     quizTitle: 'Quiz / fanazaran-tena',
-    quizHint: 'Fahatsiarovana mavitrika miaraka amin\'ny feedback.',
+    quizHint: 'Fahatsiarovana mavitrika miaraka amin’ny feedback.',
     byTopic: 'Araka ny lohahevitra',
     freeTheme: 'Lohahevitra malalaka',
     wordsAvailable: '{n} teny azo',
+    yourRole: 'Anjaranao',
+    dualVoices: 'Feo roa · session ihany',
+  },
+};
+
+const KIND_HINTS = {
+  medical: {
+    fr: {
+      simulationHint:
+        'Dialogue médecin ↔ patient, voix distinctes. Conversation en anglais. Session seule (pas de BDD).',
+      writtenHint:
+        'Dialogue patient–médecin : écrivez ou dictez en anglais, puis recevez un retour.',
+    },
+    en: {
+      simulationHint:
+        'Doctor ↔ patient dialogue, dual voices. Conversation in English. Session only (no DB).',
+      writtenHint:
+        'Doctor–patient dialogue: type or dictate in English, then get feedback.',
+    },
+    mg: {
+      simulationHint:
+        'Resaka dokotera ↔ marary, feo roa. Teny anglisy. Session ihany.',
+      writtenHint: 'Resaka dokotera–marary amin’ny teny anglisy, avy eo feedback.',
+    },
+  },
+  general: {
+    fr: {
+      simulationHint:
+        'Dialogue à 2 voix (apprenant ↔ partenaire). Conversation en anglais. Session seule (pas de BDD).',
+      writtenHint:
+        'Dialogue libre : écrivez ou dictez en anglais avec le vocabulaire du sujet, puis recevez un retour.',
+    },
+    en: {
+      simulationHint:
+        'Two-voice dialogue (learner ↔ partner). Conversation in English. Session only (no DB).',
+      writtenHint:
+        'Open dialogue: type or dictate in English using topic vocabulary, then get feedback.',
+    },
+    mg: {
+      simulationHint:
+        'Resaka feo roa (mpianatra ↔ namana). Teny anglisy. Session ihany.',
+      writtenHint:
+        'Resaka malalaka amin’ny teny anglisy miaraka amin’ny voambolana, avy eo feedback.',
+    },
   },
 };
 
@@ -147,11 +184,17 @@ function fill(template, vars = {}) {
   );
 }
 
-export function simulationUi(lang = 'fr') {
-  const dict = COPY[lang] || COPY.fr;
+/**
+ * @param {string} lang
+ * @param {'medical'|'general'} [kind='general']
+ */
+export function simulationUi(lang = 'fr', kind = 'general') {
+  const dict = BASE[lang] || BASE.fr;
+  const hints = KIND_HINTS[kind]?.[lang] || KIND_HINTS.general[lang] || KIND_HINTS.general.fr;
+  const merged = { ...dict, ...hints };
   return {
-    ...dict,
-    t: (key, vars) => fill(dict[key] ?? COPY.en[key] ?? key, vars),
+    ...merged,
+    t: (key, vars) => fill(merged[key] ?? BASE.en[key] ?? key, vars),
   };
 }
 

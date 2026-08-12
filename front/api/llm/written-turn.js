@@ -32,13 +32,15 @@ module.exports = async function handler(req, res) {
       theme,
       locale = 'en',
       level = 'beginner',
-      learnerRole = 'patient',
+      learnerRole = 'learner',
+      partnerRole = null,
       learnerText = '',
       history = [],
       vocabulary = [],
       topicLabel = null,
       customPrompt = null,
-      turnIndex = 0
+      turnIndex = 0,
+      scenarioKind = 'general'
     } = req.body || {};
 
     const cleanedTheme = String(theme || '').trim();
@@ -51,11 +53,22 @@ module.exports = async function handler(req, res) {
       );
     }
 
-    if (!['patient', 'doctor'].includes(learnerRole)) {
+    const kind = scenarioKind === 'medical' ? 'medical' : 'general';
+    const role = String(learnerRole || '').trim();
+    const allowedMedical = ['patient', 'doctor'];
+    const allowedGeneral = ['learner', 'partner'];
+    const allowed = kind === 'medical' ? allowedMedical : allowedGeneral;
+    if (!allowed.includes(role)) {
       return sendJson(
         req,
         res,
-        { ok: false, error: { code: 'INVALID_ROLE', message: 'learnerRole must be patient or doctor' } },
+        {
+          ok: false,
+          error: {
+            code: 'INVALID_ROLE',
+            message: `learnerRole must be one of: ${allowed.join(', ')}`
+          }
+        },
         400
       );
     }
@@ -64,13 +77,15 @@ module.exports = async function handler(req, res) {
       theme: cleanedTheme.slice(0, 200),
       locale,
       level,
-      learnerRole,
+      learnerRole: role,
+      partnerRole: partnerRole ? String(partnerRole).slice(0, 40) : null,
       learnerText: String(learnerText || '').slice(0, 2000),
       history: Array.isArray(history) ? history.slice(-20) : [],
       vocabulary: Array.isArray(vocabulary) ? vocabulary.slice(0, 80) : [],
       topicLabel: topicLabel ? String(topicLabel).slice(0, 120) : null,
       customPrompt,
-      turnIndex: Number(turnIndex) || 0
+      turnIndex: Number(turnIndex) || 0,
+      scenarioKind: kind
     });
 
     if (result.error) {

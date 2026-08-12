@@ -3,28 +3,45 @@ import { createWrittenTurnResult } from '../contracts';
 export const mockWrittenLlmAdapter = {
   async generateWrittenTurn({
     theme,
-    learnerRole = 'patient',
+    learnerRole = 'learner',
+    partnerRole = null,
     learnerText = '',
     history = [],
     vocabulary = [],
     topicLabel = null,
-    turnIndex = 0
+    turnIndex = 0,
+    scenarioKind = 'general',
   }) {
     await delay(500);
-    const partnerRole = learnerRole === 'doctor' ? 'patient' : 'doctor';
+    const medical = scenarioKind === 'medical';
+    const resolvedPartner =
+      partnerRole ||
+      (medical
+        ? learnerRole === 'doctor'
+          ? 'patient'
+          : 'doctor'
+        : learnerRole === 'partner'
+          ? 'learner'
+          : 'partner');
     const vocabWords = (vocabulary || [])
       .map((w) => (typeof w === 'string' ? w : w.en))
       .filter(Boolean);
 
     let partnerText;
     if (!learnerText && turnIndex === 0) {
-      partnerText = partnerRole === 'doctor'
-        ? `Hello, I'm Dr. Smith. What brings you in today regarding ${topicLabel || theme}?`
-        : `Hello doctor. I've been having some concerns about ${topicLabel || theme}.`;
-    } else if (partnerRole === 'doctor') {
+      partnerText = medical
+        ? resolvedPartner === 'doctor'
+          ? `Hello, I'm Dr. Smith. What brings you in today regarding ${topicLabel || theme}?`
+          : `Hello doctor. I've been having some concerns about ${topicLabel || theme}.`
+        : `Hi! Ready to practice English about ${topicLabel || theme}?`;
+    } else if (medical && resolvedPartner === 'doctor') {
       partnerText = `Thank you for explaining that. Can you tell me more about when it started?`;
-    } else {
+    } else if (medical) {
       partnerText = `I've noticed it for a few days now, and it's getting worse.`;
+    } else {
+      partnerText = learnerText
+        ? `Nice. Can you also try a sentence with another word from the topic?`
+        : `What would you like to say first?`;
     }
 
     const usedTheme = vocabWords.filter((w) =>
@@ -54,27 +71,6 @@ export const mockWrittenLlmAdapter = {
         exampleCorrect: 'How long has it hurt?'
       });
     }
-    if (learnerText && /\bi have pain since\b/i.test(learnerText)) {
-      issues.push({
-        category: 'tense_aspect',
-        severity: 'high',
-        original: 'I have pain since',
-        suggestion: 'I have had pain since / I have been having pain since',
-        explanation:
-          'Avec « since » (point de départ dans le passé), l’anglais utilise souvent le present perfect, pas le present simple.',
-        partOfSpeech: 'verbe (present perfect)',
-        errorType: 'temps / aspect incorrect avec since',
-        rule: 'since + moment passé → present perfect (have/has + V3) ou present perfect continuous.',
-        formation: 'have/has + participe passé du verbe principal.',
-        steps: [
-          'Repérez « since » + un moment passé.',
-          'Conjuguez have/has selon le sujet.',
-          'Ajoutez le participe passé (had, felt, noticed…).'
-        ],
-        exampleWrong: 'I have pain since Monday.',
-        exampleCorrect: 'I have had pain since Monday.'
-      });
-    }
     if (learnerText && learnerText.split(/\s+/).length < 4) {
       issues.push({
         category: 'sentence_structure',
@@ -86,14 +82,14 @@ export const mockWrittenLlmAdapter = {
         partOfSpeech: 'phrase (SVO)',
         errorType: 'phrase trop elliptique',
         rule: 'Phrase affirmative de base : Subject + Verb + Object/Complement.',
-        formation: 'Ajoutez un sujet clair, un verbe conjugué, puis le détail clinique.',
+        formation: 'Ajoutez un sujet clair, un verbe conjugué, puis le détail.',
         steps: [
-          'Choisissez le sujet (I / My eye / The pain…).',
+          'Choisissez le sujet (I / This word…).',
           'Ajoutez un verbe conjugué (have, feel, noticed…).',
           'Complétez avec le détail (where, when, how).'
         ],
         exampleWrong: 'Pain eye.',
-        exampleCorrect: 'I have pain in my right eye.'
+        exampleCorrect: medical ? 'I have pain in my right eye.' : 'I want to practice this word today.'
       });
     }
     if (missedTheme.length && learnerText) {
@@ -102,50 +98,32 @@ export const mockWrittenLlmAdapter = {
         category: 'vocabulary_theme',
         severity: 'medium',
         original: '',
-        suggestion: `… my ${word} …`,
-        explanation: `Le thème invite à utiliser « ${word} ». Intégrez ce terme dans une collocation naturelle (my ${word}, pain in the ${word}, etc.).`,
+        suggestion: `… ${word} …`,
+        explanation: `Le thème invite à utiliser « ${word} ». Intégrez ce terme dans une phrase naturelle.`,
         partOfSpeech: 'nom (vocabulaire thématique)',
         errorType: 'vocabulaire du thème non utilisé',
-        rule: 'Réutilisez les termes du thème dans des collocations médicales naturelles.',
-        formation: `Insérez « ${word} » après un déterminant (my/the) ou dans une expression fixe.`,
+        rule: 'Réutilisez les termes du thème dans des collocations naturelles.',
+        formation: `Insérez « ${word} » dans une phrase SVO complète.`,
         steps: [
-          `Choisissez le slot : my ${word} / the ${word} / pain in the ${word}.`,
+          `Choisissez le slot pour « ${word} ».`,
           'Placez-le dans une phrase SVO complète.',
           'Vérifiez l’article (a/the/my) selon le contexte.'
         ],
         exampleWrong: 'Something is wrong there.',
-        exampleCorrect: `I have discomfort in my ${word}.`
-      });
-    }
-    if (learnerText && /\bgo to hospital\b/i.test(learnerText) && !/\bthe hospital\b/i.test(learnerText)) {
-      issues.push({
-        category: 'article',
-        severity: 'low',
-        original: 'go to hospital',
-        suggestion: 'go to the hospital (US) / go to hospital (UK — possible)',
-        explanation:
-          'En anglais américain, on dit souvent « the hospital ». En britannique, « hospital » sans article est courant pour l’institution.',
-        partOfSpeech: 'article défini',
-        errorType: 'article / usage institutionnel',
-        rule: 'Article selon variété et sens (lieu vs institution).',
-        formation: 'Ajoutez « the » si vous visez l’usage américain.',
-        steps: [
-          'Décidez US vs UK.',
-          'US : the hospital ; UK institution : hospital.'
-        ],
-        exampleWrong: 'I go to hospital yesterday. (tense + article)',
-        exampleCorrect: 'I went to the hospital yesterday.'
+        exampleCorrect: medical
+          ? `I have discomfort in my ${word}.`
+          : `I can use the word ${word} in this sentence.`
       });
     }
 
     return createWrittenTurnResult({
-      partnerTurn: { role: partnerRole, text: partnerText },
+      partnerTurn: { role: resolvedPartner, text: partnerText },
       feedback: {
         overallScore: issues.length ? 68 : 90,
         strengths: learnerText
           ? [
               'Vous répondez dans le rôle et avancez le dialogue.',
-              'Le message reste compréhensible dans un contexte médical.'
+              'Le message reste compréhensible.'
             ]
           : ['Prêt à commencer : écoutez l’ouverture puis écrivez ou dictez.'],
         issues,
@@ -158,12 +136,13 @@ export const mockWrittenLlmAdapter = {
               'Après chaque correction, reformulez à voix haute la version corrigée.',
               'Pour les questions : auxiliaire + sujet + verbe, puis ?'
             ]
-          : ['Préparez une phrase complète : sujet + verbe + détail clinique.']
+          : ['Préparez une phrase complète : sujet + verbe + détail.']
       },
       done: turnIndex >= 5,
       meta: {
         model: 'mock',
         historyLength: history.length,
+        scenarioKind,
         generatedAt: new Date().toISOString()
       }
     });

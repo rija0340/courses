@@ -23,12 +23,13 @@ function shuffle(arr) {
 function wordDef(item) {
   if (item.fr) return item.fr;
   if (item.mg) return item.mg;
-  return `English medical term related to ${item.en}`;
+  return `English word related to ${item.en}`;
 }
 
-export function buildQuizDeck({ words = [], types = ['definition_to_word'], limit = 8 } = {}) {
+export function buildQuizDeck({ words = [], types = ['definition_to_word'], limit = 8, scenarioKind = 'general' } = {}) {
   const list = shuffle(words).slice(0, Math.max(1, limit));
   const typeCycle = types.length ? types : ['definition_to_word'];
+  const medical = scenarioKind === 'medical';
   return list.map((item, index) => {
     const exerciseType = typeCycle[index % typeCycle.length];
     const en = item.en || item.word || '';
@@ -56,26 +57,32 @@ export function buildQuizDeck({ words = [], types = ['definition_to_word'], limi
       return {
         id: `q-${item.id || index}`,
         exerciseType,
-        prompt: `Complétez : "The patient described discomfort in the _____." (thème : ${en})`,
+        prompt: medical
+          ? `Complétez : "The patient described discomfort in the _____." (thème : ${en})`
+          : `Complétez : "I want to use the word _____ in a clear sentence." (thème : ${en})`,
         expected: en,
         hint: wordDef(item),
         item
       };
     }
-    // reformulate
     return {
       id: `q-${item.id || index}`,
       exerciseType,
-      prompt: `Reformulez de façon naturelle (EN) : "I have problem with my ${en}."`,
-      expected: `I have a problem with my ${en}. / I've been having trouble with my ${en}.`,
+      prompt: medical
+        ? `Reformulez de façon naturelle (EN) : "I have problem with my ${en}."`
+        : `Reformulez de façon naturelle (EN) : "I want talk about ${en}."`,
+      expected: medical
+        ? `I have a problem with my ${en}. / I've been having trouble with my ${en}.`
+        : `I want to talk about ${en}. / I'd like to talk about ${en}.`,
       hint: en,
       item
     };
   });
 }
 
-export function buildFreeThemeDeck(theme, types = ['reformulate'], count = 5) {
+export function buildFreeThemeDeck(theme, types = ['reformulate'], count = 5, scenarioKind = 'general') {
   const typeCycle = types.length ? types : ['reformulate'];
+  const medical = scenarioKind === 'medical';
   return Array.from({ length: count }, (_, index) => {
     const exerciseType = typeCycle[index % typeCycle.length];
     if (exerciseType === 'definition_to_word') {
@@ -102,7 +109,9 @@ export function buildFreeThemeDeck(theme, types = ['reformulate'], count = 5) {
       return {
         id: `free-${index}`,
         exerciseType,
-        prompt: `Complétez une phrase clinique sur « ${theme} » : "The _____ is important to examine today."`,
+        prompt: medical
+          ? `Complétez une phrase clinique sur « ${theme} » : "The _____ is important to examine today."`
+          : `Complétez une phrase sur « ${theme} » : "Today I practiced the word _____."`,
         expected: '',
         hint: theme,
         item: null

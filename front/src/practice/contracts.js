@@ -115,12 +115,11 @@ export function createWrittenTurnResult({
   const issues = Array.isArray(feedback?.issues)
     ? feedback.issues.map(normalizeIssue)
     : [];
+  const role = String(partnerTurn?.role || 'partner').trim() || 'partner';
   return {
     version: 1,
     partnerTurn: {
-      role: partnerTurn?.role === 'doctor' || partnerTurn?.role === 'patient'
-        ? partnerTurn.role
-        : 'doctor',
+      role,
       text: String(partnerTurn?.text || '').trim()
     },
     feedback: {

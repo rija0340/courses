@@ -38,10 +38,10 @@ export function resolveRoleVoice(role) {
   const r = String(role || 'speaker').toLowerCase().trim();
   if (ROLE_VOICES[r]) return ROLE_VOICES[r];
   if (/doctor|physician|clinician/.test(r)) return ROLE_VOICES.doctor;
-  if (/nurse|paramedic/.test(r)) return ROLE_VOICES.nurse;
+  if (/nurse|paramedic|pharmacist/.test(r)) return ROLE_VOICES.nurse;
   if (/reception|admin/.test(r)) return ROLE_VOICES.receptionist;
   if (/patient|learner|student/.test(r)) return ROLE_VOICES.patient;
-  if (/partner|friend/.test(r)) return ROLE_VOICES.partner;
+  if (/partner|friend|tutor|teacher|interviewer/.test(r)) return ROLE_VOICES.partner;
   return ROLE_VOICES.speaker;
 }
 
