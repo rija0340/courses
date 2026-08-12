@@ -57,3 +57,8 @@ sequenceDiagram
 **Pourquoi :** le catalogue fixe ne suffit pas (nuance, registre métier…) sans perdre les presets.
 **Pas choisi :** renommer l’`id` après coup (casse les données) ; UI table-only pour config.
 **À retenir :** l’`id` est la clé stable ; le libellé est de la présentation.
+
+### 2026-08-12 - Libellé colonne : draft local
+**Tags :** `ux` `state`
+**Bonne pratique :** controlled draft + commit on blur (pas autosave keystroke)
+**À retenir :** ne pas brancher `onChange` input → persist serveur quand on édite du texte libre.

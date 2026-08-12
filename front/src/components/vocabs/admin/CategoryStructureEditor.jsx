@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronUp, ChevronDown, Plus, Trash2 } from 'lucide-react';
 import {
   STRUCTURE_FIELD_CATALOG,
@@ -10,6 +10,86 @@ import {
   createCustomField,
   structureFieldLabel,
 } from '../../../data/vocabs/vocabItemStructure';
+
+/** Local draft — commit on blur / Enter so parent autosave is not per-keystroke. */
+function FieldLabelInput({ fieldId, savedValue, placeholder, onCommit }) {
+  const [draft, setDraft] = useState(savedValue || '');
+  const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    if (!focused) setDraft(savedValue || '');
+  }, [savedValue, focused, fieldId]);
+
+  const savedTrim = (savedValue || '').trim();
+  const draftTrim = draft.trim();
+  const isDirty = draftTrim !== savedTrim;
+
+  const commit = () => {
+    const next = draftTrim;
+    if (next === savedTrim) return;
+    onCommit(fieldId, next || savedTrim);
+    if (!next) setDraft(savedTrim);
+  };
+
+  return (
+    <div className="w-full min-w-0">
+      <div className="relative">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => {
+            setFocused(false);
+            commit();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              e.currentTarget.blur();
+            }
+            if (e.key === 'Escape') {
+              setDraft(savedValue || '');
+              e.currentTarget.blur();
+            }
+          }}
+          aria-describedby={isDirty ? `label-hint-${fieldId}` : undefined}
+          className={`w-full h-9 sm:h-10 rounded-lg border px-2.5 pr-8 text-[13px] outline-none transition-colors ${
+            isDirty
+              ? 'border-amber-400 bg-amber-50/60 ring-1 ring-amber-300/50 focus:border-amber-500 focus:bg-white'
+              : 'border-[#dadce0] bg-[#f8f9fa] focus:border-[#1a73e8] focus:bg-white'
+          }`}
+          placeholder={placeholder}
+        />
+        {isDirty && (
+          <span
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-amber-500"
+            title="Modifications non enregistrées"
+            aria-hidden
+          />
+        )}
+      </div>
+      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 min-h-[16px]">
+        {isDirty ? (
+          <>
+            <span
+              id={`label-hint-${fieldId}`}
+              className="text-[10px] sm:text-[11px] text-amber-700 font-medium"
+            >
+              Brouillon
+            </span>
+            <span className="text-[10px] sm:text-[11px] text-[#9aa0a6]">
+              Entrée pour sauver
+            </span>
+          </>
+        ) : focused ? (
+          <span className="text-[10px] sm:text-[11px] text-[#9aa0a6]">
+            Entrée pour sauver
+          </span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 /**
  * Edit itemStructure on a root category:
@@ -151,49 +231,58 @@ export default function CategoryStructureEditor({ value, onChange }) {
         {structure.fields.map((f, index) => (
           <div
             key={f.id}
-            className="rounded-lg bg-white border border-[#dadce0] px-2.5 py-2 space-y-2"
+            className="rounded-lg bg-white border border-[#dadce0] px-2.5 sm:px-3 py-2.5 sm:py-3"
           >
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex flex-col">
-                <button type="button" onClick={() => moveField(index, -1)} disabled={index === 0} className="p-0.5 text-[#5f6368] disabled:opacity-30" aria-label="Monter">
-                  <ChevronUp className="w-3.5 h-3.5" />
-                </button>
-                <button type="button" onClick={() => moveField(index, 1)} disabled={index === structure.fields.length - 1} className="p-0.5 text-[#5f6368] disabled:opacity-30" aria-label="Descendre">
-                  <ChevronDown className="w-3.5 h-3.5" />
-                </button>
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-start gap-2 sm:gap-3">
+              <div className="flex items-center gap-2 sm:items-start sm:pt-1 shrink-0">
+                <div className="flex sm:flex-col">
+                  <button type="button" onClick={() => moveField(index, -1)} disabled={index === 0} className="p-0.5 text-[#5f6368] disabled:opacity-30" aria-label="Monter">
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" onClick={() => moveField(index, 1)} disabled={index === structure.fields.length - 1} className="p-0.5 text-[#5f6368] disabled:opacity-30" aria-label="Descendre">
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <span className="sm:hidden text-[10px] uppercase text-[#9aa0a6] px-1.5 py-0.5 rounded bg-[#f1f3f4]">
+                  {f.type}
+                </span>
               </div>
-              <div className="flex-1 min-w-[140px]">
-                <label className="block text-[10px] font-bold uppercase text-[#9aa0a6] mb-0.5">
-                  Libellé · <span className="font-mono normal-case text-[#9aa0a6]">{f.id}</span>
+
+              <div className="flex-1 min-w-0 w-full sm:min-w-[160px]">
+                <label className="block text-[10px] font-bold uppercase text-[#9aa0a6] mb-0.5 truncate">
+                  Libellé · <span className="font-mono normal-case">{f.id}</span>
                 </label>
-                <input
-                  value={f.label?.fr || ''}
-                  onChange={(e) => setLabelFr(f.id, e.target.value)}
-                  className="w-full h-9 rounded-lg border border-[#dadce0] bg-[#f8f9fa] px-2.5 text-[13px] outline-none focus:border-[#1a73e8] focus:bg-white"
+                <FieldLabelInput
+                  fieldId={f.id}
+                  savedValue={f.label?.fr || ''}
                   placeholder={structureFieldLabel(f, 'fr')}
+                  onCommit={setLabelFr}
                 />
               </div>
-              <span className="text-[10px] uppercase text-[#9aa0a6] px-1.5 py-0.5 rounded bg-[#f1f3f4]">
-                {f.type}
-              </span>
-              <label className="inline-flex items-center gap-1.5 text-[12px] text-[#5f6368]">
-                <input
-                  type="checkbox"
-                  checked={!!f.translate}
-                  onChange={(e) => setTranslate(f.id, e.target.checked)}
-                  className="w-3.5 h-3.5 rounded border-[#dadce0] text-[#1a73e8]"
-                />
-                Traductions
-              </label>
-              <button
-                type="button"
-                onClick={() => removeField(f.id)}
-                className="w-9 h-9 rounded-lg text-red-600 hover:bg-red-50 flex items-center justify-center"
-                aria-label="Supprimer la colonne"
-                title="Supprimer"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto sm:pt-6 shrink-0">
+                <span className="hidden sm:inline text-[10px] uppercase text-[#9aa0a6] px-1.5 py-0.5 rounded bg-[#f1f3f4]">
+                  {f.type}
+                </span>
+                <label className="inline-flex items-center gap-1.5 text-[12px] text-[#5f6368] min-h-9">
+                  <input
+                    type="checkbox"
+                    checked={!!f.translate}
+                    onChange={(e) => setTranslate(f.id, e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border-[#dadce0] text-[#1a73e8]"
+                  />
+                  Traductions
+                </label>
+                <button
+                  type="button"
+                  onClick={() => removeField(f.id)}
+                  className="w-9 h-9 rounded-lg text-red-600 hover:bg-red-50 flex items-center justify-center ml-auto sm:ml-0"
+                  aria-label="Supprimer la colonne"
+                  title="Supprimer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         ))}
