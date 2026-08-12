@@ -696,14 +696,6 @@ export default function VocabsView() {
                           <div className="p-3">
                             <p className="text-[15px] font-semibold text-[#202124] truncate">{activeWord}</p>
                             <p className="text-[12px] text-[#5f6368] mt-0.5">{item.en} · {item.mg}</p>
-                            <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white mt-2 ${
-                              item.category === 'Organe' ? 'bg-[#2563EB]' :
-                              item.category === 'Maladie' ? 'bg-[#EA4335]' :
-                              item.category === 'Symptôme' ? 'bg-[#FBBC05]' :
-                              'bg-[#34A853]'
-                            }`}>
-                              {item.category}
-                            </span>
                           </div>
                         </div>
                       );

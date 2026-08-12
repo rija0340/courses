@@ -13,7 +13,7 @@ import {
   pickI18nText,
   fieldHasContent,
 } from '../../../data/vocabs/vocabItemStructure';
-import { EmptyState, ConfirmModal, ImageModal, TYPE_COLORS } from './shared';
+import { EmptyState, ConfirmModal, ImageModal } from './shared';
 import FullscreenLightbox from '../FullscreenLightbox';
 
 export default function CategoryItemsPanel({
@@ -431,7 +431,6 @@ export default function CategoryItemsPanel({
           <ul className="divide-y divide-[#f1f3f4]">
             {filtered.map((item) => {
               const img = itemImages[item.id];
-              const typeClass = TYPE_COLORS[item.category] || 'bg-[#f1f3f4] text-[#5f6368]';
               const isSelected = selectedIds.has(item.id);
               return (
                 <li key={item.id} className={`group ${isSelected ? 'bg-[#E8F0FE]/50' : 'hover:bg-[#f8f9fa]/80'}`}>
@@ -444,7 +443,6 @@ export default function CategoryItemsPanel({
                       <p className="text-[14px] font-medium text-[#202124] truncate">{item.en || item.fr}</p>
                       <p className="text-[12px] text-[#5f6368] truncate">{[item.fr, item.mg].filter(Boolean).join(' · ')}</p>
                     </div>
-                    {item.category && <span className={`hidden sm:inline text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${typeClass}`}>{item.category}</span>}
                     <div className="flex items-center gap-1 shrink-0">
                       <button type="button" onClick={() => setImageItemId(item.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5f6368] hover:bg-[#e8eaed]"><ImageIcon className="w-3.5 h-3.5" /></button>
                       <button type="button" onClick={() => { setEditItem(item); setShowForm(true); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5f6368] hover:bg-[#e8eaed]"><Pencil className="w-3.5 h-3.5" /></button>

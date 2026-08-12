@@ -8,6 +8,7 @@ import {
   normalizeI18nValue,
   buildSampleItemFromStructure,
   resolveItemStructure,
+  coercePhoneticString,
 } from './vocabItemStructure';
 
 export const VOCAB_DOMAIN_VERSION = 4;
@@ -67,9 +68,9 @@ export const ITEM_FIELDS = /** @type {Record<string, FieldDef>} */ ({
   category: {
     type: 'string',
     required: false,
-    example: 'Organe',
+    example: '',
     default: '',
-    description: 'Type libre (Organe, Maladie, Symptôme…)',
+    description: 'Tag libre legacy (optionnel, souvent vide). Préférer categoryId pour le thème.',
   },
   tab: {
     type: 'string',
@@ -90,7 +91,7 @@ export const ITEM_FIELDS = /** @type {Record<string, FieldDef>} */ ({
     required: false,
     example: '/aɪ/',
     default: null,
-    description: 'Prononciation (optionnel)',
+    description: 'IPA en chaîne seule (ex. "/ˈhæpi/"). Pas un objet i18n — sinon [object Object].',
   },
   // Mini-dialogue (symptoms / conditions) — patient + doctor, 2 tours
   example: {
@@ -370,7 +371,7 @@ export function buildImportTemplate(domain = null) {
         en: index === 0 ? 'Example word' : `Example (${tab.id})`,
         fr: index === 0 ? 'Mot exemple' : `Exemple (${tab.id})`,
         mg: index === 0 ? 'Ohatra' : `Ohatra (${tab.id})`,
-        category: index % 2 === 0 ? 'Organe' : 'Maladie',
+        category: '',
         tab: tab.id,
         categoryId: firstCat,
         phonetic: index === 0 ? '/ɪɡˈzæmpəl/' : null,
@@ -384,6 +385,8 @@ export function buildImportTemplate(domain = null) {
         'Les images (image / image_url) se gèrent via upload, pas via ce JSON.',
         'categoryId doit référencer un id existant dans organization.categories (récursif).',
         'tab doit référencer un id dans organization.tabs.',
+        'phonetic = chaîne IPA seule, ex. "/ˈhæpi/" — jamais un objet {en,fr,mg}.',
+        'category (tag Organe/…) est optionnel et souvent vide ; le thème = categoryId.',
       ],
     },
   };
@@ -513,6 +516,11 @@ function normalizeItem(raw, index, errors, warnings, structureHint = null) {
         ? fieldTranslate[key]
         : Array.isArray(raw[key]) && raw[key].some((v) => v && typeof v === 'object');
       item[key] = normalizeListField(raw[key], translate);
+    } else if (key === 'phonetic') {
+      item.phonetic = coercePhoneticString(raw.phonetic) || null;
+      if (raw.phonetic != null && typeof raw.phonetic === 'object') {
+        warnings.push(`items[${index}].phonetic: objet reçu — converti en chaîne IPA (utiliser "phonetic": "/ˈhæpi/")`);
+      }
     } else if (i18nIds.has(key) || def.type === 'i18n') {
       item[key] = normalizeI18nValue(raw[key]);
     } else if (def.type === 'string') {
@@ -588,7 +596,7 @@ export function buildItemsOnlyImportTemplate(domain = null) {
       en: `Example word (${tab.id})`,
       fr: `Mot exemple (${tab.id})`,
       mg: `Ohatra (${tab.id})`,
-      category: index % 2 === 0 ? 'Organe' : 'Maladie',
+      category: '',
       tab: tab.id,
       categoryId: firstCat || undefined,
     };
@@ -605,6 +613,7 @@ export function buildItemsOnlyImportTemplate(domain = null) {
         'Chaque item doit avoir un champ tab correspondant à un onglet existant.',
         'tab et categoryId doivent exister dans le domaine.',
         'Les images se gèrent via upload admin, pas via JSON.',
+        'phonetic = chaîne IPA seule ("/ˈhæpi/"), pas un objet.',
       ],
     },
   };
@@ -638,7 +647,7 @@ export function buildCategoryItemsImportTemplate(domain = null, scope = {}) {
       en: `Example word (${tabId})`,
       fr: `Mot exemple (${tabId})`,
       mg: `Ohatra (${tabId})`,
-      category: index % 2 === 0 ? 'Organe' : 'Maladie',
+      category: '',
       tab: tabId,
       categoryId: catId || undefined,
       phonetic: '',
@@ -651,6 +660,7 @@ export function buildCategoryItemsImportTemplate(domain = null, scope = {}) {
   const structureNote = structure
     ? `Structure racine : langs=[${(structure.langs || []).join(',') || '—'}] fields=[${(structure.fields || []).map((f) => f.id).join(', ')}]`
     : 'Pas de itemStructure sur la racine — template classique.';
+  const phoneticNote = 'phonetic = chaîne IPA seule, ex. "/ˈhæpi/" — jamais {"en":"/…/"}.';
 
   if (mode === 'domain') {
     sampleItems = tabs.map((t, i) => makeSample(categoryId, t.id, i));
@@ -658,6 +668,7 @@ export function buildCategoryItemsImportTemplate(domain = null, scope = {}) {
     notes = [
       'Seul le tableau items est requis.',
       structureNote,
+      phoneticNote,
       `Onglets disponibles : ${tabIds.join(', ') || '(aucun)'}.`,
       'en (anglais) est requis ; fr/mg selon langs de la racine.',
       'Même id = mise à jour ; nouvel id = ajout.',
@@ -668,6 +679,7 @@ export function buildCategoryItemsImportTemplate(domain = null, scope = {}) {
     notes = [
       'Seul le tableau items est requis.',
       structureNote,
+      phoneticNote,
       `categoryId est fixé sur « ${categoryId || '(vide)'} » à l’import.`,
       'en (anglais) est requis.',
     ];
@@ -677,6 +689,7 @@ export function buildCategoryItemsImportTemplate(domain = null, scope = {}) {
     notes = [
       'Seul le tableau items est requis.',
       structureNote,
+      phoneticNote,
       `categoryId est fixé sur « ${categoryId || '(vide)'} » à l’import.`,
       `tab est fixé sur « ${tab} » à l’import.`,
       'en (anglais) est requis.',

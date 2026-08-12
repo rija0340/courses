@@ -17,6 +17,7 @@ import {
   normalizeListField,
   structureFieldLabel,
   structureHeadLangs,
+  coercePhoneticString,
 } from '../../data/vocabs/vocabItemStructure';
 
 const EXAMPLE_TABS = new Set(['symptoms', 'conditions', 'maladies']);
@@ -110,7 +111,7 @@ export default function VocabForm({
       en: '',
       fr: '',
       mg: '',
-      category: 'Organe',
+      category: '',
       tab: defaultTab || 'vocab',
       categoryId: defaultCategoryId || '',
       phonetic: '',
@@ -140,10 +141,10 @@ export default function VocabForm({
         en: item.en || '',
         fr: item.fr || '',
         mg: item.mg || '',
-        category: item.category || 'Organe',
+        category: item.category || '',
         tab: item.tab || defaultTab || 'vocab',
         categoryId: item.categoryId || defaultCategoryId || '',
-        phonetic: item.phonetic || '',
+        phonetic: coercePhoneticString(item.phonetic),
         example: normalizeExample(item.example),
         dialogue: normalizeDialogue(item.dialogue),
         _listForms: {},
@@ -163,7 +164,7 @@ export default function VocabForm({
       const tab = defaultTab || 'vocab';
       const next = buildEmpty();
       next.tab = tab;
-      next.category = SCENARIO_TABS.has(tab) ? 'Scénario' : 'Organe';
+      next.category = '';
       setForm(next);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -188,10 +189,10 @@ export default function VocabForm({
       en: form.en.trim(),
       fr: form.fr.trim(),
       mg: form.mg.trim(),
-      category: form.category,
+      category: form.category || '',
       tab: form.tab,
       categoryId: form.categoryId || null,
-      phonetic: form.phonetic?.trim() || '',
+      phonetic: coercePhoneticString(form.phonetic),
       example: showExampleEditor ? cleanExampleForSave(form.example) : null,
       dialogue: showDialogueEditor ? cleanDialogueForSave(form.dialogue) : null,
     };
@@ -200,6 +201,15 @@ export default function VocabForm({
     if (showExampleEditor) payload.dialogue = null;
 
     structureFields.forEach((f) => {
+      if (f.id === 'phonetic') {
+        // Always plain IPA string — never i18n object
+        if (f.translate) {
+          payload.phonetic = coercePhoneticString(form._i18nForms[f.id]);
+        } else {
+          payload.phonetic = coercePhoneticString(form[f.id] ?? form.phonetic);
+        }
+        return;
+      }
       if (f.type === 'list') {
         const raw = form._listForms[f.id];
         payload[f.id] = f.translate
@@ -211,6 +221,8 @@ export default function VocabForm({
         payload[f.id] = String(form[f.id] || '').trim();
       }
     });
+
+    payload.phonetic = coercePhoneticString(payload.phonetic);
 
     onSave(payload);
   };
@@ -292,21 +304,11 @@ export default function VocabForm({
           )}
 
           {!structured && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#9aa0a6] mb-1.5">Type</label>
-                <input
-                  value={form.category}
-                  onChange={(e) => handleChange('category', e.target.value)}
-                  className="w-full h-11 rounded-xl bg-[#f8f9fa] border border-transparent focus:bg-white focus:border-[#1a73e8] px-3 text-[14px] outline-none"
-                />
-              </div>
-              <SelectField label="Onglet" value={form.tab} onChange={(v) => handleChange('tab', v)} disabled={lockTab && !isEdit}>
-                {activeTabs.map((t) => (
-                  <option key={t.id} value={t.id}>{t.label?.fr || t.id}</option>
-                ))}
-              </SelectField>
-            </div>
+            <SelectField label="Onglet" value={form.tab} onChange={(v) => handleChange('tab', v)} disabled={lockTab && !isEdit}>
+              {activeTabs.map((t) => (
+                <option key={t.id} value={t.id}>{t.label?.fr || t.id}</option>
+              ))}
+            </SelectField>
           )}
 
           {structured && activeTabs.length > 1 && (
@@ -419,8 +421,13 @@ export default function VocabForm({
             );
           })}
 
-          {!structured && !showDialogueEditor && (
-            <FormField label="Phonétique (optionnel)" value={form.phonetic} onChange={(v) => handleChange('phonetic', v)} placeholder="/aɪ/" />
+          {(!structured || !structureFields.some((f) => f.id === 'phonetic')) && !showDialogueEditor && (
+            <FormField
+              label="Phonétique IPA (optionnel)"
+              value={coercePhoneticString(form.phonetic)}
+              onChange={(v) => handleChange('phonetic', v)}
+              placeholder="/ˈhæpi/"
+            />
           )}
 
           {showExampleEditor && (

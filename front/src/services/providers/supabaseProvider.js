@@ -9,19 +9,20 @@ import {
   isAcceptedImageType,
 } from '../imageUpload';
 import { requireAuthSession } from '../supabaseHealth';
-import { pickItemAttrs, mergeAttrsIntoItem, hasItemAttrPayload } from '../../data/vocabs/vocabItemStructure';
+import { pickItemAttrs, mergeAttrsIntoItem, hasItemAttrPayload, coercePhoneticString } from '../../data/vocabs/vocabItemStructure';
 
 function mapItem(item) {
   const extra = mergeAttrsIntoItem(item);
+  delete extra.phonetic;
   return {
     id: item.id,
     en: item.en,
     fr: item.fr,
     mg: item.mg,
-    category: item.category,
+    category: item.category || '',
     tab: item.tab,
     categoryId: item.category_id,
-    phonetic: item.phonetic,
+    phonetic: coercePhoneticString(item.phonetic) || null,
     example: item.example ?? null,
     dialogue: item.dialogue ?? null,
     ...extra,
@@ -39,7 +40,7 @@ function mapItemRow(item, domainId) {
     category: item.category || '',
     tab: item.tab || '',
     category_id: item.categoryId || null,
-    phonetic: item.phonetic || null,
+    phonetic: coercePhoneticString(item.phonetic) || null,
     example: item.example ?? null,
     dialogue: Array.isArray(item.dialogue) ? item.dialogue : null,
     attrs: pickItemAttrs(item),
@@ -329,7 +330,7 @@ const supabaseProvider = {
     if (data.category !== undefined) updateData.category = data.category;
     if (data.tab !== undefined) updateData.tab = data.tab;
     if (data.categoryId !== undefined) updateData.category_id = data.categoryId;
-    if (data.phonetic !== undefined) updateData.phonetic = data.phonetic;
+    if (data.phonetic !== undefined) updateData.phonetic = coercePhoneticString(data.phonetic) || null;
     if (data.example !== undefined) updateData.example = data.example;
     if (data.dialogue !== undefined) {
       updateData.dialogue = Array.isArray(data.dialogue) ? data.dialogue : null;

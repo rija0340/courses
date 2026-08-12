@@ -14,15 +14,8 @@ import {
   fieldHasContent,
   hasText,
   listEntryPrimary,
+  coercePhoneticString,
 } from '../../data/vocabs/vocabItemStructure';
-
-const CATEGORY_COLORS = {
-  Organe: { bg: '#2563EB', soft: '#EFF6FF', accent: '#3B82F6' },
-  Maladie: { bg: '#EF4444', soft: '#FEF2F2', accent: '#F87171' },
-  Symptôme: { bg: '#F59E0B', soft: '#FFFBEB', accent: '#FBBF24' },
-  Expression: { bg: '#10B981', soft: '#ECFDF5', accent: '#34D399' },
-  Scénario: { bg: '#7c3aed', soft: '#F5F3FF', accent: '#A78BFA' },
-};
 
 const FIELD_SOFT = {
   synonyms: { bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE' },
@@ -71,6 +64,7 @@ export default function VocabCard({
 
   const structured = Boolean(itemStructure);
   const structureLangs = structured ? structureHeadLangs(itemStructure) : ['fr', 'mg'];
+  const phonetic = coercePhoneticString(item.phonetic);
 
   // Lecture: English is always the title (lexique EN-first).
   const titleEn = hasText(item.en) ? item.en.trim() : '';
@@ -87,21 +81,17 @@ export default function VocabCard({
     ? item[revisionLang].trim()
     : (titleEn || fallbackTitle);
   const displayTitle = isRevision ? revisionWord : (titleEn || fallbackTitle);
-
-  // Image / alt: prefer EN
   const imageAlt = titleEn || displayTitle;
 
   const otherLangRows = LANG_ROWS.filter((r) => {
     if (!hasText(item[r.field])) return false;
     if (isRevision) {
-      // Show all available langs (including EN) for reveal practice
       if (structured && r.key !== 'en' && !structureLangs.includes(r.key)) return false;
       return true;
     }
-    // Lecture: EN is title → hide from rows
     if (r.key === 'en') return false;
     if (structured) return structureLangs.includes(r.key);
-    return true; // MediVocabs: FR + MG under EN title
+    return true;
   });
 
   const handleSpeak = async (e) => {
@@ -117,21 +107,10 @@ export default function VocabCard({
     }
   };
 
-  const colors = CATEGORY_COLORS[item.category] || {
-    bg: '#6B7280',
-    soft: '#F9FAFB',
-    accent: '#9CA3AF',
-  };
-
-  const canPractice =
-    isPracticeEnabled() &&
-    (item.category === 'Expression' || item.tab === 'expressions') &&
-    !!item.en;
+  const canPractice = isPracticeEnabled() && !!titleEn;
 
   return (
-    <div
-      className="group rounded-xl border border-[#dadce0] bg-white hover:shadow-sm transition-all p-3.5 sm:p-4 flex gap-3 items-start"
-    >
+    <div className="group rounded-xl border border-[#dadce0] bg-white hover:shadow-sm transition-all p-3.5 sm:p-4 flex gap-3 items-start">
       {item.image && (
         <button
           type="button"
@@ -151,13 +130,13 @@ export default function VocabCard({
             <div className="text-[18px] sm:text-[19px] font-semibold text-[#202124] leading-tight tracking-tight">
               {displayTitle}
             </div>
-            {hasText(item.phonetic) && (
+            {phonetic && (
               <div className="flex items-baseline gap-1.5 mt-0.5">
                 <span className="text-[10px] font-bold uppercase tracking-wide text-[#6366F1]/80">
                   IPA
                 </span>
                 <span className="text-[14px] sm:text-[15px] text-[#4F46E5] font-medium leading-snug">
-                  {item.phonetic}
+                  {phonetic}
                 </span>
               </div>
             )}
@@ -168,7 +147,8 @@ export default function VocabCard({
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setShowPractice((v) => !v); }}
                 className={`w-9 h-9 rounded-full flex items-center justify-center ${showPractice ? 'bg-emerald-600 text-white' : 'bg-[#f1f3f4] text-[#5f6368]'}`}
-                aria-label="Pratique orale"
+                aria-label="Pratiquer"
+                title="Pratiquer (oral / texte)"
               >
                 <Mic className="w-4 h-4" />
               </button>
@@ -189,15 +169,6 @@ export default function VocabCard({
             )}
           </div>
         </div>
-
-        {item.category && (
-          <span
-            className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-md text-white mb-2"
-            style={{ background: colors.bg }}
-          >
-            {item.category}
-          </span>
-        )}
 
         {otherLangRows.length > 0 && (
           <div className="space-y-1 rounded-lg bg-[#f8f9fa]/80 px-1 py-0.5">
@@ -284,7 +255,7 @@ export default function VocabCard({
 
         {hasExample(item.example) && <ExampleCollapse example={item.example} item={item} />}
         {canPractice && showPractice && (
-          <PronunciationPractice targetText={item.en} phonetic={item.phonetic} />
+          <PronunciationPractice targetText={titleEn} phonetic={phonetic} />
         )}
       </div>
     </div>

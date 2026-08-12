@@ -75,6 +75,27 @@ export function hasText(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+/**
+ * phonetic must always be a plain IPA string, never an i18n object.
+ * Bad import: "phonetic": { "en": "/ˈhæpi/" } → UI shows [object Object].
+ * Correct: "phonetic": "/ˈhæpi/"
+ */
+export function coercePhoneticString(value) {
+  if (value == null || value === '') return '';
+  if (typeof value === 'string') {
+    const t = value.trim();
+    if (!t || t === '[object Object]') return '';
+    return t;
+  }
+  if (typeof value === 'object' && !Array.isArray(value)) {
+    for (const code of ['en', 'fr', 'mg', 'ipa', 'phonetic']) {
+      const v = value[code];
+      if (typeof v === 'string' && v.trim()) return v.trim();
+    }
+  }
+  return '';
+}
+
 export function emptyItemStructure() {
   return { langs: [], fields: [] };
 }
@@ -114,10 +135,12 @@ export function normalizeItemStructure(raw) {
     // phonetic is special: allowed as structure field but stored in column
     seen.add(id);
     const type = f.type === 'list' || catalogMeta?.type === 'list' ? 'list' : 'text';
+    // phonetic is always a plain string column — never translate/i18n
+    const translate = id === 'phonetic' ? false : f.translate === true;
     fields.push({
       id,
-      type,
-      translate: f.translate === true,
+      type: id === 'phonetic' ? 'text' : type,
+      translate,
       label: normalizeFieldLabel(f.label, id, catalogMeta),
     });
   });
