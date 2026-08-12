@@ -62,3 +62,11 @@ sequenceDiagram
 **Tags :** `ux` `state`
 **Bonne pratique :** controlled draft + commit on blur (pas autosave keystroke)
 **À retenir :** ne pas brancher `onChange` input → persist serveur quand on édite du texte libre.
+
+### 2026-08-12 - VocabCard compact EN-first
+**Tags :** `ux` `visibility`
+**Bonne pratique :** primary language as hierarchy anchor ; subtle color coding
+**Concept :** titre toujours EN (lecture) + IPA visible ; FR/MG en lignes ; bordure catégorie + chips teintés légers.
+**Pourquoi :** lexique anglais-first, densifier sans perdre la lisibilité (titre ~18–19px, traductions 15px).
+**Pas choisi :** titre = langue UI ; palette saturée type dashboard.
+**À retenir :** EN = titre, le reste = support ; couleur = signal, pas décor.
