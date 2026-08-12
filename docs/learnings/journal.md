@@ -47,5 +47,13 @@ sequenceDiagram
 **Bonne pratique :** single source of truth ; Open/Closed (catalogue + flags translate)
 **Concept :** `itemStructure` sur catégorie racine (`langs` + `fields[{id,type,translate}]`) ; enfants héritent ; EN requis ; colonnes optionnelles ; listes i18n si translate.
 **Pourquoi :** thème ≠ profil figé ; antonymes peuvent avoir FR/MG ; UI table desktop / cartes mobile.
-**Pas choisi :** profils adjective/phrasal ; champs 100% custom ; tabs comme axe principal.
+**Pas choisi :** profils adjective/phrasal ; tabs comme axe principal.
 **À retenir :** configurer la structure sur la racine, pas sur chaque mot ni sous-catégorie.
+
+### 2026-08-12 - Colonnes : rename / add / delete
+**Tags :** `data-modeling` `ux`
+**Bonne pratique :** Open/Closed ; label override (presentation ≠ id)
+**Concept :** `fields[].label` pour renommer ; presets + colonnes custom (`id` validé) ; suppression / reorder dans l’éditeur racine ; `attrs` persist toutes les clés hors colonnes core.
+**Pourquoi :** le catalogue fixe ne suffit pas (nuance, registre métier…) sans perdre les presets.
+**Pas choisi :** renommer l’`id` après coup (casse les données) ; UI table-only pour config.
+**À retenir :** l’`id` est la clé stable ; le libellé est de la présentation.

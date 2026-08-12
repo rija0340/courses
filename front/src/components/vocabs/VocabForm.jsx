@@ -335,7 +335,7 @@ export default function VocabForm({
           </div>
 
           {structureFields.map((f) => {
-            const label = structureFieldLabel(f.id, 'fr');
+            const label = structureFieldLabel(f, 'fr');
             if (f.type === 'list' && f.translate) {
               const entries = form._listForms[f.id] || [];
               return (

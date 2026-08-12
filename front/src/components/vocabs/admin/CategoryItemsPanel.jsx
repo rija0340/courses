@@ -325,7 +325,7 @@ export default function CategoryItemsPanel({
                   ))}
                   {structureFields.map((f) => (
                     <th key={f.id} className="px-3 py-2 font-semibold text-[#5f6368]">
-                      {structureFieldLabel(f.id, 'fr')}
+                      {structureFieldLabel(f, 'fr')}
                     </th>
                   ))}
                   <th className="px-3 py-2 w-28" />
@@ -403,7 +403,7 @@ export default function CategoryItemsPanel({
                   {structureFields.filter((f) => fieldHasContent(item, f)).map((f) => (
                     <div key={f.id}>
                       <p className="text-[10px] font-bold uppercase tracking-wider text-[#9aa0a6]">
-                        {structureFieldLabel(f.id, 'fr')}
+                        {structureFieldLabel(f, 'fr')}
                       </p>
                       <p className="text-[13px] text-[#3c4043]">{cellValue(item, f)}</p>
                     </div>

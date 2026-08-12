@@ -9,7 +9,7 @@ import {
   isAcceptedImageType,
 } from '../imageUpload';
 import { requireAuthSession } from '../supabaseHealth';
-import { pickItemAttrs, mergeAttrsIntoItem, STRUCTURE_ATTR_KEYS } from '../../data/vocabs/vocabItemStructure';
+import { pickItemAttrs, mergeAttrsIntoItem, hasItemAttrPayload } from '../../data/vocabs/vocabItemStructure';
 
 function mapItem(item) {
   const extra = mergeAttrsIntoItem(item);
@@ -334,7 +334,7 @@ const supabaseProvider = {
     if (data.dialogue !== undefined) {
       updateData.dialogue = Array.isArray(data.dialogue) ? data.dialogue : null;
     }
-    if (STRUCTURE_ATTR_KEYS.some((k) => data[k] !== undefined)) {
+    if (hasItemAttrPayload(data)) {
       updateData.attrs = pickItemAttrs(data);
     }
     if (data.image !== undefined) {

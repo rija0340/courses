@@ -186,7 +186,7 @@ export default function VocabCard({
         {structured && (itemStructure.fields || []).map((f) => {
           if (f.id === 'phonetic') return null;
           if (!fieldHasContent(item, f)) return null;
-          const label = structureFieldLabel(f.id, lang);
+          const label = structureFieldLabel(f, lang);
           if (f.type === 'list') {
             const entries = normalizeListField(item[f.id], f.translate);
             return (

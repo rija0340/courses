@@ -240,11 +240,11 @@ export const CATEGORY_FIELDS = /** @type {Record<string, FieldDef>} */ ({
     example: {
       langs: ['fr', 'mg'],
       fields: [
-        { id: 'synonyms', type: 'list', translate: true },
-        { id: 'antonyms', type: 'list', translate: true },
+        { id: 'synonyms', type: 'list', translate: true, label: { fr: 'Synonymes', en: 'Synonyms', mg: '' } },
+        { id: 'nuance', type: 'text', translate: true, label: { fr: 'Nuance', en: 'Nuance', mg: '' } },
       ],
     },
-    description: 'Structure des fiches (racine seulement) : langs + fields[{id,type,translate}]',
+    description: 'Structure des fiches (racine) : langs + fields[{id,type,translate,label?}]. Presets ou colonnes custom.',
   },
 });
 

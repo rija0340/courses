@@ -1,6 +1,6 @@
 /**
  * Root-category item structure: langs + configurable columns.
- * Children inherit via resolveItemStructure(categories, categoryId).
+ * Preset catalog remains; fields can be custom (rename / add / remove).
  */
 import { getPath } from '../../utils/categoryTree';
 
@@ -59,8 +59,13 @@ export const STRUCTURE_FIELD_CATALOG = {
 
 export const STRUCTURE_FIELD_IDS = Object.keys(STRUCTURE_FIELD_CATALOG);
 
-/** Attrs keys stored in vocab_items.attrs */
-export const STRUCTURE_ATTR_KEYS = STRUCTURE_FIELD_IDS;
+const FIELD_ID_RE = /^[a-z][a-z0-9_]{0,39}$/;
+
+const ATTR_RESERVED = new Set([
+  'id', 'en', 'fr', 'mg', 'category', 'tab', 'categoryId', 'category_id',
+  'phonetic', 'example', 'dialogue', 'image', 'image_url', 'attrs',
+  'domain_id', 'created_at', 'updated_at',
+]);
 
 export function emptyI18nEntry() {
   return { en: '', fr: '', mg: '' };
@@ -74,6 +79,22 @@ export function emptyItemStructure() {
   return { langs: [], fields: [] };
 }
 
+export function isValidFieldId(id) {
+  return typeof id === 'string' && FIELD_ID_RE.test(id) && !ATTR_RESERVED.has(id);
+}
+
+function normalizeFieldLabel(raw, fallbackId, catalogMeta) {
+  const base = catalogMeta?.label
+    ? { fr: catalogMeta.label.fr || '', en: catalogMeta.label.en || '', mg: catalogMeta.label.mg || '' }
+    : { fr: fallbackId, en: fallbackId, mg: '' };
+  if (!raw || typeof raw !== 'object') return base;
+  return {
+    fr: raw.fr != null && String(raw.fr).trim() ? String(raw.fr) : base.fr,
+    en: raw.en != null && String(raw.en).trim() ? String(raw.en) : (base.en || base.fr),
+    mg: raw.mg != null ? String(raw.mg) : (base.mg || ''),
+  };
+}
+
 export function normalizeItemStructure(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const langs = Array.isArray(raw.langs)
@@ -84,18 +105,62 @@ export function normalizeItemStructure(raw) {
   const list = Array.isArray(raw.fields) ? raw.fields : [];
   list.forEach((f) => {
     if (!f || typeof f !== 'object') return;
-    const id = String(f.id || '');
-    if (!STRUCTURE_FIELD_CATALOG[id] || seen.has(id)) return;
+    let id = String(f.id || '').trim();
+    if (!id || seen.has(id)) return;
+    const catalogMeta = STRUCTURE_FIELD_CATALOG[id] || null;
+    // Allow catalog ids OR custom valid ids (not reserved)
+    if (!catalogMeta && !isValidFieldId(id)) return;
+    if (ATTR_RESERVED.has(id) && id !== 'phonetic') return;
+    // phonetic is special: allowed as structure field but stored in column
     seen.add(id);
-    const meta = STRUCTURE_FIELD_CATALOG[id];
+    const type = f.type === 'list' || catalogMeta?.type === 'list' ? 'list' : 'text';
     fields.push({
       id,
-      type: meta.type,
+      type,
       translate: f.translate === true,
+      label: normalizeFieldLabel(f.label, id, catalogMeta),
     });
   });
   if (!langs.length && !fields.length) return null;
   return { langs, fields };
+}
+
+export function createFieldFromPreset(presetId) {
+  const meta = STRUCTURE_FIELD_CATALOG[presetId];
+  if (!meta) return null;
+  return {
+    id: meta.id,
+    type: meta.type,
+    translate: !!meta.defaultTranslate,
+    label: { ...meta.label },
+  };
+}
+
+export function createCustomField({ id, type = 'text', translate = false, labelFr = '' }) {
+  const source = String(id || labelFr || '').trim();
+  const cleanId = source
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9_]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  if (!isValidFieldId(cleanId)) return null;
+  const fr = String(labelFr || '').trim() || cleanId;
+  return {
+    id: cleanId,
+    type: type === 'list' ? 'list' : 'text',
+    translate: !!translate,
+    label: { fr, en: fr, mg: '' },
+  };
+}
+
+/** True when payload may carry attrs (custom/preset columns). */
+export function hasItemAttrPayload(data = {}) {
+  return Object.keys(data || {}).some((key) => {
+    if (key.startsWith('_')) return false;
+    if (ATTR_RESERVED.has(key)) return false;
+    return true;
+  }) || STRUCTURE_FIELD_IDS.some((k) => k !== 'phonetic' && data[k] !== undefined);
 }
 
 export function isRootCategory(categories, categoryId) {
@@ -109,9 +174,6 @@ export function resolveRootCategory(categories, categoryId) {
   return path[0] || null;
 }
 
-/**
- * Structure for a category: from its root ancestor's itemStructure, or null (legacy MediVocabs).
- */
 export function resolveItemStructure(categories, categoryId) {
   const root = resolveRootCategory(categories, categoryId);
   if (!root) return null;
@@ -122,13 +184,20 @@ export function getStructureFieldMeta(fieldId) {
   return STRUCTURE_FIELD_CATALOG[fieldId] || null;
 }
 
-export function structureFieldLabel(fieldId, lang = 'fr') {
-  const meta = getStructureFieldMeta(fieldId);
-  if (!meta) return fieldId;
-  return meta.label?.[lang] || meta.label?.fr || fieldId;
+/** Accept field def object or id string. */
+export function structureFieldLabel(fieldOrId, lang = 'fr') {
+  if (fieldOrId && typeof fieldOrId === 'object') {
+    const label = fieldOrId.label;
+    if (label && typeof label === 'object') {
+      return label[lang] || label.fr || label.en || fieldOrId.id || '';
+    }
+    return fieldOrId.id || '';
+  }
+  const meta = getStructureFieldMeta(fieldOrId);
+  if (!meta) return fieldOrId || '';
+  return meta.label?.[lang] || meta.label?.fr || fieldOrId;
 }
 
-/** Headword translation langs for a structure (never includes en). */
 export function structureHeadLangs(structure) {
   return structure?.langs || [];
 }
@@ -160,11 +229,6 @@ export function pickI18nText(value, preferredLang = 'en') {
   return '';
 }
 
-/**
- * Normalize a list field value.
- * translate=false → string[]
- * translate=true → {en,fr,mg}[]
- */
 export function normalizeListField(value, translate) {
   if (!Array.isArray(value)) {
     if (typeof value === 'string' && value.trim()) {
@@ -221,9 +285,17 @@ export function fieldHasContent(item, fieldDef) {
   return hasText(raw);
 }
 
+/** Persist any non-core keys (presets + custom) into attrs. */
 export function pickItemAttrs(item = {}) {
   const out = {};
-  STRUCTURE_ATTR_KEYS.forEach((key) => {
+  Object.keys(item || {}).forEach((key) => {
+    if (ATTR_RESERVED.has(key)) return;
+    if (key.startsWith('_')) return;
+    out[key] = item[key];
+  });
+  // phonetic stays in column; catalog extras without being reserved
+  STRUCTURE_FIELD_IDS.forEach((key) => {
+    if (key === 'phonetic') return;
     if (item[key] !== undefined) out[key] = item[key];
   });
   return out;
@@ -231,21 +303,14 @@ export function pickItemAttrs(item = {}) {
 
 export function mergeAttrsIntoItem(row) {
   const attrs = row?.attrs && typeof row.attrs === 'object' ? row.attrs : {};
-  const extra = {};
-  STRUCTURE_ATTR_KEYS.forEach((key) => {
-    if (attrs[key] !== undefined) extra[key] = attrs[key];
-  });
-  return extra;
+  return { ...attrs };
 }
 
-/** Sample value for JSON template based on field def. */
 export function sampleFieldValue(fieldDef) {
   if (!fieldDef) return null;
   if (fieldDef.type === 'list') {
     if (fieldDef.translate) {
-      return [
-        { en: 'example', fr: 'exemple', mg: '' },
-      ];
+      return [{ en: 'example', fr: 'exemple', mg: '' }];
     }
     return ['example'];
   }
