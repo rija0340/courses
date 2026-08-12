@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useContext, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Search, X, Filter, Image as ImageIcon, Volume2, BookOpen, Eye, HelpCircle, Link2, Check, Languages, MoreHorizontal, Sparkles, MessageCircle } from 'lucide-react';
+import { Search, X, Filter, ChevronDown, Image as ImageIcon, Volume2, BookOpen, Eye, HelpCircle, Link2, Check, Languages, MoreHorizontal, Sparkles, MessageCircle } from 'lucide-react';
 import { AppContext } from '../App';
 import Breadcrumb from '../components/Breadcrumb';
 import { CompactMenu, MenuButton, MenuTrigger } from '../components/CompactMenu';
@@ -58,19 +58,8 @@ export default function VocabsView() {
   const [shareCopied, setShareCopied] = useState(false);
 
   const drawerRef = useRef(null);
-  const buttonRef = useRef(null);
   const desktopSearchRef = useRef(null);
   const mobileSearchRef = useRef(null);
-  const [drawerPos, setDrawerPos] = useState({ top: 0, left: 0, width: 280 });
-
-  useEffect(() => {
-    if (mobileDrawerOpen && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const width = Math.min(window.innerWidth - 16, 360);
-      const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
-      setDrawerPos({ top: rect.bottom + 8, left, width });
-    }
-  }, [mobileDrawerOpen]);
 
   useEffect(() => {
     if (!mobileDrawerOpen) return;
@@ -439,44 +428,47 @@ export default function VocabsView() {
           <p className="text-[13px] text-[#5f6368]">{modeHint}</p>
         )}
 
-        {/* Row 2: search + mobile categories */}
-        <div className="flex flex-wrap items-center gap-2">
-          {isTextMode && (
-            <form
-              onSubmit={(e) => handleSearchSubmit(e, desktopSearchRef)}
-              className="hidden md:flex relative flex-1 items-center min-w-[220px]"
-            >
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aa0a6] pointer-events-none" />
-              <input
-                ref={desktopSearchRef}
-                type="search"
-                enterKeyHint="search"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Rechercher..."
-                className="w-full h-10 pl-9 pr-8 rounded-xl bg-white border border-[#dadce0] focus:border-[#1a73e8] focus:shadow-sm outline-none text-[15px] transition-all placeholder:text-[#9aa0a6]"
-              />
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-zinc-100 rounded-full hover:bg-zinc-200"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-            </form>
-          )}
+        {/* Row 2: desktop search */}
+        {isTextMode && (
+          <form
+            onSubmit={(e) => handleSearchSubmit(e, desktopSearchRef)}
+            className="hidden md:block relative w-full max-w-xl"
+          >
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aa0a6] pointer-events-none" />
+            <input
+              ref={desktopSearchRef}
+              type="search"
+              enterKeyHint="search"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Rechercher..."
+              className="w-full h-10 pl-9 pr-8 rounded-xl bg-white border border-[#dadce0] focus:border-[#1a73e8] focus:shadow-sm outline-none text-[15px] transition-all placeholder:text-[#9aa0a6]"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-zinc-100 rounded-full hover:bg-zinc-200"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </form>
+        )}
 
-          {hasSidebar && (
+        {/* Mobile: full-width category selector (in-flow, not floating) */}
+        {hasSidebar && (
+          <div ref={drawerRef} className="md:hidden w-full">
             <button
-              ref={buttonRef}
               type="button"
               onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
-              className="md:hidden flex items-center gap-1.5 px-3 h-9 rounded-xl bg-white border border-[#dadce0] text-[13px] font-semibold text-[#3c4043] shadow-sm hover:bg-[#f8f9fa] transition-all shrink-0"
+              aria-expanded={mobileDrawerOpen}
+              className={`w-full flex items-center gap-2 px-3 h-11 bg-white border border-[#dadce0] text-[15px] font-semibold text-[#3c4043] hover:bg-[#f8f9fa] transition-all ${
+                mobileDrawerOpen ? 'rounded-t-xl rounded-b-none border-b-transparent' : 'rounded-xl'
+              }`}
             >
-              <Filter className="w-4 h-4 text-[#5f6368]" />
-              <span className="max-w-[140px] truncate">
+              <Filter className="w-4 h-4 text-[#5f6368] shrink-0" />
+              <span className="flex-1 min-w-0 truncate text-left">
                 {activeCategory
                   ? categoryPath.map(n => getLabel(n.label)).join(' > ')
                   : 'Catégories'}
@@ -487,19 +479,32 @@ export default function VocabsView() {
                   tabIndex={0}
                   onClick={e => { e.stopPropagation(); clearFilters(); }}
                   onKeyDown={e => { if (e.key === 'Enter') { e.stopPropagation(); clearFilters(); } }}
-                  className="ml-0.5 p-0.5 rounded-full bg-[#e8eaed] hover:bg-[#dadce0]"
+                  className="shrink-0 p-0.5 rounded-full bg-[#e8eaed] hover:bg-[#dadce0]"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </span>
               )}
+              <ChevronDown
+                className={`w-4 h-4 text-[#5f6368] shrink-0 transition-transform ${
+                  mobileDrawerOpen ? 'rotate-180' : ''
+                }`}
+              />
             </button>
-          )}
-        </div>
+
+            {mobileDrawerOpen && (
+              <div className="w-full bg-white border border-[#dadce0] border-t-0 rounded-b-xl overflow-hidden">
+                <div className="p-3 overflow-y-auto" style={{ maxHeight: '60vh' }}>
+                  {sidebarContent}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {isTextMode && (
           <form
             onSubmit={(e) => handleSearchSubmit(e, mobileSearchRef)}
-            className="md:hidden relative"
+            className="md:hidden relative w-full"
           >
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aa0a6] pointer-events-none" />
             <input
@@ -523,32 +528,6 @@ export default function VocabsView() {
           </form>
         )}
       </div>
-
-      {mobileDrawerOpen && (
-        <>
-          <div className="fixed inset-0 z-[55]" onClick={() => setMobileDrawerOpen(false)} />
-          <div
-            ref={drawerRef}
-            className="fixed z-[60] bg-white border border-[#dadce0] rounded-2xl shadow-2xl overflow-hidden animate-fade-in"
-            style={{
-              top: drawerPos.top,
-              left: drawerPos.left,
-              width: drawerPos.width,
-              maxHeight: '70vh'
-            }}
-          >
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#dadce0]">
-              <p className="font-medium text-[16px] text-[#202124]">Catégories</p>
-              <button onClick={() => setMobileDrawerOpen(false)} className="p-1 rounded-full hover:bg-[#f1f3f4]">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-3 overflow-y-auto" style={{ maxHeight: '60vh' }}>
-              {sidebarContent}
-            </div>
-          </div>
-        </>
-      )}
 
       <div className="flex flex-col md:flex-row gap-6 md:gap-8">
         {hasSidebar && (
