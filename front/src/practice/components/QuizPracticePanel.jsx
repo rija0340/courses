@@ -16,15 +16,32 @@ import WrittenFeedbackPanel from './WrittenFeedbackPanel';
 import { speechService } from '../services/speechService';
 import { simulationUi } from '../data/simulationUiCopy';
 import { MAX_PRACTICE_VOCAB, capVocabularyForGeneration } from '../domain/topicVocabulary';
+import {
+  PracticeCard,
+  PracticeCardHeader,
+  SegmentedControl,
+  FieldLabel,
+  PracticeInput,
+  PracticeSelect,
+  PracticeTextarea,
+  ChoicePill,
+  PrimaryButton,
+  SoftBadge,
+} from './practiceUi';
 
 export default function QuizPracticePanel({
   defaultTheme = '',
   categories = [],
   items = [],
-  defaultCategoryId = ''
+  defaultCategoryId = '',
+  domainId = null,
 }) {
   const { lang } = useContext(AppContext);
-  const ui = useMemo(() => simulationUi(lang), [lang]);
+  const scenarioKind = useMemo(
+    () => (domainId === 'medi-vocabs' ? 'medical' : 'general'),
+    [domainId]
+  );
+  const ui = useMemo(() => simulationUi(lang, scenarioKind), [lang, scenarioKind]);
   const topicOptions = useMemo(() => flattenTree(categories, lang), [categories, lang]);
   const saved = useMemo(() => loadQuizSession(), []);
   const mic = useMicTranscript({ language: 'en' });
@@ -109,7 +126,8 @@ export default function QuizPracticePanel({
           phonetic: w.phonetic
         })),
         types: selectedTypes,
-        limit: Math.min(10, capped.length)
+        limit: Math.min(10, capped.length),
+        scenarioKind,
       });
       if (!theme.trim()) setTheme(topicSelection.topicLabel || '');
     } else {
@@ -117,7 +135,7 @@ export default function QuizPracticePanel({
         setError('Indiquez un thème libre.');
         return;
       }
-      nextDeck = buildFreeThemeDeck(theme.trim(), selectedTypes, 6);
+      nextDeck = buildFreeThemeDeck(theme.trim(), selectedTypes, 6, scenarioKind);
     }
     setDeck(nextDeck);
     setStarted(true);
@@ -190,34 +208,36 @@ export default function QuizPracticePanel({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-[#dadce0] dark:border-[#3c4043] bg-white dark:bg-[#202124] p-5 space-y-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-[18px] font-semibold text-[#202124] dark:text-[#e8eaed]">{ui.quizTitle}</h2>
-            <p className="text-[13px] text-[#5f6368] dark:text-[#9aa0a6] mt-1">
-              {ui.quizHint}
-              {usesRemoteLlm() ? ' · Groq' : ' · mock'}
-            </p>
-          </div>
-          <Brain className="w-5 h-5 text-[#1a73e8] shrink-0" />
-        </div>
+      <PracticeCard className="pb-5 sm:pb-6">
+        <PracticeCardHeader
+          title={ui.quizTitle}
+          hint={`${ui.quizHint}${usesRemoteLlm() ? ' · Groq' : ' · mock'}`}
+          icon={<Brain className="w-5 h-5" />}
+          badge={
+            <SoftBadge tone={scenarioKind === 'medical' ? 'sky' : 'teal'}>
+              {scenarioKind === 'medical' ? 'Médical' : 'Général'}
+            </SoftBadge>
+          }
+        />
 
+        <div className="px-5 sm:px-6 mt-4 space-y-4">
         {!started && (
           <>
-            <div className="flex flex-wrap gap-2">
-              <ModeChip active={source === 'topic'} onClick={() => setSource('topic')} disabled={!topicOptions.length}>
-                {ui.byTopic}
-              </ModeChip>
-              <ModeChip active={source === 'free'} onClick={() => setSource('free')}>
-                {ui.freeTheme}
-              </ModeChip>
-            </div>
+            <SegmentedControl
+              className="w-full"
+              value={source}
+              onChange={setSource}
+              options={[
+                { id: 'topic', label: ui.byTopic, disabled: !topicOptions.length },
+                { id: 'free', label: ui.freeTheme },
+              ]}
+            />
 
             {source === 'topic' && (
               <div className="space-y-3">
                 <label className="block">
-                  <span className="text-[12px] font-semibold text-[#5f6368]">{ui.topicCategory}</span>
-                  <select
+                  <FieldLabel>{ui.topicCategory}</FieldLabel>
+                  <PracticeSelect
                     value={categoryId}
                     onChange={(e) => {
                       const id = e.target.value;
@@ -225,13 +245,12 @@ export default function QuizPracticePanel({
                       const opt = topicOptions.find((t) => t.id === id);
                       if (opt) setTheme(opt.label);
                     }}
-                    className="mt-1 w-full rounded-xl border border-[#dadce0] dark:border-[#5f6368] dark:bg-[#303134] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8] bg-white"
                   >
                     <option value="">{ui.selectTopic}</option>
                     {topicOptions.map((t) => (
                       <option key={t.id} value={t.id}>{'—'.repeat(t.depth)} {t.label}</option>
                     ))}
-                  </select>
+                  </PracticeSelect>
                 </label>
                 <TopicVocabPicker
                   items={items}
@@ -246,49 +265,41 @@ export default function QuizPracticePanel({
               </div>
             )}
 
-            <label className="block">
-              <span className="text-[12px] font-semibold text-[#5f6368]">{ui.theme}</span>
-              <input
-                value={theme}
-                onChange={(e) => setTheme(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-[#dadce0] dark:border-[#5f6368] dark:bg-[#303134] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8]"
-              />
-            </label>
+            {source === 'free' && (
+              <label className="block">
+                <FieldLabel>{ui.theme}</FieldLabel>
+                <PracticeInput
+                  value={theme}
+                  onChange={(e) => setTheme(e.target.value)}
+                  placeholder="ex. Adjectives of emotion"
+                />
+              </label>
+            )}
 
             <div>
-              <span className="text-[12px] font-semibold text-[#5f6368]">Types d’exercices</span>
-              <div className="mt-1 flex flex-wrap gap-2">
+              <FieldLabel>Types d’exercices</FieldLabel>
+              <div className="flex flex-wrap gap-2">
                 {EXERCISE_TYPES.map((t) => (
-                  <button
+                  <ChoicePill
                     key={t.id}
-                    type="button"
+                    active={selectedTypes.includes(t.id)}
                     onClick={() => toggleType(t.id)}
-                    className={`text-[12px] font-semibold px-3 py-1.5 rounded-full border ${
-                      selectedTypes.includes(t.id)
-                        ? 'bg-[#e8f0fe] border-[#1a73e8] text-[#1a73e8]'
-                        : 'bg-white dark:bg-[#303134] border-[#dadce0] dark:border-[#5f6368] text-[#5f6368]'
-                    }`}
                   >
                     {t.label}
-                  </button>
+                  </ChoicePill>
                 ))}
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={handleStart}
-              disabled={!canStart}
-              className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] text-white text-[13px] font-semibold px-4 py-2 hover:bg-[#1557b0] disabled:opacity-50"
-            >
-              <Brain className="w-4 h-4" />
+            <PrimaryButton onClick={handleStart} disabled={loading} className="w-full sm:w-auto">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
               Commencer le quiz
-            </button>
+            </PrimaryButton>
           </>
         )}
 
         {started && (
-          <div className="flex items-center justify-between gap-2 text-[13px] text-[#5f6368]">
+          <div className="flex items-center justify-between gap-2 text-[13px] text-[#64748b]">
             <p>
               Question {index + 1}/{deck.length}
               {scoreboard.total > 0 && (
@@ -297,7 +308,7 @@ export default function QuizPracticePanel({
                 </span>
               )}
             </p>
-            <button type="button" onClick={handleReset} className="inline-flex items-center gap-1 font-semibold hover:text-[#202124]">
+            <button type="button" onClick={handleReset} className="inline-flex items-center gap-1 font-semibold text-teal-800 hover:text-teal-950">
               <RotateCcw className="w-3.5 h-3.5" />
               Recommencer
             </button>
@@ -306,40 +317,40 @@ export default function QuizPracticePanel({
 
         {error && <div className="text-[13px] text-[#c5221f]">{error}</div>}
         {mic.error && <div className="text-[13px] text-[#c5221f]">{mic.error}</div>}
-      </div>
+        </div>
+      </PracticeCard>
 
       {started && current && (
         <>
-          <div className="rounded-2xl border border-[#dadce0] dark:border-[#3c4043] bg-white dark:bg-[#202124] p-5 space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#9aa0a6]">
+          <PracticeCard className="p-5 sm:p-6 space-y-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
               {EXERCISE_TYPES.find((t) => t.id === current.exerciseType)?.label || current.exerciseType}
             </p>
-            <p className="text-[16px] font-medium text-[#202124] dark:text-[#e8eaed] leading-relaxed">
+            <p className="text-[16px] font-medium text-[#0f172a] leading-relaxed">
               {current.prompt}
             </p>
             {current.hint && (
-              <p className="text-[12px] text-[#9aa0a6]">Indice : {current.hint}</p>
+              <p className="text-[12px] text-[#94a3b8]">Indice : {current.hint}</p>
             )}
-          </div>
 
           {!lastResult && (
-            <form onSubmit={handleSubmit} className="space-y-3">
+            <form onSubmit={handleSubmit} className="space-y-3 pt-1">
               <div className="relative">
-                <textarea
+                <PracticeTextarea
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   rows={3}
                   placeholder="Écrivez ou dictez votre réponse…"
-                  className="w-full rounded-xl border border-[#dadce0] dark:border-[#5f6368] dark:bg-[#303134] px-3 py-2 pr-14 text-[14px] outline-none focus:border-[#1a73e8] resize-y"
+                  className="pr-14"
                 />
                 <button
                   type="button"
                   onClick={handleMicToggle}
                   disabled={loading || mic.status === 'transcribing'}
-                  className={`absolute right-2 bottom-2 w-10 h-10 rounded-full flex items-center justify-center ${
+                  className={`absolute right-2 bottom-2 w-10 h-10 rounded-xl flex items-center justify-center ${
                     mic.status === 'recording'
                       ? 'bg-[#EA4335] text-white animate-pulse'
-                      : 'bg-[#f1f3f4] dark:bg-[#3c4043] text-[#5f6368]'
+                      : 'bg-[#f1f5f9] text-[#64748b]'
                   }`}
                 >
                   {mic.status === 'transcribing' ? (
@@ -351,19 +362,15 @@ export default function QuizPracticePanel({
                   )}
                 </button>
               </div>
-              <button
-                type="submit"
-                disabled={loading || !draft.trim()}
-                className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] text-white text-[13px] font-semibold px-4 py-2 disabled:opacity-50"
-              >
+              <PrimaryButton type="submit" disabled={loading || !draft.trim()}>
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Vérifier
-              </button>
+              </PrimaryButton>
             </form>
           )}
 
           {lastResult && (
-            <div className="space-y-4">
+            <div className="space-y-4 pt-1">
               <div className={`rounded-xl border px-3 py-2.5 text-[13px] font-semibold flex items-center gap-2 ${
                 lastResult.correct
                   ? 'bg-[#E6F4EA] border-[#34A853]/30 text-[#137333]'
@@ -383,40 +390,20 @@ export default function QuizPracticePanel({
                     : null
                 }
               />
-              <button
-                type="button"
-                onClick={handleNext}
-                className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] text-white text-[13px] font-semibold px-4 py-2"
-              >
+              <PrimaryButton onClick={handleNext}>
                 {index + 1 >= deck.length ? 'Terminer' : 'Question suivante'}
-              </button>
+              </PrimaryButton>
             </div>
           )}
+          </PracticeCard>
         </>
       )}
 
       {!started && scoreboard.total > 0 && (
-        <p className="text-[13px] text-[#5f6368]">
+        <p className="text-[13px] text-[#64748b]">
           Dernière session : {scoreboard.correct}/{scoreboard.total} correctes.
         </p>
       )}
     </div>
-  );
-}
-
-function ModeChip({ active, onClick, disabled, children }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`text-[12px] font-semibold px-3 py-1.5 rounded-full border transition-colors disabled:opacity-40 ${
-        active
-          ? 'bg-[#e8f0fe] border-[#1a73e8] text-[#1a73e8]'
-          : 'bg-white dark:bg-[#303134] border-[#dadce0] dark:border-[#5f6368] text-[#5f6368] hover:bg-[#f8f9fa]'
-      }`}
-    >
-      {children}
-    </button>
   );
 }

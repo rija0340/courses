@@ -17,16 +17,38 @@ import {
 } from '../domain/simulationSession';
 import { stopPlayback } from '../services/speechService';
 import { simulationUi } from '../data/simulationUiCopy';
+import {
+  PracticeCard,
+  PracticeCardHeader,
+  SegmentedControl,
+  FieldLabel,
+  PracticeInput,
+  PracticeSelect,
+  PracticeTextarea,
+  ChoicePill,
+  PrimaryButton,
+  SoftBadge,
+} from './practiceUi';
 
 export default function SimulationPanel({
   defaultTheme = '',
   categories = [],
   items = [],
   defaultCategoryId = '',
+  domainId = null,
 }) {
   const { lang } = useContext(AppContext);
-  const ui = useMemo(() => simulationUi(lang), [lang]);
-  const presets = useMemo(() => simulationService.listPresets(), []);
+  const profile = useMemo(() => simulationService.getProfile(domainId), [domainId]);
+  const ui = useMemo(() => simulationUi(lang, profile.kind), [lang, profile.kind]);
+  const presets = useMemo(() => simulationService.listPresets(domainId), [domainId]);
+
+  useEffect(() => {
+    if (!presets.some((p) => p.id === promptId) && presets[0]) {
+      setPromptId(presets[0].id);
+      setTheme((t) => t || presets[0].theme);
+    }
+  }, [presets, promptId]);
+
   const topicOptions = useMemo(
     () => flattenTree(categories, lang),
     [categories, lang]
@@ -124,6 +146,8 @@ export default function SimulationPanel({
       vocabulary: capped,
       topicLabel: useTopic ? topicSelection.topicLabel : null,
       length,
+      domainId,
+      scenarioKind: profile.kind,
       _truncated: truncated,
     };
   };
@@ -163,171 +187,148 @@ export default function SimulationPanel({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-[#dadce0] bg-white p-5 space-y-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-[18px] font-semibold text-[#202124]">
-              {ui.simulation}
-            </h2>
-            <p className="text-[13px] text-[#5f6368] mt-1">
-              {ui.simulationHint}
-              {usesRemoteLlm() ? ' · Groq' : ' · mock'}
-            </p>
-          </div>
-          <Sparkles className="w-5 h-5 text-[#1a73e8] shrink-0" />
-        </div>
+      <PracticeCard className="pb-5 sm:pb-6">
+        <PracticeCardHeader
+          title={ui.simulation}
+          hint={`${ui.simulationHint}${usesRemoteLlm() ? ' · Groq' : ' · mock'}`}
+          icon={<Sparkles className="w-5 h-5" />}
+          badge={
+            <SoftBadge tone={profile.kind === 'medical' ? 'sky' : 'teal'}>
+              {profile.kind === 'medical' ? 'Médical' : 'Général'}
+            </SoftBadge>
+          }
+        />
 
-        <div className="flex flex-wrap gap-2">
-          <ModeChip active={mode === 'preset'} onClick={() => setMode('preset')}>
-            {ui.preset}
-          </ModeChip>
-          <ModeChip
-            active={mode === 'topic'}
-            onClick={() => setMode('topic')}
-            disabled={!topicOptions.length}
-          >
-            {ui.topicVocab}
-          </ModeChip>
-          <ModeChip active={mode === 'custom'} onClick={() => setMode('custom')}>
-            {ui.customPrompt}
-          </ModeChip>
-        </div>
+        <div className="px-5 sm:px-6 mt-4 space-y-4">
+          <SegmentedControl
+            className="w-full"
+            value={mode}
+            onChange={setMode}
+            options={[
+              { id: 'preset', label: ui.preset },
+              { id: 'topic', label: ui.topicVocab, disabled: !topicOptions.length },
+              { id: 'custom', label: ui.customPrompt },
+            ]}
+          />
 
-        {mode === 'preset' && (
-          <>
-            <div className="flex flex-wrap gap-2">
-              {presets.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => handlePresetChange(p.id)}
-                  className={`text-[12px] font-semibold px-3 py-1.5 rounded-full border transition-colors ${
-                    promptId === p.id
-                      ? 'bg-[#e8f0fe] border-[#1a73e8] text-[#1a73e8]'
-                      : 'bg-white border-[#dadce0] text-[#5f6368] hover:bg-[#f8f9fa]'
-                  }`}
+          {mode === 'preset' && (
+            <div className="space-y-2.5">
+              <div className="flex flex-wrap gap-2">
+                {presets.map((p) => (
+                  <ChoicePill
+                    key={p.id}
+                    active={promptId === p.id}
+                    onClick={() => handlePresetChange(p.id)}
+                  >
+                    {label(p)}
+                  </ChoicePill>
+                ))}
+              </div>
+              {selected?.description && (
+                <p className="text-[13px] text-[#64748b] leading-relaxed rounded-xl bg-[#f8fafc] border border-[#e2e8f0] px-3.5 py-2.5">
+                  {selected.description[lang] || selected.description.en}
+                </p>
+              )}
+            </div>
+          )}
+
+          {mode === 'topic' && (
+            <div className="space-y-3">
+              <label className="block">
+                <FieldLabel>{ui.topicCategory}</FieldLabel>
+                <PracticeSelect
+                  value={categoryId}
+                  onChange={(e) => handleTopicChange(e.target.value)}
                 >
-                  {label(p)}
-                </button>
+                  <option value="">{ui.selectTopic}</option>
+                  {topicOptions.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {'—'.repeat(t.depth)} {t.label}
+                    </option>
+                  ))}
+                </PracticeSelect>
+              </label>
+              <TopicVocabPicker
+                items={items}
+                categories={categories}
+                categoryId={categoryId}
+                topicTab={topicTab}
+                onTopicTabChange={setTopicTab}
+                selectedWordIds={selectedWordIds}
+                onSelectedWordIdsChange={setSelectedWordIds}
+                ui={ui}
+              />
+            </div>
+          )}
+
+          {mode === 'custom' && (
+            <label className="block">
+              <FieldLabel>{ui.customInstructions}</FieldLabel>
+              <PracticeTextarea
+                value={customPrompt}
+                onChange={(e) => setCustomPrompt(e.target.value)}
+                rows={3}
+              />
+            </label>
+          )}
+
+          <label className="block">
+            <FieldLabel>{ui.theme}</FieldLabel>
+            <PracticeInput
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+            />
+          </label>
+
+          <div>
+            <FieldLabel>{ui.length}</FieldLabel>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: 'short', label: ui.short },
+                { id: 'medium', label: ui.medium },
+                { id: 'long', label: ui.long },
+              ].map((opt) => (
+                <ChoicePill
+                  key={opt.id}
+                  active={length === opt.id}
+                  onClick={() => setLength(opt.id)}
+                >
+                  {opt.label}
+                </ChoicePill>
               ))}
             </div>
-            {selected?.description && (
-              <p className="text-[13px] text-[#5f6368]">
-                {selected.description[lang] || selected.description.en}
-              </p>
-            )}
-          </>
-        )}
+          </div>
 
-        {mode === 'topic' && (
-          <div className="space-y-3">
+          {mode === 'topic' && (
             <label className="block">
-              <span className="text-[12px] font-semibold text-[#5f6368]">
-                {ui.topicCategory}
-              </span>
-              <select
-                value={categoryId}
-                onChange={(e) => handleTopicChange(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8] bg-white"
-              >
-                <option value="">{ui.selectTopic}</option>
-                {topicOptions.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {'—'.repeat(t.depth)} {t.label}
-                  </option>
-                ))}
-              </select>
+              <FieldLabel>{ui.extraInstructions}</FieldLabel>
+              <PracticeTextarea
+                value={customPrompt}
+                onChange={(e) => setCustomPrompt(e.target.value)}
+                rows={2}
+              />
             </label>
-            <TopicVocabPicker
-              items={items}
-              categories={categories}
-              categoryId={categoryId}
-              topicTab={topicTab}
-              onTopicTabChange={setTopicTab}
-              selectedWordIds={selectedWordIds}
-              onSelectedWordIdsChange={setSelectedWordIds}
-              ui={ui}
-            />
-          </div>
-        )}
-
-        {mode === 'custom' && (
-          <label className="block">
-            <span className="text-[12px] font-semibold text-[#5f6368]">
-              {ui.customInstructions}
-            </span>
-            <textarea
-              value={customPrompt}
-              onChange={(e) => setCustomPrompt(e.target.value)}
-              rows={3}
-              className="mt-1 w-full rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8] resize-y"
-            />
-          </label>
-        )}
-
-        <label className="block">
-          <span className="text-[12px] font-semibold text-[#5f6368]">{ui.theme}</span>
-          <input
-            value={theme}
-            onChange={(e) => setTheme(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8]"
-          />
-        </label>
-
-        <label className="block">
-          <span className="text-[12px] font-semibold text-[#5f6368]">{ui.length}</span>
-          <div className="mt-1 flex flex-wrap gap-2">
-            {[
-              { id: 'short', label: ui.short },
-              { id: 'medium', label: ui.medium },
-              { id: 'long', label: ui.long },
-            ].map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setLength(opt.id)}
-                className={`text-[12px] font-semibold px-3 py-1.5 rounded-full border ${
-                  length === opt.id
-                    ? 'bg-[#e8f0fe] border-[#1a73e8] text-[#1a73e8]'
-                    : 'bg-white border-[#dadce0] text-[#5f6368]'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </label>
-
-        {mode === 'topic' && (
-          <label className="block">
-            <span className="text-[12px] font-semibold text-[#5f6368]">
-              {ui.extraInstructions}
-            </span>
-            <textarea
-              value={customPrompt}
-              onChange={(e) => setCustomPrompt(e.target.value)}
-              rows={2}
-              className="mt-1 w-full rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] outline-none focus:border-[#1a73e8] resize-y"
-            />
-          </label>
-        )}
-
-        <button
-          type="button"
-          onClick={handleGenerate}
-          disabled={loading || !canGenerate}
-          className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] text-white text-[13px] font-semibold px-4 py-2 hover:bg-[#1557b0] disabled:opacity-50"
-        >
-          {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Sparkles className="w-4 h-4" />
           )}
-          {loading ? ui.generating : script ? ui.generateNew : ui.generate}
-        </button>
 
-        {error && <div className="text-[13px] text-[#c5221f]">{error}</div>}
-      </div>
+          <div className="pt-1 flex flex-col sm:flex-row sm:items-center gap-3">
+            <PrimaryButton
+              onClick={handleGenerate}
+              disabled={loading || !canGenerate}
+              className="w-full sm:w-auto"
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4" />
+              )}
+              {loading ? ui.generating : script ? ui.generateNew : ui.generate}
+            </PrimaryButton>
+            {error && (
+              <p className="text-[13px] text-[#c5221f] sm:flex-1">{error}</p>
+            )}
+          </div>
+        </div>
+      </PracticeCard>
 
       {script && (
         <ConversationPlayer
@@ -339,22 +340,5 @@ export default function SimulationPanel({
         />
       )}
     </div>
-  );
-}
-
-function ModeChip({ active, onClick, disabled, children }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`text-[12px] font-semibold px-3 py-1.5 rounded-full border transition-colors disabled:opacity-40 ${
-        active
-          ? 'bg-[#e8f0fe] border-[#1a73e8] text-[#1a73e8]'
-          : 'bg-white border-[#dadce0] text-[#5f6368] hover:bg-[#f8f9fa]'
-      }`}
-    >
-      {children}
-    </button>
   );
 }
