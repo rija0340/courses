@@ -76,15 +76,25 @@ export function hasText(value) {
 }
 
 /**
- * phonetic must always be a plain IPA string, never an i18n object.
- * Bad import: "phonetic": { "en": "/ˈhæpi/" } → UI shows [object Object].
- * Correct: "phonetic": "/ˈhæpi/"
+ * IPA column is always a plain string (EN-first).
+ * Accepts legacy import shapes:
+ * - "/ˈhæpi/"
+ * - { en: "/ˈhæpi/", fr: "...", mg: "..." } → prefers en, then fr/mg
+ * - JSON string of that object (if a driver stringified it)
+ * Rejects the corrupted literal "[object Object]".
  */
 export function coercePhoneticString(value) {
   if (value == null || value === '') return '';
   if (typeof value === 'string') {
     const t = value.trim();
     if (!t || t === '[object Object]') return '';
+    if (t.startsWith('{') && t.includes(':')) {
+      try {
+        return coercePhoneticString(JSON.parse(t));
+      } catch {
+        /* keep plain string */
+      }
+    }
     return t;
   }
   if (typeof value === 'object' && !Array.isArray(value)) {
@@ -94,6 +104,13 @@ export function coercePhoneticString(value) {
     }
   }
   return '';
+}
+
+/** Normalize phonetic on a vocab item (mutates a shallow copy). */
+export function sanitizeItemPhonetic(item) {
+  if (!item || typeof item !== 'object') return item;
+  const phonetic = coercePhoneticString(item.phonetic);
+  return { ...item, phonetic: phonetic || null };
 }
 
 export function emptyItemStructure() {

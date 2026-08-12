@@ -13,7 +13,10 @@ import { pickItemAttrs, mergeAttrsIntoItem, hasItemAttrPayload, coercePhoneticSt
 
 function mapItem(item) {
   const extra = mergeAttrsIntoItem(item);
+  // Recover IPA if column was corrupted to "[object Object]" but attrs still hold the object
+  const attrsPhonetic = extra.phonetic;
   delete extra.phonetic;
+  const phonetic = coercePhoneticString(item.phonetic) || coercePhoneticString(attrsPhonetic) || null;
   return {
     id: item.id,
     en: item.en,
@@ -22,7 +25,7 @@ function mapItem(item) {
     category: item.category || '',
     tab: item.tab,
     categoryId: item.category_id,
-    phonetic: coercePhoneticString(item.phonetic) || null,
+    phonetic,
     example: item.example ?? null,
     dialogue: item.dialogue ?? null,
     ...extra,

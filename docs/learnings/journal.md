@@ -77,7 +77,15 @@ sequenceDiagram
 **Concept :** tag `category` (Organe…) vidé / masqué ; `phonetic` toujours chaîne via `coercePhoneticString` ; pratique Oral+Texte sur chaque carte EN.
 **Pourquoi :** confondre type MediVocabs et thème arbre ; `String({})` → `[object Object]` à l’import.
 **Pas choisi :** garder badge Organe ; pratique réservée aux expressions.
-**À retenir :** phonetic = `"/ˈhæpi/"` jamais `{en:…}` ; practice = mic sur toute carte EN.
+**À retenir :** phonetic objet `{en}` → coerce EN à l’import/form ; practice = mic sur toute carte EN.
+
+### 2026-08-12 - phonetic i18n object import
+**Tags :** `data-modeling` `visibility`
+**Bonne pratique :** coerce at boundaries
+**Concept :** import `{ phonetic: { en, fr, mg } }` accepté → colonne IPA = `en` ; form structure ne réassigne plus l’objet brut (évite `[object Object]` dans l’input).
+**Pourquoi :** les exports humains sont souvent i18n ; `String(obj)` / `value={obj}` cassent l’UI.
+**Pas choisi :** stocker phonetic multilingue en attrs.
+**À retenir :** frontières lecture/écriture = toujours `coercePhoneticString`.
 
 ### 2026-08-12 - Simulation domain-aware
 **Tags :** `architecture` `learning` `ux`

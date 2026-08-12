@@ -91,7 +91,7 @@ export const ITEM_FIELDS = /** @type {Record<string, FieldDef>} */ ({
     required: false,
     example: '/aɪ/',
     default: null,
-    description: 'IPA en chaîne seule (ex. "/ˈhæpi/"). Pas un objet i18n — sinon [object Object].',
+    description: 'IPA (chaîne "/ˈhæpi/" ou objet {en,fr,mg} — on garde en).',
   },
   // Mini-dialogue (symptoms / conditions) — patient + doctor, 2 tours
   example: {
@@ -385,7 +385,7 @@ export function buildImportTemplate(domain = null) {
         'Les images (image / image_url) se gèrent via upload, pas via ce JSON.',
         'categoryId doit référencer un id existant dans organization.categories (récursif).',
         'tab doit référencer un id dans organization.tabs.',
-        'phonetic = chaîne IPA seule, ex. "/ˈhæpi/" — jamais un objet {en,fr,mg}.',
+        'phonetic = "/ˈhæpi/" ou { "en": "/ˈhæpi/", "fr": "…"} (on garde EN).',
         'category (tag Organe/…) est optionnel et souvent vide ; le thème = categoryId.',
       ],
     },
@@ -517,9 +517,12 @@ function normalizeItem(raw, index, errors, warnings, structureHint = null) {
         : Array.isArray(raw[key]) && raw[key].some((v) => v && typeof v === 'object');
       item[key] = normalizeListField(raw[key], translate);
     } else if (key === 'phonetic') {
+      // Accept "/ipa/" or { en, fr, mg } — store EN IPA string only
       item.phonetic = coercePhoneticString(raw.phonetic) || null;
       if (raw.phonetic != null && typeof raw.phonetic === 'object') {
-        warnings.push(`items[${index}].phonetic: objet reçu — converti en chaîne IPA (utiliser "phonetic": "/ˈhæpi/")`);
+        warnings.push(
+          `items[${index}].phonetic: objet i18n → IPA EN « ${item.phonetic || '∅'} »`
+        );
       }
     } else if (i18nIds.has(key) || def.type === 'i18n') {
       item[key] = normalizeI18nValue(raw[key]);
@@ -613,7 +616,7 @@ export function buildItemsOnlyImportTemplate(domain = null) {
         'Chaque item doit avoir un champ tab correspondant à un onglet existant.',
         'tab et categoryId doivent exister dans le domaine.',
         'Les images se gèrent via upload admin, pas via JSON.',
-        'phonetic = chaîne IPA seule ("/ˈhæpi/"), pas un objet.',
+        'phonetic = "/ˈhæpi/" ou objet {en,fr,mg} (IPA EN retenu).',
       ],
     },
   };
@@ -660,7 +663,7 @@ export function buildCategoryItemsImportTemplate(domain = null, scope = {}) {
   const structureNote = structure
     ? `Structure racine : langs=[${(structure.langs || []).join(',') || '—'}] fields=[${(structure.fields || []).map((f) => f.id).join(', ')}]`
     : 'Pas de itemStructure sur la racine — template classique.';
-  const phoneticNote = 'phonetic = chaîne IPA seule, ex. "/ˈhæpi/" — jamais {"en":"/…/"}.';
+  const phoneticNote = 'phonetic = "/ˈhæpi/" ou {"en":"/…/","fr":"…"} — IPA EN stocké.';
 
   if (mode === 'domain') {
     sampleItems = tabs.map((t, i) => makeSample(categoryId, t.id, i));

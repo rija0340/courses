@@ -247,7 +247,7 @@ export default function VocabCard({
                 className="inline-block px-2 py-1 rounded-md border leading-snug"
                 style={{ background: soft.bg, borderColor: soft.border, color: soft.text }}
               >
-                {String(item[f.id]).trim()}
+                {typeof item[f.id] === 'string' ? item[f.id].trim() : ''}
               </span>
             </Section>
           );

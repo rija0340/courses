@@ -155,8 +155,12 @@ export default function VocabForm({
           next._listForms[f.id] = listToForm(item[f.id], f.translate);
         } else if (f.translate) {
           next._i18nForms[f.id] = i18nToForm(item[f.id]);
+        } else if (f.id === 'phonetic') {
+          // Never assign the raw object — React inputs would show [object Object]
+          next.phonetic = coercePhoneticString(item.phonetic ?? item[f.id]);
         } else {
-          next[f.id] = item[f.id] || '';
+          const raw = item[f.id];
+          next[f.id] = raw == null || typeof raw === 'object' ? '' : String(raw);
         }
       });
       setForm(next);
@@ -411,11 +415,22 @@ export default function VocabForm({
                 </section>
               );
             }
+            if (f.id === 'phonetic') {
+              return (
+                <FormField
+                  key={f.id}
+                  label={`${label} (IPA EN)`}
+                  value={coercePhoneticString(form.phonetic)}
+                  onChange={(v) => handleChange('phonetic', v)}
+                  placeholder="/ˈæŋk.ʃəs/"
+                />
+              );
+            }
             return (
               <FormField
                 key={f.id}
                 label={label}
-                value={form[f.id] || ''}
+                value={typeof form[f.id] === 'string' ? form[f.id] : ''}
                 onChange={(v) => handleChange(f.id, v)}
               />
             );

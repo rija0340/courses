@@ -1,4 +1,5 @@
 import { getDomainSeed } from '../../data/vocabs';
+import { sanitizeItemPhonetic } from '../../data/vocabs/vocabItemStructure';
 
 const DOMAIN_KEY = (id) => `medi_vocabs_domain_${id}`;
 const IMAGE_KEY = (domainId, itemId) => `medi_vocabs_img_${domainId}_${itemId}`;
@@ -29,12 +30,15 @@ function migrateDomain(domain) {
   }
   if (Array.isArray(migrated.items)) {
     migrated.items = migrated.items.map(item => {
-      if (item.categoryId) return item;
-      let categoryId = null;
-      if (item.sub) categoryId = item.sub;
-      else if (item.part) categoryId = item.part;
-      const { part, sub, ...rest } = item;
-      return { ...rest, categoryId };
+      let next = item;
+      if (!item.categoryId) {
+        let categoryId = null;
+        if (item.sub) categoryId = item.sub;
+        else if (item.part) categoryId = item.part;
+        const { part, sub, ...rest } = item;
+        next = { ...rest, categoryId };
+      }
+      return sanitizeItemPhonetic(next);
     });
   }
   return migrated;
@@ -49,7 +53,10 @@ const localStorageProvider = {
   },
 
   async saveDomain(domainId, data) {
-    localStorage.setItem(DOMAIN_KEY(domainId), JSON.stringify(data));
+    const payload = data && Array.isArray(data.items)
+      ? { ...data, items: data.items.map(sanitizeItemPhonetic) }
+      : data;
+    localStorage.setItem(DOMAIN_KEY(domainId), JSON.stringify(payload));
   },
 
   async initDomain(domainId) {
@@ -94,7 +101,10 @@ const localStorageProvider = {
   async createItem(domainId, item) {
     const domain = await this.getDomain(domainId);
     if (!domain) throw new Error('Domain not found');
-    const newItem = { ...item, id: item.id || `${Date.now()}_${Math.random().toString(36).slice(2, 8)}` };
+    const newItem = sanitizeItemPhonetic({
+      ...item,
+      id: item.id || `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    });
     domain.items.push(newItem);
     await this.saveDomain(domainId, domain);
     return newItem;
@@ -105,7 +115,7 @@ const localStorageProvider = {
     if (!domain) throw new Error('Domain not found');
     const idx = domain.items.findIndex(i => i.id === id);
     if (idx === -1) throw new Error('Item not found');
-    domain.items[idx] = { ...domain.items[idx], ...data };
+    domain.items[idx] = sanitizeItemPhonetic({ ...domain.items[idx], ...data });
     await this.saveDomain(domainId, domain);
     return domain.items[idx];
   },
