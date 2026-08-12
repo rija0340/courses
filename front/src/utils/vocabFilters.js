@@ -22,11 +22,7 @@ export function filterVocabItems(items, { categories, activeCategory, activeTab,
       i.en?.toLowerCase().includes(q) ||
       i.fr?.toLowerCase().includes(q) ||
       i.mg?.toLowerCase().includes(q) ||
-      i.category?.toLowerCase().includes(q) ||
-      (Array.isArray(i.synonyms) && i.synonyms.some(s => String(s).toLowerCase().includes(q))) ||
-      (Array.isArray(i.antonyms) && i.antonyms.some(s => String(s).toLowerCase().includes(q))) ||
-      i.particle?.toLowerCase().includes(q) ||
-      i.pattern?.toLowerCase().includes(q)
+      i.category?.toLowerCase().includes(q)
     );
   } else if (activeTab) {
     result = result.filter(i => i.tab === activeTab);

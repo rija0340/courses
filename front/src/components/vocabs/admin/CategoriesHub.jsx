@@ -14,12 +14,6 @@ import CategoryItemsPanel from './CategoryItemsPanel';
 import CategoryDataTransfer from './CategoryDataTransfer';
 import FullscreenLightbox from '../FullscreenLightbox';
 import { EmptyState, ImageModal } from './shared';
-import {
-  ITEM_PROFILE_OPTIONS,
-  DEFAULT_ITEM_PROFILE,
-  resolveItemProfile,
-  getItemProfile,
-} from '../../../data/vocabs/vocabItemProfiles';
 
 export default function CategoriesHub({
   categories,
@@ -144,16 +138,6 @@ export default function CategoriesHub({
     await updateCategories(updated);
     showToast('Nom mis à jour');
     setIsEditing(false);
-  };
-
-  const handleProfileChange = async (profileId) => {
-    if (!selectedId) return;
-    const updated = updateNode(categories, selectedId, (n) => ({
-      ...n,
-      itemProfile: profileId || DEFAULT_ITEM_PROFILE,
-    }));
-    await updateCategories(updated);
-    showToast('Profil de fiche mis à jour');
   };
 
   const handleDelete = async () => {
@@ -439,26 +423,6 @@ export default function CategoriesHub({
                     ))}
                   </div>
 
-                  <div className="mb-4 rounded-xl border border-[#dadce0] bg-[#f8f9fa] p-3">
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#9aa0a6] mb-1.5">
-                      Profil des fiches (colonnes)
-                    </label>
-                    <select
-                      value={resolveItemProfile(categories, selectedId)}
-                      onChange={(e) => handleProfileChange(e.target.value)}
-                      className="w-full h-10 rounded-xl bg-white border border-[#dadce0] px-3 text-[13px] outline-none focus:border-[#1a73e8]"
-                    >
-                      {ITEM_PROFILE_OPTIONS.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.label.fr}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-[11px] text-[#9aa0a6] mt-1.5">
-                      {getItemProfile(resolveItemProfile(categories, selectedId)).description?.fr}
-                    </p>
-                  </div>
-
                   <div className="flex flex-wrap gap-2">
                     {!addingChild && (
                       <button
@@ -543,7 +507,6 @@ export default function CategoriesHub({
                       tabs={tabs}
                       categoryId={selectedId}
                       activeOrgTab={activeOrgTab}
-                      itemProfile={resolveItemProfile(categories, selectedId)}
                       domainId={domainId}
                       addItem={addItem}
                       updateItem={updateItem}
@@ -556,27 +519,9 @@ export default function CategoriesHub({
                 </>
               )}
 
-              {tabs.length === 0 && selectedId && (
-                <CategoryItemsPanel
-                  items={items}
-                  categories={categories}
-                  tabs={[{ id: 'vocab', label: { fr: 'Vocabulaire', en: 'Vocabulary', mg: 'Voaboly' } }]}
-                  categoryId={selectedId}
-                  activeOrgTab="vocab"
-                  itemProfile={resolveItemProfile(categories, selectedId)}
-                  domainId={domainId}
-                  addItem={addItem}
-                  updateItem={updateItem}
-                  deleteItem={deleteItem}
-                  deleteItems={deleteItems}
-                  showToast={showToast}
-                  getLabel={getLabel}
-                />
-              )}
-
-              {tabs.length === 0 && !selectedId && (
+              {tabs.length === 0 && (
                 <p className="mt-6 text-[13px] text-[#9aa0a6]">
-                  Aucun onglet configuré — ajoutez-en dans Paramètres, ou sélectionnez une catégorie (profil basique).
+                  Aucun onglet configuré — ajoutez-en dans Paramètres.
                 </p>
               )}
             </div>

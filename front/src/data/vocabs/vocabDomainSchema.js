@@ -2,14 +2,8 @@
  * Single source of truth for vocab domain JSON (import / export / template).
  * Change fields here → template, validation, and export pickers update automatically.
  */
-import {
-  hasAnyLanguage,
-  normalizeOptionalI18n,
-  normalizeStringList,
-  isValidItemProfile,
-} from './vocabItemProfiles';
 
-export const VOCAB_DOMAIN_VERSION = 4;
+export const VOCAB_DOMAIN_VERSION = 3;
 
 export const I18N_LANGS = ['fr', 'en', 'mg'];
 
@@ -45,24 +39,21 @@ export const ITEM_FIELDS = /** @type {Record<string, FieldDef>} */ ({
   },
   en: {
     type: 'string',
-    required: false,
+    required: true,
     example: 'Eye',
-    default: '',
-    description: 'Mot en anglais (optionnel — au moins une langue requise)',
+    description: 'Mot en anglais',
   },
   fr: {
     type: 'string',
-    required: false,
+    required: true,
     example: 'Œil',
-    default: '',
-    description: 'Mot en français (optionnel — au moins une langue requise)',
+    description: 'Mot en français',
   },
   mg: {
     type: 'string',
-    required: false,
+    required: true,
     example: 'Maso',
-    default: '',
-    description: 'Mot en malgache (optionnel — au moins une langue requise)',
+    description: 'Mot en malgache',
   },
   category: {
     type: 'string',
@@ -113,55 +104,6 @@ export const ITEM_FIELDS = /** @type {Record<string, FieldDef>} */ ({
       { role: 'doctor', en: 'Does it affect one eye or both?', fr: 'Un œil ou les deux ?', mg: '' },
     ],
     description: 'Tours de dialogue patient/docteur (onglet scenarios). mg optionnel par tour.',
-  },
-  synonyms: {
-    type: 'array',
-    required: false,
-    default: [],
-    example: ['joyful', 'cheerful'],
-    description: 'Synonymes (liste ; profil adjective)',
-  },
-  antonyms: {
-    type: 'array',
-    required: false,
-    default: [],
-    example: ['sad', 'miserable'],
-    description: 'Antonymes (liste ; profil adjective)',
-  },
-  context: {
-    type: 'i18n',
-    required: false,
-    default: null,
-    example: { en: 'She felt happy after the news.', fr: 'Elle était heureuse après la nouvelle.', mg: '' },
-    description: 'Phrase d’usage / contexte (i18n optionnel)',
-  },
-  particle: {
-    type: 'string',
-    required: false,
-    default: '',
-    example: 'up',
-    description: 'Particule (phrasal verb)',
-  },
-  pattern: {
-    type: 'string',
-    required: false,
-    default: '',
-    example: 'make a decision',
-    description: 'Schéma de collocation',
-  },
-  register: {
-    type: 'string',
-    required: false,
-    default: '',
-    example: 'formal',
-    description: 'Registre (formal / informal…)',
-  },
-  notes: {
-    type: 'i18n',
-    required: false,
-    default: null,
-    example: { en: 'Often followed by about…', fr: 'Souvent suivi de about…', mg: '' },
-    description: 'Notes d’usage (i18n optionnel)',
   },
   // Images are managed via Storage upload — not part of bulk JSON import by default
   image: {
@@ -232,13 +174,6 @@ export const CATEGORY_FIELDS = /** @type {Record<string, FieldDef>} */ ({
     example: [],
     default: [],
     description: 'Sous-catégories (même structure récursive)',
-  },
-  itemProfile: {
-    type: 'string',
-    required: false,
-    example: 'adjective',
-    default: null,
-    description: 'Profil de champs des mots (basic | adjective | phrasalVerb | collocation). Hérité des parents si absent.',
   },
 });
 
@@ -391,7 +326,6 @@ function sanitizeCategoriesForTemplate(nodes) {
     label: { ...emptyI18n(), ...(n.label || {}) },
     image: null,
     visuals: Array.isArray(n.visuals) ? [] : [],
-    ...(isValidItemProfile(n.itemProfile) ? { itemProfile: n.itemProfile } : {}),
     children: sanitizeCategoriesForTemplate(n.children || []),
   }));
 }
@@ -461,20 +395,11 @@ function normalizeCategoryNode(node, path, errors) {
   if (!node.id || typeof node.id !== 'string') {
     errors.push(`${path}: id manquant`);
   }
-  const profileRaw = node.itemProfile;
-  let itemProfile = null;
-  if (profileRaw != null && profileRaw !== '') {
-    const id = String(profileRaw);
-    if (isValidItemProfile(id)) itemProfile = id;
-    else errors.push(`${path}.itemProfile: profil inconnu « ${id} » (basic|adjective|phrasalVerb|collocation)`);
-  }
-
   return {
     id: String(node.id || `cat_${Math.random().toString(36).slice(2, 8)}`),
     label: normalizeI18n(node.label, String(node.id || '')),
     image: node.image ?? null,
     visuals: Array.isArray(node.visuals) ? node.visuals : [],
-    ...(itemProfile ? { itemProfile } : {}),
     children: (Array.isArray(node.children) ? node.children : [])
       .map((ch, i) => normalizeCategoryNode(ch, `${path}.children[${i}]`, errors))
       .filter(Boolean),
@@ -489,8 +414,6 @@ function normalizeItem(raw, index, errors, warnings) {
 
   const item = {};
   const importKeys = getItemImportKeys();
-  const listKeys = new Set(['synonyms', 'antonyms']);
-  const i18nKeys = new Set(['context', 'notes']);
 
   for (const key of importKeys) {
     const def = ITEM_FIELDS[key];
@@ -502,17 +425,8 @@ function normalizeItem(raw, index, errors, warnings) {
       }
       continue;
     }
-    if (listKeys.has(key)) {
-      item[key] = normalizeStringList(raw[key]);
-    } else if (i18nKeys.has(key)) {
-      item[key] = normalizeOptionalI18n(raw[key]);
-    } else if (def.type === 'string') {
-      item[key] = String(raw[key]);
-    } else if (def.type === 'i18n') {
-      item[key] = normalizeOptionalI18n(raw[key]);
-    } else {
-      item[key] = raw[key];
-    }
+    if (def.type === 'string') item[key] = String(raw[key]);
+    else item[key] = raw[key];
   }
 
   // Keep unknown keys as warnings only (forward-compat)
@@ -526,10 +440,6 @@ function normalizeItem(raw, index, errors, warnings) {
   if (!item.id) {
     item.id = `vocab_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 6)}`;
     warnings.push(`items[${index}]: id généré automatiquement (${item.id})`);
-  }
-
-  if (!hasAnyLanguage(item)) {
-    errors.push(`items[${index}] (${item.id}): au moins une langue (en, fr ou mg) est requise`);
   }
 
   return item;
@@ -677,10 +587,7 @@ export function categoryItemsTemplateToPrettyJson(domain = null, scope = {}) {
 }
 
 /** CSV columns for vocab item export (Excel-friendly). */
-export const VOCAB_CSV_COLUMNS = [
-  'id', 'fr', 'en', 'mg', 'category', 'tab', 'categoryId', 'phonetic',
-  'synonyms', 'antonyms', 'context', 'particle', 'pattern', 'register', 'notes',
-];
+export const VOCAB_CSV_COLUMNS = ['id', 'fr', 'en', 'mg', 'category', 'tab', 'categoryId', 'phonetic'];
 
 /**
  * Filter items by export/import UI scope.
@@ -703,26 +610,13 @@ function escapeCsvCell(value) {
   return s;
 }
 
-function csvCellFromItem(item, key) {
-  const value = item?.[key];
-  if (key === 'synonyms' || key === 'antonyms') {
-    return Array.isArray(value) ? value.join('; ') : (value ?? '');
-  }
-  if (key === 'context' || key === 'notes') {
-    if (!value) return '';
-    if (typeof value === 'string') return value;
-    return value.en || value.fr || value.mg || '';
-  }
-  return value ?? '';
-}
-
 /**
  * Build CSV string (UTF-8 BOM for Excel) from vocab items.
  */
 export function itemsToCsv(items, columns = VOCAB_CSV_COLUMNS) {
   const lines = [columns.join(',')];
   (items || []).forEach((item) => {
-    lines.push(columns.map((key) => escapeCsvCell(csvCellFromItem(item, key))).join(','));
+    lines.push(columns.map((key) => escapeCsvCell(item[key] ?? '')).join(','));
   });
   return `\uFEFF${lines.join('\n')}`;
 }
