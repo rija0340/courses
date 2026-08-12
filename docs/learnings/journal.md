@@ -70,3 +70,24 @@ sequenceDiagram
 **Pourquoi :** lexique anglais-first, densifier sans perdre la lisibilité (titre ~18–19px, traductions 15px).
 **Pas choisi :** titre = langue UI ; palette saturée type dashboard.
 **À retenir :** EN = titre, le reste = support ; couleur = signal, pas décor.
+
+### 2026-08-12 - category vide + IPA string + pratique carte
+**Tags :** `data-modeling` `ux` `learning`
+**Bonne pratique :** coerce at boundaries ; practice affordance on each item
+**Concept :** tag `category` (Organe…) vidé / masqué ; `phonetic` toujours chaîne via `coercePhoneticString` ; pratique Oral+Texte sur chaque carte EN.
+**Pourquoi :** confondre type MediVocabs et thème arbre ; `String({})` → `[object Object]` à l’import.
+**Pas choisi :** garder badge Organe ; pratique réservée aux expressions.
+**À retenir :** phonetic = `"/ˈhæpi/"` jamais `{en:…}` ; practice = mic sur toute carte EN.
+
+### 2026-08-12 - Simulation domain-aware
+**Tags :** `architecture` `learning` `ux`
+**Bonne pratique :** domain-aware defaults, not domain-hardcoded core
+**Concept :** `scenarioProfiles` — médical (doctor/patient) pour `medi-vocabs`, général (learner/partner) ailleurs ; presets + prompts LLM + UI copy suivent le profil.
+**Pourquoi :** adjectifs / tech ne doivent pas forcer une visite clinique.
+**Pas choisi :** masquer Simulation hors MediVocabs ; un seul pack médical pour tous.
+**À retenir :** le moteur est générique ; le médical est un profil.
+
+### 2026-08-12 - Simulation UI modernisée
+**Tags :** `ux` `visibility`
+**Bonne pratique :** shared design system for a surface ; chat bubbles for dialogue
+**À retenir :** chrome pratique partagé (`practiceUi`) + bulles alignées par rôle + accent teal/sky.
