@@ -67,6 +67,10 @@ export const aiClient = {
 
   generateQuizFeedback(input) {
     return postJson('/api/llm/quiz-feedback', input);
+  },
+
+  assessCardUtterance(input) {
+    return postJson('/api/llm/card-utterance', input);
   }
 };
 

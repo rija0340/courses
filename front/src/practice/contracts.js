@@ -81,7 +81,9 @@ const FEEDBACK_CATEGORIES = new Set([
   'preposition',
   'article',
   'collocation',
-  'word_order'
+  'word_order',
+  'context_use',
+  'sentence_level'
 ]);
 
 function normalizeIssue(issue) {
@@ -158,6 +160,105 @@ export function normalizeWrittenTurn(raw) {
       overallScore: fb.overallScore
     },
     done: raw.done,
+    meta: raw.meta || {}
+  });
+}
+
+const CARD_WEIGHTS = { contextUse: 0.45, grammar: 0.25, naturalness: 0.2, sentenceLevel: 0.1 };
+
+function clampDim(n, fallback = 0) {
+  const x = Number(n);
+  if (Number.isNaN(x)) return fallback;
+  return Math.max(0, Math.min(100, Math.round(x)));
+}
+
+function combineCardDims(d) {
+  return clampDim(
+    CARD_WEIGHTS.contextUse * (d.contextUse || 0) +
+      CARD_WEIGHTS.grammar * (d.grammar || 0) +
+      CARD_WEIGHTS.naturalness * (d.naturalness || 0) +
+      CARD_WEIGHTS.sentenceLevel * (d.sentenceLevel || 0)
+  );
+}
+
+function mapTarget(entry) {
+  if (!entry) return null;
+  if (typeof entry === 'string') {
+    const word = entry.trim();
+    return word ? { word, role: 'related' } : null;
+  }
+  const word = String(entry.word || entry.en || '').trim();
+  if (!word) return null;
+  return { word, role: String(entry.role || 'related') };
+}
+
+export function createCardUtteranceResult({
+  learnerText = '',
+  overallScore,
+  dimensions = {},
+  usedTargets = [],
+  missedTargets = [],
+  copiedExample = false,
+  feedback = {},
+  meta = {}
+}) {
+  const dims = {
+    grammar: clampDim(dimensions.grammar),
+    naturalness: clampDim(dimensions.naturalness),
+    sentenceLevel: clampDim(dimensions.sentenceLevel),
+    contextUse: clampDim(dimensions.contextUse)
+  };
+  const combined = combineCardDims(dims);
+  const score = clampDim(overallScore, combined);
+  const used = (usedTargets || []).map(mapTarget).filter(Boolean);
+  const missed = (missedTargets || []).map(mapTarget).filter(Boolean);
+  const issues = Array.isArray(feedback.issues) ? feedback.issues.map(normalizeIssue) : [];
+  return {
+    version: 1,
+    learnerText: String(learnerText || '').trim(),
+    heardText: String(learnerText || '').trim(),
+    targetText: used[0]?.word || '',
+    score,
+    overallScore: score,
+    dimensions: dims,
+    usedTargets: used,
+    missedTargets: missed,
+    copiedExample: !!copiedExample,
+    wordFeedback: used.map((u) => ({ word: u.word, ok: true, hint: u.role })),
+    tips: Array.isArray(feedback.tips) ? feedback.tips : [],
+    feedback: {
+      overallScore: score,
+      strengths: Array.isArray(feedback.strengths) ? feedback.strengths : [],
+      issues,
+      reformulation: String(feedback.reformulation || '').trim(),
+      vocabUsed: {
+        theme: used.map((u) => u.word),
+        missed: missed.map((m) => m.word)
+      },
+      tips: Array.isArray(feedback.tips) ? feedback.tips : []
+    },
+    meta
+  };
+}
+
+export function normalizeCardUtterance(raw) {
+  if (!raw || typeof raw !== 'object') {
+    throw new Error('INVALID_CARD_UTTERANCE: empty payload');
+  }
+  const dimsIn = raw.dimensions || {};
+  return createCardUtteranceResult({
+    learnerText: raw.learnerText,
+    overallScore: raw.overallScore ?? raw.feedback?.overallScore,
+    dimensions: {
+      grammar: dimsIn.grammar,
+      naturalness: dimsIn.naturalness,
+      sentenceLevel: dimsIn.sentenceLevel ?? dimsIn.advancement,
+      contextUse: dimsIn.contextUse
+    },
+    usedTargets: raw.usedTargets || raw.feedback?.vocabUsed?.theme,
+    missedTargets: raw.missedTargets || raw.feedback?.vocabUsed?.missed,
+    copiedExample: raw.copiedExample,
+    feedback: raw.feedback || {},
     meta: raw.meta || {}
   });
 }

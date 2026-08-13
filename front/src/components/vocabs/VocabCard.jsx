@@ -304,7 +304,12 @@ export default function VocabCard({
 
         {hasExample(item.example) && <ExampleCollapse example={item.example} item={item} />}
         {canPractice && showPractice && (
-          <PronunciationPractice targetText={titleEn} phonetic={phonetic} />
+          <PronunciationPractice
+            targetText={titleEn}
+            phonetic={phonetic}
+            item={item}
+            itemStructure={itemStructure}
+          />
         )}
       </div>
     </div>

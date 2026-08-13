@@ -60,7 +60,9 @@ const FEEDBACK_CATEGORIES = new Set([
   'preposition',
   'article',
   'collocation',
-  'word_order'
+  'word_order',
+  'context_use',
+  'sentence_level'
 ]);
 
 function normalizeIssue(issue) {
@@ -122,9 +124,81 @@ function normalizeWrittenTurn(raw) {
   };
 }
 
+function clampDim(n, fallback = 0) {
+  const x = Number(n);
+  if (Number.isNaN(x)) return fallback;
+  return Math.max(0, Math.min(100, Math.round(x)));
+}
+
+function combineCardDims(d) {
+  return clampDim(
+    0.45 * (d.contextUse || 0) +
+      0.25 * (d.grammar || 0) +
+      0.2 * (d.naturalness || 0) +
+      0.1 * (d.sentenceLevel || 0)
+  );
+}
+
+function mapTarget(entry) {
+  if (!entry) return null;
+  if (typeof entry === 'string') {
+    const word = String(entry).trim();
+    return word ? { word, role: 'related' } : null;
+  }
+  const word = String(entry.word || entry.en || '').trim();
+  if (!word) return null;
+  return { word, role: String(entry.role || 'related') };
+}
+
+function normalizeCardUtterance(raw) {
+  if (!raw || typeof raw !== 'object') {
+    throw new Error('INVALID_CARD_UTTERANCE: empty payload');
+  }
+  const dimsIn = raw.dimensions || {};
+  const dimensions = {
+    grammar: clampDim(dimsIn.grammar),
+    naturalness: clampDim(dimsIn.naturalness),
+    sentenceLevel: clampDim(dimsIn.sentenceLevel ?? dimsIn.advancement),
+    contextUse: clampDim(dimsIn.contextUse)
+  };
+  const combined = combineCardDims(dimensions);
+  const given = clampDim(raw.overallScore ?? raw.feedback?.overallScore, combined);
+  const overallScore = Math.abs(given - combined) > 30 ? combined : given;
+  const fb = raw.feedback || {};
+  const issueSrc = Array.isArray(fb.issues) ? fb.issues : Array.isArray(raw.issues) ? raw.issues : [];
+  const issues = issueSrc
+    .map(normalizeIssue)
+    .filter((issue) => issue.explanation || issue.suggestion || issue.rule);
+  const used = (raw.usedTargets || fb.vocabUsed?.theme || []).map(mapTarget).filter(Boolean);
+  const missed = (raw.missedTargets || fb.vocabUsed?.missed || []).map(mapTarget).filter(Boolean);
+
+  return {
+    version: 1,
+    learnerText: String(raw.learnerText || '').trim(),
+    overallScore,
+    dimensions,
+    usedTargets: used,
+    missedTargets: missed,
+    copiedExample: !!raw.copiedExample,
+    feedback: {
+      overallScore,
+      strengths: Array.isArray(fb.strengths) ? fb.strengths.map((s) => String(s)) : [],
+      issues,
+      reformulation: String(fb.reformulation || '').trim(),
+      vocabUsed: {
+        theme: used.map((u) => u.word),
+        missed: missed.map((m) => m.word)
+      },
+      tips: Array.isArray(fb.tips) ? fb.tips.map((t) => String(t)) : []
+    },
+    meta: raw.meta || {}
+  };
+}
+
 module.exports = {
   createTranscript,
   createSimulationScript,
   normalizeSimulationScript,
-  normalizeWrittenTurn
+  normalizeWrittenTurn,
+  normalizeCardUtterance
 };

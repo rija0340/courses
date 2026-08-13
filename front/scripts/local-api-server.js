@@ -38,6 +38,7 @@ const speak = require('../api/speech/speak');
 const generate = require('../api/llm/generate');
 const writtenTurn = require('../api/llm/written-turn');
 const quizFeedback = require('../api/llm/quiz-feedback');
+const cardUtterance = require('../api/llm/card-utterance');
 const aiHealth = require('../api/ai/health');
 
 const PORT = Number(process.env.API_PORT || 3001);
@@ -48,6 +49,7 @@ const routes = {
   'POST /api/llm/generate': generate,
   'POST /api/llm/written-turn': writtenTurn,
   'POST /api/llm/quiz-feedback': quizFeedback,
+  'POST /api/llm/card-utterance': cardUtterance,
   'GET /api/ai/health': aiHealth
 };
 

@@ -2,9 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { speechService } from '../services/speechService';
 
 /**
- * Record mic → assess pronunciation against targetText.
+ * Record mic → assess. Default: overlap score vs targetText.
+ * Pass `assess(transcriptText)` to replace scoring (e.g. card utterance).
  */
-export function usePronunciation(targetText) {
+export function usePronunciation(targetText, options = {}) {
+  const assessRef = useRef(options.assess);
+  assessRef.current = options.assess;
   const [status, setStatus] = useState('idle'); // idle | recording | scoring | done | error
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -70,10 +73,20 @@ export function usePronunciation(targetText) {
     });
 
     try {
-      const { result: scored } = await speechService.assessPronunciation(targetText, blob, {
-        language: 'en',
-        targetHint: targetText
-      });
+      let scored;
+      if (typeof assessRef.current === 'function') {
+        const transcript = await speechService.transcribe(blob, {
+          language: 'en',
+          targetHint: targetText
+        });
+        scored = await assessRef.current(transcript?.text || '');
+      } else {
+        const pack = await speechService.assessPronunciation(targetText, blob, {
+          language: 'en',
+          targetHint: targetText
+        });
+        scored = pack.result;
+      }
       setResult(scored);
       setStatus('done');
     } catch (err) {

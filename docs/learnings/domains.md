@@ -34,6 +34,7 @@ Utilise ces domaines. Si un nouveau domaine est nécessaire, **ajoute-le ici** a
 | `naming` | Noms clairs, intention révélée |
 | `readability` | Lisibilité, complexité cognitive |
 | `tooling` | CI, lint, build, scripts — ce qui casse avant le runtime |
+| `learning` | Pédagogie, évaluation, feedback apprenant |
 
 ## Bonnes pratiques nommées (références)
 

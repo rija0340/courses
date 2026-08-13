@@ -6,6 +6,7 @@ Tags : voir [`domains.md`](./domains.md).
 
 | Date | Feature | Tags | Décision | Options rejetées | Pourquoi rejetée | Piège | Pratique / principe nommé |
 |------|---------|------|----------|------------------|------------------|-------|---------------------------|
+| 2026-08-13 | Card utterance assessment | `ux` `learning` `api-design` | Juge phrase dédié (contexte 45%) ; oral = transcribe puis même juge | Réutiliser written-turn ; overlap pronunciation | Dialogue hors sujet ; pénalise les mots en trop | Répéter l’exemple ≠ seule réponse valide | SRP ; ports & adapters ; fail safely in prod |
 | 2026-08-13 | Vercel build quiz unused var | `tooling` `error-handling` | Réutiliser `canStart` sur le bouton quiz | `CI=false` / disable ESLint | Cache le signal ; casse le garde-fou UX | Vercel `CI=true` = warning ESLint = fail | fail loudly in CI ; no dead assignments |
 | 2026-08-12 | Admin tab-focus refresh | `effects` `state` | Hook `useSupabaseAdminSession` + deps `userId` | Désactiver autoRefresh Supabase ; refetchOnWindowFocus | Casse le refresh token ; pas de React Query | `SIGNED_IN` ≠ vrai login au focus | distinguish side-effect triggers ; stable dependency keys |
 | 2026-08-12 | Vocab structure racine | `data-modeling` `ux` | itemStructure sur racine + héritage ; EN requis ; translate par colonne | Profils nommés ; table-only | Trop figé / mauvais mobile | Confondre tabs et structure | SSOT ; Open/Closed |

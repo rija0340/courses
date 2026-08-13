@@ -3,20 +3,54 @@ import { Mic, Square, RotateCcw, Volume2, Keyboard } from 'lucide-react';
 import { usePronunciation } from '../hooks/usePronunciation';
 import { speechService } from '../services/speechService';
 import { scorePronunciation } from '../domain/pronunciation';
+import { collectCardLexicon } from '../domain/cardUtterance';
+import { cardUtteranceService } from '../services/cardUtteranceService';
 import { coercePhoneticString } from '../../data/vocabs/vocabItemStructure';
+import WrittenFeedbackPanel from './WrittenFeedbackPanel';
+
+const DIM_LABELS = [
+  { key: 'contextUse', label: 'Contexte' },
+  { key: 'grammar', label: 'Grammaire' },
+  { key: 'naturalness', label: 'Naturel' },
+  { key: 'sentenceLevel', label: 'Niveau' },
+];
+
+function dimColor(n) {
+  if (n >= 80) return 'text-emerald-700 bg-emerald-50 border-emerald-100';
+  if (n >= 55) return 'text-amber-700 bg-amber-50 border-amber-100';
+  return 'text-red-700 bg-red-50 border-red-100';
+}
 
 /**
- * Oral (mic) + typed practice against targetText, with score feedback.
+ * Oral (mic) + typed practice.
+ * - Default: repeat targetText (dialogue lines).
+ * - With `item`: produce a sentence using the card lexicon (headword / syn / ant).
  */
-export default function PronunciationPractice({ targetText, phonetic }) {
-  const { status, result, error, start, stop, reset } = usePronunciation(targetText);
+export default function PronunciationPractice({
+  targetText,
+  phonetic,
+  item = null,
+  itemStructure = null,
+}) {
+  const utteranceMode = Boolean(item && targetText);
+  const assessUtterance = React.useCallback(
+    (text) => cardUtteranceService.assess({ learnerText: text, item, itemStructure }),
+    [item, itemStructure]
+  );
+  const { status, result, error, start, stop, reset } = usePronunciation(
+    targetText,
+    utteranceMode ? { assess: assessUtterance } : {}
+  );
   const [listening, setListening] = React.useState(false);
-  const [mode, setMode] = React.useState('speak'); // speak | type
+  const [mode, setMode] = React.useState('speak');
   const [typed, setTyped] = React.useState('');
   const [typedResult, setTypedResult] = React.useState(null);
+  const [typedChecking, setTypedChecking] = React.useState(false);
 
   const ipa = coercePhoneticString(phonetic);
   const displayResult = mode === 'type' ? typedResult : result;
+  const lexicon = utteranceMode ? collectCardLexicon(item, itemStructure) : null;
+  const relatedHint = (lexicon?.related || []).slice(0, 4).map((r) => r.word).join(', ');
 
   const handleModel = async (e) => {
     e.stopPropagation();
@@ -29,16 +63,32 @@ export default function PronunciationPractice({ targetText, phonetic }) {
     }
   };
 
-  const handleTypedCheck = (e) => {
+  const handleTypedCheck = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (!targetText || !typed.trim()) return;
+    if (utteranceMode) {
+      setTypedChecking(true);
+      try {
+        setTypedResult(await assessUtterance(typed.trim()));
+      } catch (err) {
+        setTypedResult({
+          score: 0,
+          heardText: typed.trim(),
+          tips: [err.message || 'Évaluation indisponible'],
+        });
+      } finally {
+        setTypedChecking(false);
+      }
+      return;
+    }
     setTypedResult(scorePronunciation(targetText, typed.trim()));
   };
 
   const handleTypedReset = () => {
     setTyped('');
     setTypedResult(null);
+    setTypedChecking(false);
   };
 
   const switchMode = (next) => {
@@ -46,6 +96,8 @@ export default function PronunciationPractice({ targetText, phonetic }) {
     if (next === 'speak') handleTypedReset();
     else reset();
   };
+
+  const busy = status === 'scoring' || typedChecking;
 
   return (
     <div
@@ -66,6 +118,14 @@ export default function PronunciationPractice({ targetText, phonetic }) {
           Modèle
         </button>
       </div>
+
+      {utteranceMode && (
+        <p className="text-[12px] text-[#3c4043] leading-snug mb-2">
+          Inventez une phrase anglaise avec « {targetText} »
+          {relatedHint ? ` (ou ${relatedHint})` : ' (synonyme / antonyme de la carte OK)'}.
+          L’exemple n’est pas obligatoire — le juge vérifie surtout le <strong>bon contexte</strong>, puis grammaire, naturel et niveau.
+        </p>
+      )}
 
       <div className="flex gap-1 mb-2.5 p-0.5 rounded-lg bg-white/70 border border-emerald-100">
         <button
@@ -98,11 +158,11 @@ export default function PronunciationPractice({ targetText, phonetic }) {
             <button
               type="button"
               onClick={start}
-              disabled={status === 'scoring' || !targetText}
+              disabled={busy || !targetText}
               className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white text-[12px] font-semibold px-3 py-1.5 hover:bg-emerald-700 disabled:opacity-50"
             >
               <Mic className="w-3.5 h-3.5" />
-              {status === 'scoring' ? 'Score…' : 'Parler'}
+              {status === 'scoring' ? 'Analyse…' : 'Parler'}
             </button>
           ) : (
             <button
@@ -130,21 +190,33 @@ export default function PronunciationPractice({ targetText, phonetic }) {
         </div>
       ) : (
         <form onSubmit={handleTypedCheck} className="space-y-2">
-          <input
-            value={typed}
-            onChange={(e) => setTyped(e.target.value)}
-            placeholder={`Taper « ${targetText || ''} »`}
-            className="w-full h-10 rounded-lg border border-[#dadce0] bg-white px-3 text-[14px] outline-none focus:border-emerald-500"
-            autoComplete="off"
-            spellCheck={false}
-          />
+          {utteranceMode ? (
+            <textarea
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              placeholder={`Ex. I woke up with a bad ${targetText || '…'}.`}
+              rows={3}
+              className="w-full rounded-lg border border-[#dadce0] bg-white px-3 py-2 text-[14px] outline-none focus:border-emerald-500 resize-y min-h-[4.5rem]"
+              autoComplete="off"
+              spellCheck={false}
+            />
+          ) : (
+            <input
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              placeholder={`Taper « ${targetText || ''} »`}
+              className="w-full h-10 rounded-lg border border-[#dadce0] bg-white px-3 text-[14px] outline-none focus:border-emerald-500"
+              autoComplete="off"
+              spellCheck={false}
+            />
+          )}
           <div className="flex items-center gap-2">
             <button
               type="submit"
-              disabled={!targetText || !typed.trim()}
+              disabled={!targetText || !typed.trim() || typedChecking}
               className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white text-[12px] font-semibold px-3 py-1.5 hover:bg-emerald-700 disabled:opacity-50"
             >
-              Vérifier
+              {typedChecking ? 'Analyse…' : 'Vérifier'}
             </button>
             {typedResult && (
               <button
@@ -178,13 +250,36 @@ export default function PronunciationPractice({ targetText, phonetic }) {
             >
               {displayResult.score}%
             </div>
-            <div className="text-[12px] text-[#5f6368]">intelligibilité</div>
+            <div className="text-[12px] text-[#5f6368]">
+              {utteranceMode ? 'phrase (contexte pondéré)' : 'intelligibilité'}
+            </div>
           </div>
+
+          {utteranceMode && displayResult.dimensions && (
+            <div className="grid grid-cols-2 gap-1.5">
+              {DIM_LABELS.map(({ key, label }) => {
+                const n = displayResult.dimensions[key] ?? 0;
+                return (
+                  <div
+                    key={key}
+                    className={`rounded-lg border px-2 py-1.5 ${dimColor(n)}`}
+                  >
+                    <div className="text-[10px] font-semibold uppercase tracking-wide opacity-80">
+                      {label}
+                    </div>
+                    <div className="text-[14px] font-bold tabular-nums">{n}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           <div className="text-[12px] text-[#3c4043]">
             <span className="text-[#9aa0a6]">{mode === 'type' ? 'Saisi : ' : 'Entendu : '}</span>
-            {displayResult.heardText || '—'}
+            {displayResult.heardText || displayResult.learnerText || '—'}
           </div>
-          {!!displayResult.wordFeedback?.length && (
+
+          {!utteranceMode && !!displayResult.wordFeedback?.length && (
             <div className="flex flex-wrap gap-1">
               {displayResult.wordFeedback.map((w, i) => (
                 <span
@@ -200,11 +295,24 @@ export default function PronunciationPractice({ targetText, phonetic }) {
               ))}
             </div>
           )}
-          {displayResult.tips?.slice(0, 2).map((tip) => (
-            <div key={tip} className="text-[12px] text-[#5f6368]">
-              {tip}
-            </div>
-          ))}
+
+          {!utteranceMode &&
+            displayResult.tips?.slice(0, 2).map((tip) => (
+              <div key={tip} className="text-[12px] text-[#5f6368]">
+                {tip}
+              </div>
+            ))}
+
+          {utteranceMode && displayResult.feedback && (
+            <WrittenFeedbackPanel
+              feedback={displayResult.feedback}
+              onSpeakReformulation={
+                displayResult.feedback.reformulation
+                  ? () => speechService.speak(displayResult.feedback.reformulation)
+                  : undefined
+              }
+            />
+          )}
         </div>
       )}
     </div>

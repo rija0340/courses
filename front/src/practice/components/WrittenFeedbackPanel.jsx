@@ -10,7 +10,9 @@ const CATEGORY_LABELS = {
   preposition: 'Préposition',
   article: 'Article',
   collocation: 'Expression / collocation',
-  word_order: 'Ordre des mots'
+  word_order: 'Ordre des mots',
+  context_use: 'Mot en contexte',
+  sentence_level: 'Niveau de phrase'
 };
 
 export default function WrittenFeedbackPanel({ feedback, onSpeakReformulation }) {

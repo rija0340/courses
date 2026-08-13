@@ -115,3 +115,21 @@ sequenceDiagram
 **Pourquoi :** `canStart` existait encore après le refactor UI mais n’était plus passé à `disabled` — le bouton Simulation écrit, lui, le branche encore.
 **Pas choisi :** désactiver ESLint / `CI=false` sur Vercel (ça masquerait les prochaines fuites).
 **À retenir :** un unused var suffit à faire rater le deploy prod ; vérifier avec `CI=true npm run build`.
+
+### 2026-08-13 - Pratique carte : phrase en contexte
+**Tags :** `ux` `learning` `api-design`
+**Bonne pratique :** Single Responsibility ; ports & adapters ; fail safely in prod
+**Concept :** produce-and-assess — l’apprenant invente une phrase avec le mot (ou syn/ant) ; le score pondère le **contexte** (45 %), puis grammaire, naturel, niveau. L’exemple n’est pas obligatoire.
+**Pourquoi :** `scorePronunciation` comparait au titre et pénalisait les mots en trop — exactement l’inverse d’une production libre.
+**Pas choisi :** réutiliser `written-turn` (c’est un dialogue) ; heuristique seule (ne détecte pas le mauvais sens d’un homographe).
+**À retenir :** le drill « répéter la réplique » reste sur les exemples ; la carte vocab juge une phrase.
+
+```mermaid
+flowchart LR
+  Carte -->|oral ou texte| Juge
+  Juge -->|Groq ou mock| Dimensions
+  Dimensions --> Contexte
+  Dimensions --> Grammaire
+  Dimensions --> Naturel
+  Dimensions --> Niveau
+```
