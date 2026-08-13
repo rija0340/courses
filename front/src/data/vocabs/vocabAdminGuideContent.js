@@ -1,3 +1,5 @@
+import { pickLangText } from './vocabItemStructure';
+
 export const VOCAB_ADMIN_GUIDE = {
   pageTitle: {
     fr: 'Guide administrateur',
@@ -70,7 +72,5 @@ export const VOCAB_ADMIN_GUIDE = {
 };
 
 export function getAdminGuideText(obj, lang) {
-  if (!obj) return '';
-  if (typeof obj === 'string') return obj;
-  return obj[lang] || obj.fr || obj.en || '';
+  return pickLangText(obj, lang);
 }

@@ -16,6 +16,7 @@ import WrittenFeedbackPanel from './WrittenFeedbackPanel';
 import { speechService } from '../services/speechService';
 import { simulationUi } from '../data/simulationUiCopy';
 import { getScenarioProfile } from '../data/scenarioProfiles';
+import { coerceDisplayText } from '../../data/vocabs/vocabItemStructure';
 import { MAX_PRACTICE_VOCAB, capVocabularyForGeneration } from '../domain/topicVocabulary';
 import {
   PracticeCard,
@@ -331,7 +332,7 @@ export default function QuizPracticePanel({
               {current.prompt}
             </p>
             {current.hint && (
-              <p className="text-[12px] text-[#94a3b8]">Indice : {current.hint}</p>
+              <p className="text-[12px] text-[#94a3b8]">Indice : {coerceDisplayText(current.hint)}</p>
             )}
 
           {!lastResult && (

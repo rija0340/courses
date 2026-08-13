@@ -1,3 +1,8 @@
+import {
+  coerceDisplayText,
+  coercePhoneticString,
+} from '../../data/vocabs/vocabItemStructure';
+
 /**
  * Build quiz items from vocab list / free theme.
  */
@@ -21,9 +26,16 @@ function shuffle(arr) {
 }
 
 function wordDef(item) {
-  if (item.fr) return item.fr;
-  if (item.mg) return item.mg;
-  return `English word related to ${item.en}`;
+  const fr = coerceDisplayText(item?.fr);
+  if (fr) return fr;
+  const mg = coerceDisplayText(item?.mg);
+  if (mg) return mg;
+  const en = coerceDisplayText(item?.en);
+  return en ? `English word related to ${en}` : '';
+}
+
+function wordEn(item) {
+  return coerceDisplayText(item?.en) || coerceDisplayText(item?.word) || '';
 }
 
 export function buildQuizDeck({ words = [], types = ['definition_to_word'], limit = 8, scenarioKind = 'general' } = {}) {
@@ -32,14 +44,14 @@ export function buildQuizDeck({ words = [], types = ['definition_to_word'], limi
   const medical = scenarioKind === 'medical';
   return list.map((item, index) => {
     const exerciseType = typeCycle[index % typeCycle.length];
-    const en = item.en || item.word || '';
+    const en = wordEn(item);
     if (exerciseType === 'definition_to_word') {
       return {
         id: `q-${item.id || index}`,
         exerciseType,
         prompt: `Quel est le mot anglais pour : « ${wordDef(item)} » ?`,
         expected: en,
-        hint: item.phonetic || null,
+        hint: coercePhoneticString(item.phonetic) || null,
         item
       };
     }

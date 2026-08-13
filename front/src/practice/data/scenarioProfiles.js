@@ -1,3 +1,5 @@
+import { pickLangText } from '../../data/vocabs/vocabItemStructure';
+
 /**
  * Domain-aware scenario profiles for practice simulation.
  * Medical = medi-vocabs; everything else = general two-role dialogue.
@@ -190,7 +192,7 @@ export function getScenarioProfile(domainId, promptId = null) {
 export function roleLabel(profile, roleId, lang = 'fr') {
   const role = (profile?.roles || []).find((r) => r.id === roleId);
   if (!role) return roleId || '';
-  return role.label?.[lang] || role.label?.en || role.id;
+  return pickLangText(role.label, lang) || role.id;
 }
 
 export function partnerRoleFor(profile, learnerRole) {

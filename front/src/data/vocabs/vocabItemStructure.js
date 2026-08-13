@@ -121,6 +121,12 @@ export function coerceDisplayText(value, preferredKeys = ['en', 'fr', 'mg'], dep
   return '';
 }
 
+/** Prefer UI lang, then fr / en / mg. Always a string (never a React child object). */
+export function pickLangText(value, lang = 'fr') {
+  const order = [lang, 'fr', 'en', 'mg'].filter((k, i, arr) => arr.indexOf(k) === i);
+  return coerceDisplayText(value, order);
+}
+
 /**
  * IPA column is always a plain string (EN-first).
  * Accepts "/ˈhæpi/", { en: "/ˈhæpi/" }, nested objects, JSON strings.
@@ -156,9 +162,9 @@ function normalizeFieldLabel(raw, fallbackId, catalogMeta) {
     : { fr: fallbackId, en: fallbackId, mg: '' };
   if (!raw || typeof raw !== 'object') return base;
   return {
-    fr: raw.fr != null && String(raw.fr).trim() ? String(raw.fr) : base.fr,
-    en: raw.en != null && String(raw.en).trim() ? String(raw.en) : (base.en || base.fr),
-    mg: raw.mg != null ? String(raw.mg) : (base.mg || ''),
+    fr: coerceDisplayText(raw.fr, ['fr', 'en', 'mg']) || base.fr,
+    en: coerceDisplayText(raw.en, ['en', 'fr', 'mg']) || base.en || base.fr,
+    mg: coerceDisplayText(raw.mg, ['mg', 'fr', 'en']) || base.mg || '',
   };
 }
 
@@ -253,18 +259,19 @@ export function getStructureFieldMeta(fieldId) {
   return STRUCTURE_FIELD_CATALOG[fieldId] || null;
 }
 
-/** Accept field def object or id string. */
+/** Accept field def object, id string, or a raw `{fr,en,mg}` label. Always a string. */
 export function structureFieldLabel(fieldOrId, lang = 'fr') {
   if (fieldOrId && typeof fieldOrId === 'object') {
-    const label = fieldOrId.label;
-    if (label && typeof label === 'object') {
-      return label[lang] || label.fr || label.en || fieldOrId.id || '';
-    }
-    return fieldOrId.id || '';
+    const fromLabel = pickLangText(fieldOrId.label, lang);
+    if (fromLabel) return fromLabel;
+    if (typeof fieldOrId.label === 'string' && fieldOrId.label.trim()) return fieldOrId.label.trim();
+    const fromSelf = pickLangText(fieldOrId, lang);
+    if (fromSelf) return fromSelf;
+    return typeof fieldOrId.id === 'string' ? fieldOrId.id : '';
   }
   const meta = getStructureFieldMeta(fieldOrId);
-  if (!meta) return fieldOrId || '';
-  return meta.label?.[lang] || meta.label?.fr || fieldOrId;
+  if (!meta) return typeof fieldOrId === 'string' ? fieldOrId : '';
+  return pickLangText(meta.label, lang) || (typeof fieldOrId === 'string' ? fieldOrId : '');
 }
 
 export function structureHeadLangs(structure) {

@@ -10,6 +10,7 @@ import PronunciationPractice from '../../practice/components/PronunciationPracti
 import { isPracticeEnabled } from '../../practice/config';
 import { speechService } from '../../practice/services/speechService';
 import { hasText, highlightCollocation } from '../../utils/vocabDialogue';
+import { coerceDisplayText } from '../../data/vocabs/vocabItemStructure';
 
 const ROWS = [
   { code: 'EN', key: 'en' },
@@ -32,7 +33,7 @@ export default function DialogueLangLines({
 
   if (!line) return null;
 
-  const en = line.en?.trim() || '';
+  const en = coerceDisplayText(line.en);
   const canPractice = enablePractice && isPracticeEnabled() && !!en;
 
   const handleSpeak = async (e) => {
@@ -46,15 +47,15 @@ export default function DialogueLangLines({
     }
   };
 
-  const rows = ROWS.filter(({ key }) => hasText(line[key]));
+  const rows = ROWS.filter(({ key }) => hasText(coerceDisplayText(line[key])));
   if (rows.length === 0) return null;
 
   return (
     <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
       {rows.map(({ code, key }) => {
-        const text = line[key].trim();
+        const text = coerceDisplayText(line[key]);
         const style = LANG_STYLES[code];
-        const term = highlightTerms?.[key];
+        const term = coerceDisplayText(highlightTerms?.[key]);
         const isEn = key === 'en';
 
         return (

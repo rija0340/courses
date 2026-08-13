@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { coerceDisplayText } from '../../../data/vocabs/vocabItemStructure';
 
 /**
  * Shared preview modal for vocab JSON import (items-only or full domain).
@@ -196,7 +197,9 @@ export default function ImportPreviewModal({
                           Déjà en base :{' '}
                           {group.existingIds.map((id) => {
                             const ex = existingById.get(id);
-                            return ex ? `${ex.en || '—'} / ${ex.fr || '—'}` : id;
+                            return ex
+                              ? `${coerceDisplayText(ex.en) || '—'} / ${coerceDisplayText(ex.fr) || '—'}`
+                              : id;
                           }).join(' · ')}
                         </p>
                       )}
@@ -216,7 +219,7 @@ export default function ImportPreviewModal({
                                 className="mt-0.5 w-3.5 h-3.5 rounded border-[#dadce0] text-[#1a73e8] focus:ring-[#1a73e8]"
                               />
                               <span>
-                                Inclure « {item.en || '—'} » / « {item.fr || '—'} »
+                                Inclure « {coerceDisplayText(item.en) || '—'} » / « {coerceDisplayText(item.fr) || '—'} »
                                 <span className="text-[#9aa0a6]"> · id {item.id || '?'}</span>
                               </span>
                             </label>

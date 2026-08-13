@@ -11,6 +11,7 @@ import {
   structureHeadLangs,
   normalizeListField,
   pickI18nText,
+  pickLangText,
   fieldHasContent,
   hasText,
   listEntryPrimary,
@@ -50,6 +51,7 @@ const LANG_ROWS = [
 
 function Section({ label, children, soft, compact = false }) {
   const tone = soft || DEFAULT_FIELD_SOFT;
+  const labelText = typeof label === 'string' ? label : pickLangText(label);
   if (compact) {
     return (
       <div className="flex flex-col items-center text-center px-2 py-1 min-w-[7rem] max-w-full">
@@ -57,7 +59,7 @@ function Section({ label, children, soft, compact = false }) {
           className="text-[10px] font-bold uppercase tracking-wider mb-1"
           style={{ color: tone.text }}
         >
-          {label}
+          {labelText}
         </p>
         <div className="text-[14px] sm:text-[15px] text-[#3c4043] leading-snug w-full flex justify-center">
           {children}
@@ -71,7 +73,7 @@ function Section({ label, children, soft, compact = false }) {
         className="text-[10px] font-bold uppercase tracking-wider mb-1"
         style={{ color: tone.text }}
       >
-        {label}
+        {labelText}
       </p>
       <div className="text-[14px] sm:text-[15px] text-[#3c4043] leading-snug">{children}</div>
     </div>

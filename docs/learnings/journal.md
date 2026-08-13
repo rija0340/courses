@@ -133,3 +133,20 @@ flowchart LR
   Dimensions --> Naturel
   Dimensions --> Niveau
 ```
+
+### 2026-08-13 - React #31 : objet i18n en enfant
+**Tags :** `error-handling` `visibility` `data-modeling`
+**Bonne pratique :** coerce at boundaries
+**Concept :** React refuse `{en, fr, mg}` comme child. `pickLangText` + `coerceDisplayText` extraient une string (y compris i18n imbriqué) avant le JSX — mode Image, labels, scénarios, admin.
+**Pourquoi :** `VocabCard` était déjà protégé ; `VocabsView` image grid et `getLabel` (`obj[lang] \|\| obj.fr`) laissaient fuir l’objet.
+**Pas choisi :** ErrorBoundary seul (ça masque) ; `String(obj)` (`[object Object]`).
+**À retenir :** un champ « texte » qui vaut `{en,fr,mg}` doit passer par un picker, jamais `{item.en}` brut.
+
+Le crash restant (clés `{fr, en, mg}` dans un `<p>`) venait de `PracticeSimulation` : `domain.meta.title` interpolé tel quel à côté d’un `<span>`. Même piège : `obj[lang] || obj.fr` si `fr` est encore un objet.
+
+```mermaid
+flowchart LR
+  Donnee["valeur i18n"] --> Picker["pickLangText / coerceDisplayText"]
+  Picker --> String["string"]
+  String --> JSX["React child"]
+```

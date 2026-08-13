@@ -34,11 +34,24 @@ export function getPath(categories, id) {
   return [];
 }
 
+/** Keep labels as strings so <option>{c.label}</option> never receives {en,fr,mg}. */
+function flattenLabel(label, lang, depth = 0) {
+  if (label == null || depth > 6) return '';
+  if (typeof label === 'string') return label.trim();
+  if (typeof label !== 'object') return '';
+  for (const key of [lang, 'fr', 'en', 'mg']) {
+    if (label[key] == null) continue;
+    const inner = flattenLabel(label[key], lang, depth + 1);
+    if (inner) return inner;
+  }
+  return '';
+}
+
 export function flattenTree(categories, lang = 'fr', depth = 0, parentPath = '') {
   if (!Array.isArray(categories)) return [];
   const result = [];
   categories.forEach(node => {
-    const label = typeof node.label === 'string' ? node.label : (node.label?.[lang] || node.label?.fr || '');
+    const label = flattenLabel(node.label, lang);
     const path = parentPath ? `${parentPath} > ${label}` : label;
     result.push({ id: node.id, label, path, depth });
     if (node.children?.length) {

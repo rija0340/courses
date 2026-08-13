@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Send, Loader2, MessageCircle, AlertCircle, BookOpen } from 'lucide-react';
 import { AppContext } from '../App';
 import { sendRagChat } from '../lib/ragClient';
+import { coerceDisplayText } from '../data/vocabs/vocabItemStructure';
 
 const SUPPORTED = 'medi-vocabs';
 
@@ -132,8 +133,8 @@ export default function VocabsChat() {
                 <ul className="space-y-1.5">
                   {sources.map((s) => (
                     <li key={s.id} className="text-[12px] text-[#3c4043]">
-                      <span className="font-semibold text-[#1a73e8]">{s.en}</span>
-                      {s.fr ? <span className="text-[#5f6368]"> · {s.fr}</span> : null}
+                      <span className="font-semibold text-[#1a73e8]">{coerceDisplayText(s.en)}</span>
+                      {coerceDisplayText(s.fr) ? <span className="text-[#5f6368]"> · {coerceDisplayText(s.fr)}</span> : null}
                       {typeof s.similarity === 'number' ? (
                         <span className="text-[#9aa0a6]"> · {(s.similarity * 100).toFixed(0)}%</span>
                       ) : null}

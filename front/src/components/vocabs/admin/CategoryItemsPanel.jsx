@@ -12,6 +12,7 @@ import {
   summarizeListField,
   pickI18nText,
   fieldHasContent,
+  coerceDisplayText,
 } from '../../../data/vocabs/vocabItemStructure';
 import { EmptyState, ConfirmModal, ImageModal } from './shared';
 import FullscreenLightbox from '../FullscreenLightbox';
@@ -197,7 +198,7 @@ export default function CategoryItemsPanel({
       return summarizeListField(item[fieldDef.id], fieldDef.translate);
     }
     if (fieldDef.translate) return pickI18nText(item[fieldDef.id], 'en');
-    return item[fieldDef.id] || '';
+    return coerceDisplayText(item[fieldDef.id]);
   };
 
   return (
@@ -342,9 +343,9 @@ export default function CategoryItemsPanel({
                         className="w-4 h-4 rounded border-[#dadce0] text-[#1a73e8]"
                       />
                     </td>
-                    <td className="px-3 py-2.5 font-medium text-[#202124]">{item.en}</td>
+                    <td className="px-3 py-2.5 font-medium text-[#202124]">{coerceDisplayText(item.en)}</td>
                     {headLangs.map((l) => (
-                      <td key={l} className="px-3 py-2.5 text-[#3c4043]">{item[l] || '—'}</td>
+                      <td key={l} className="px-3 py-2.5 text-[#3c4043]">{coerceDisplayText(item[l]) || '—'}</td>
                     ))}
                     {structureFields.map((f) => (
                       <td key={f.id} className="px-3 py-2.5 text-[#3c4043] max-w-[160px] truncate">
@@ -382,13 +383,16 @@ export default function CategoryItemsPanel({
                     className="w-4 h-4 mt-1 rounded border-[#dadce0] text-[#1a73e8]"
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[16px] font-semibold text-[#202124]">{item.en}</p>
-                    {headLangs.map((l) => item[l] ? (
+                    <p className="text-[16px] font-semibold text-[#202124]">{coerceDisplayText(item.en)}</p>
+                    {headLangs.map((l) => {
+                      const text = coerceDisplayText(item[l]);
+                      return text ? (
                       <p key={l} className="text-[13px] text-[#5f6368]">
                         <span className="uppercase text-[10px] font-bold text-[#9aa0a6] mr-1">{l}</span>
-                        {item[l]}
+                        {text}
                       </p>
-                    ) : null)}
+                      ) : null;
+                    })}
                   </div>
                   <div className="flex gap-0.5">
                     <button type="button" onClick={() => { setEditItem(item); setShowForm(true); }} className="w-9 h-9 rounded-lg hover:bg-[#f1f3f4] flex items-center justify-center">
@@ -436,12 +440,12 @@ export default function CategoryItemsPanel({
                 <li key={item.id} className={`group ${isSelected ? 'bg-[#E8F0FE]/50' : 'hover:bg-[#f8f9fa]/80'}`}>
                   <div className="flex items-center gap-3 px-3 py-2.5">
                     <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(item.id)} className="w-4 h-4 rounded border-[#dadce0] text-[#1a73e8]" />
-                    <button type="button" onClick={() => (img ? setLightbox({ src: img, alt: item.fr || item.en }) : setImageItemId(item.id))} className="w-11 h-11 rounded-xl overflow-hidden bg-[#f1f3f4] border border-[#dadce0]/80 flex items-center justify-center shrink-0">
+                    <button type="button" onClick={() => (img ? setLightbox({ src: img, alt: coerceDisplayText(item.fr) || coerceDisplayText(item.en) }) : setImageItemId(item.id))} className="w-11 h-11 rounded-xl overflow-hidden bg-[#f1f3f4] border border-[#dadce0]/80 flex items-center justify-center shrink-0">
                       {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <ImageOff className="w-4 h-4 text-[#9aa0a6]" />}
                     </button>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-medium text-[#202124] truncate">{item.en || item.fr}</p>
-                      <p className="text-[12px] text-[#5f6368] truncate">{[item.fr, item.mg].filter(Boolean).join(' · ')}</p>
+                      <p className="text-[14px] font-medium text-[#202124] truncate">{coerceDisplayText(item.en) || coerceDisplayText(item.fr)}</p>
+                      <p className="text-[12px] text-[#5f6368] truncate">{[coerceDisplayText(item.fr), coerceDisplayText(item.mg)].filter(Boolean).join(' · ')}</p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <button type="button" onClick={() => setImageItemId(item.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5f6368] hover:bg-[#e8eaed]"><ImageIcon className="w-3.5 h-3.5" /></button>
@@ -464,8 +468,8 @@ export default function CategoryItemsPanel({
                 <div className="p-3 flex items-start gap-2">
                   <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(item.id)} className="w-4 h-4 mt-1" />
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-[14px] font-medium truncate">{item.en || item.fr}</h4>
-                    <p className="text-[12px] text-[#5f6368] truncate">{[item.fr, item.mg].filter(Boolean).join(' · ')}</p>
+                    <h4 className="text-[14px] font-medium truncate">{coerceDisplayText(item.en) || coerceDisplayText(item.fr)}</h4>
+                    <p className="text-[12px] text-[#5f6368] truncate">{[coerceDisplayText(item.fr), coerceDisplayText(item.mg)].filter(Boolean).join(' · ')}</p>
                   </div>
                   <button type="button" onClick={() => { setEditItem(item); setShowForm(true); }} className="w-8 h-8 rounded-lg hover:bg-white flex items-center justify-center"><Pencil className="w-3.5 h-3.5" /></button>
                   <button type="button" onClick={() => setConfirmDelete(item)} className="w-8 h-8 rounded-lg hover:bg-red-50 flex items-center justify-center text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -495,7 +499,7 @@ export default function CategoryItemsPanel({
       {confirmDelete && (
         <ConfirmModal
           title="Supprimer ce mot ?"
-          text={`« ${confirmDelete.en || confirmDelete.fr || confirmDelete.id} » sera définitivement supprimé.`}
+          text={`« ${coerceDisplayText(confirmDelete.en) || coerceDisplayText(confirmDelete.fr) || confirmDelete.id} » sera définitivement supprimé.`}
           onCancel={() => setConfirmDelete(null)}
           onConfirm={() => handleDelete(confirmDelete.id)}
           confirmText="Supprimer"
@@ -516,7 +520,7 @@ export default function CategoryItemsPanel({
 
       {imageItemId && (
         <ImageModal
-          title={`Image — ${items.find(i => i.id === imageItemId)?.fr || imageItemId}`}
+          title={`Image — ${coerceDisplayText(items.find(i => i.id === imageItemId)?.fr) || coerceDisplayText(items.find(i => i.id === imageItemId)?.en) || imageItemId}`}
           currentImage={itemImages[imageItemId] || null}
           onSave={(b64) => handleImageSave(imageItemId, b64)}
           onDelete={() => handleImageDelete(imageItemId)}

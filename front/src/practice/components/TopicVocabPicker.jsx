@@ -9,6 +9,7 @@ import {
   collectTopicVocabulary,
 } from '../domain/topicVocabulary';
 import { TOPIC_TAB_LABEL_KEYS } from '../data/simulationUiCopy';
+import { coerceDisplayText } from '../../data/vocabs/vocabItemStructure';
 
 export default function TopicVocabPicker({
   items,
@@ -142,9 +143,9 @@ export default function TopicVocabPicker({
                     onChange={() => toggle(w.id)}
                     className="w-4 h-4 rounded border-[#dadce0] text-[#1a73e8] focus:ring-[#1a73e8]"
                   />
-                  <span className="text-[13px] text-[#202124] font-medium">{w.en}</span>
-                  {w.fr && (
-                    <span className="text-[12px] text-[#5f6368] truncate">{w.fr}</span>
+                  <span className="text-[13px] text-[#202124] font-medium">{coerceDisplayText(w.en)}</span>
+                  {coerceDisplayText(w.fr) && (
+                    <span className="text-[12px] text-[#5f6368] truncate">{coerceDisplayText(w.fr)}</span>
                   )}
                 </label>
               );

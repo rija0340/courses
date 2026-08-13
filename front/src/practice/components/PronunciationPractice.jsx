@@ -5,7 +5,7 @@ import { speechService } from '../services/speechService';
 import { scorePronunciation } from '../domain/pronunciation';
 import { collectCardLexicon } from '../domain/cardUtterance';
 import { cardUtteranceService } from '../services/cardUtteranceService';
-import { coercePhoneticString } from '../../data/vocabs/vocabItemStructure';
+import { coercePhoneticString, coerceDisplayText } from '../../data/vocabs/vocabItemStructure';
 import WrittenFeedbackPanel from './WrittenFeedbackPanel';
 
 const DIM_LABELS = [
@@ -48,6 +48,7 @@ export default function PronunciationPractice({
   const [typedChecking, setTypedChecking] = React.useState(false);
 
   const ipa = coercePhoneticString(phonetic);
+  const displayTarget = coerceDisplayText(targetText);
   const displayResult = mode === 'type' ? typedResult : result;
   const lexicon = utteranceMode ? collectCardLexicon(item, itemStructure) : null;
   const relatedHint = (lexicon?.related || []).slice(0, 4).map((r) => r.word).join(', ');
@@ -121,7 +122,7 @@ export default function PronunciationPractice({
 
       {utteranceMode && (
         <p className="text-[12px] text-[#3c4043] leading-snug mb-2">
-          Inventez une phrase anglaise avec « {targetText} »
+          Inventez une phrase anglaise avec « {displayTarget} »
           {relatedHint ? ` (ou ${relatedHint})` : ' (synonyme / antonyme de la carte OK)'}.
           L’exemple n’est pas obligatoire — le juge vérifie surtout le <strong>bon contexte</strong>, puis grammaire, naturel et niveau.
         </p>

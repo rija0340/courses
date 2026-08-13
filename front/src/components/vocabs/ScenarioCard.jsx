@@ -7,11 +7,18 @@ import { ChevronDown, MessagesSquare, Volume2 } from 'lucide-react';
 import { hasText } from '../../utils/vocabDialogue';
 import DialogueLangLines from './DialogueLangLines';
 import { speechService } from '../../practice/services/speechService';
+import { coerceDisplayText, pickLangText } from '../../data/vocabs/vocabItemStructure';
 
 function TurnBubble({ turn }) {
   const role = turn.role === 'doctor' ? 'doctor' : 'patient';
   const isDoctor = role === 'doctor';
-  if (!hasText(turn.en) && !hasText(turn.fr) && !hasText(turn.mg)) return null;
+  const line = {
+    ...turn,
+    en: coerceDisplayText(turn.en),
+    fr: coerceDisplayText(turn.fr),
+    mg: coerceDisplayText(turn.mg),
+  };
+  if (!hasText(line.en) && !hasText(line.fr) && !hasText(line.mg)) return null;
 
   return (
     <div className={`flex ${isDoctor ? 'justify-end' : 'justify-start'}`}>
@@ -25,7 +32,7 @@ function TurnBubble({ turn }) {
         <p className="text-[10px] font-bold uppercase tracking-wider text-[#9aa0a6] mb-1.5 px-1.5">
           {isDoctor ? 'Doctor' : 'Patient'}
         </p>
-        <DialogueLangLines line={turn} />
+        <DialogueLangLines line={line} />
       </div>
     </div>
   );
@@ -35,15 +42,20 @@ export default function ScenarioCard({ item, lang = 'fr' }) {
   const [open, setOpen] = useState(false);
   const [titlePlaying, setTitlePlaying] = useState(false);
   const turns = Array.isArray(item.dialogue) ? item.dialogue : [];
-  const title =
-    lang === 'en' ? item.en : lang === 'mg' ? (item.mg || item.fr || item.en) : (item.fr || item.en);
+  const textEn = coerceDisplayText(item.en);
+  const textFr = coerceDisplayText(item.fr);
+  const textMg = coerceDisplayText(item.mg);
+  const title = pickLangText({ en: textEn, fr: textFr, mg: textMg }, lang)
+    || textEn
+    || textFr
+    || textMg;
 
   const handleTitleSpeak = async (e) => {
     e.stopPropagation();
-    if (titlePlaying || !item.en?.trim()) return;
+    if (titlePlaying || !textEn) return;
     setTitlePlaying(true);
     try {
-      await speechService.speak(item.en.trim());
+      await speechService.speak(textEn);
     } finally {
       setTitlePlaying(false);
     }
@@ -71,22 +83,22 @@ export default function ScenarioCard({ item, lang = 'fr' }) {
               {title}
             </div>
             {/* Title translations with lang cues when not the active lang */}
-            {lang !== 'en' && hasText(item.en) && (
+            {lang !== 'en' && hasText(textEn) && (
               <p className="text-[13px] text-[#5f6368] mt-1">
                 <span className="font-bold text-[#9aa0a6] mr-1">EN</span>
-                {item.en}
+                {textEn}
               </p>
             )}
-            {lang !== 'fr' && hasText(item.fr) && (
+            {lang !== 'fr' && hasText(textFr) && (
               <p className="text-[13px] text-[#5f6368] mt-0.5">
                 <span className="font-bold text-[#9aa0a6] mr-1">FR</span>
-                {item.fr}
+                {textFr}
               </p>
             )}
-            {hasText(item.mg) && lang !== 'mg' && (
+            {hasText(textMg) && lang !== 'mg' && (
               <p className="text-[13px] text-[#3c4043] mt-0.5">
                 <span className="font-bold text-[#9aa0a6] mr-1">MG</span>
-                {item.mg}
+                {textMg}
               </p>
             )}
           </div>
@@ -99,7 +111,7 @@ export default function ScenarioCard({ item, lang = 'fr' }) {
           </span>
         </button>
 
-        {hasText(item.en) && (
+        {hasText(textEn) && (
           <button
             type="button"
             onClick={handleTitleSpeak}

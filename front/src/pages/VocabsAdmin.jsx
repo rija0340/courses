@@ -12,6 +12,7 @@ import { ACTIVE_PROVIDER, STORAGE_PROVIDERS } from '../services/storageConfig';
 import { flattenTree } from '../utils/categoryTree';
 import { parseAdminSearchParams, buildAdminUrl } from '../utils/vocabUrlState';
 import { CompactMenu, MenuLink, MenuButton, MenuTrigger } from '../components/CompactMenu';
+import { pickLangText } from '../data/vocabs/vocabItemStructure';
 import CategoriesHub from '../components/vocabs/admin/CategoriesHub';
 import SettingsPanel from '../components/vocabs/admin/SettingsPanel';
 import AdminAuth from '../components/vocabs/admin/AdminAuth';
@@ -76,11 +77,7 @@ export default function VocabsAdmin() {
     }
   };
 
-  const getLabel = (obj) => {
-    if (!obj) return '';
-    if (typeof obj === 'string') return obj;
-    return obj[lang] || obj.fr || '';
-  };
+  const getLabel = (obj) => pickLangText(obj, lang);
 
   if (checkingAuth || loading) {
     return (

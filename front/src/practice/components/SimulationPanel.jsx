@@ -29,6 +29,7 @@ import {
   PrimaryButton,
   SoftBadge,
 } from './practiceUi';
+import { pickLangText } from '../../data/vocabs/vocabItemStructure';
 
 export default function SimulationPanel({
   defaultTheme = '',
@@ -181,7 +182,7 @@ export default function SimulationPanel({
   };
 
   const label = (preset) =>
-    preset.title?.[lang] || preset.title?.en || preset.theme;
+    pickLangText(preset.title, lang) || preset.theme;
 
   const canGenerate =
     !!theme.trim() &&
@@ -230,7 +231,7 @@ export default function SimulationPanel({
               </div>
               {selected?.description && (
                 <p className="text-[13px] text-[#64748b] leading-relaxed rounded-xl bg-[#f8fafc] border border-[#e2e8f0] px-3.5 py-2.5">
-                  {selected.description[lang] || selected.description.en}
+                  {pickLangText(selected.description, lang)}
                 </p>
               )}
             </div>

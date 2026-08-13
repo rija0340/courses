@@ -58,11 +58,13 @@ export function isI18nObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value);
 }
 
-export function localize(value, lang, fallback = '') {
-  if (value == null) return fallback;
-  if (typeof value === 'string') return value;
+export function localize(value, lang, fallback = '', depth = 0) {
+  if (value == null || depth > 6) return fallback;
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
   if (isI18nObject(value)) {
-    return value[lang] || value.fr || value.en || value.mg || fallback;
+    const picked = value[lang] || value.fr || value.en || value.mg || fallback;
+    if (picked && typeof picked === 'object') return localize(picked, lang, fallback, depth + 1);
+    return picked || fallback;
   }
   return fallback;
 }

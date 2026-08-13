@@ -6,10 +6,16 @@ import React, { useState } from 'react';
 import { ChevronDown, MessageCircle } from 'lucide-react';
 import { hasExample, hasText } from '../../utils/vocabDialogue';
 import DialogueLangLines from './DialogueLangLines';
+import { coerceDisplayText } from '../../data/vocabs/vocabItemStructure';
 
 function SpeakerBlock({ label, side, align = 'start', highlightTerms }) {
   if (!side) return null;
-  if (!hasText(side.en) && !hasText(side.fr) && !hasText(side.mg)) return null;
+  const line = {
+    en: coerceDisplayText(side.en),
+    fr: coerceDisplayText(side.fr),
+    mg: coerceDisplayText(side.mg),
+  };
+  if (!hasText(line.en) && !hasText(line.fr) && !hasText(line.mg)) return null;
 
   const isDoctor = align === 'end';
 
@@ -25,7 +31,7 @@ function SpeakerBlock({ label, side, align = 'start', highlightTerms }) {
         <p className="text-[10px] font-bold uppercase tracking-wider text-[#9aa0a6] mb-1.5 px-1.5">
           {label}
         </p>
-        <DialogueLangLines line={side} highlightTerms={highlightTerms} />
+        <DialogueLangLines line={line} highlightTerms={highlightTerms} />
       </div>
     </div>
   );
@@ -36,7 +42,11 @@ export default function ExampleCollapse({ example, item }) {
 
   if (!hasExample(example)) return null;
 
-  const terms = { en: item?.en, fr: item?.fr, mg: item?.mg };
+  const terms = {
+    en: coerceDisplayText(item?.en),
+    fr: coerceDisplayText(item?.fr),
+    mg: coerceDisplayText(item?.mg),
+  };
 
   return (
     <div className="mt-3 border-t border-[#dadce0]/60 pt-3">

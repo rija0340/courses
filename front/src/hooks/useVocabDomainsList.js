@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import courses from '../data/courses.json';
 import { getStaticPresentation } from '../data/vocabs';
 import vocabStorage from '../services/vocabStorage';
+import { pickLangText } from '../data/vocabs/vocabItemStructure';
 
 function mergeCourseCard(domainEntry, lang) {
   const staticCourse = courses.find(c => c.id === domainEntry.id && c.type === 'vocabs');
@@ -21,7 +22,7 @@ function mergeCourseCard(domainEntry, lang) {
     icon,
     color,
     itemCount: domainEntry.itemCount ?? 0,
-    label: title[lang] || title.fr || domainEntry.id
+    label: pickLangText(title, lang) || domainEntry.id
   };
 }
 
@@ -44,7 +45,7 @@ export default function useVocabDomainsList(lang = 'fr') {
         .map(c => ({
           ...c,
           itemCount: 0,
-          label: c.title[lang] || c.title.fr
+          label: pickLangText(c.title, lang)
         }));
 
       setDomains([...fromDb, ...jsonVocabs].sort((a, b) =>
@@ -54,7 +55,7 @@ export default function useVocabDomainsList(lang = 'fr') {
       setError(err.message || 'Erreur chargement domaines');
       const fallback = courses
         .filter(c => c.type === 'vocabs')
-        .map(c => ({ ...c, itemCount: 0, label: c.title[lang] || c.title.fr }));
+        .map(c => ({ ...c, itemCount: 0, label: pickLangText(c.title, lang) }));
       setDomains(fallback);
     } finally {
       setLoading(false);

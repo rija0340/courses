@@ -8,6 +8,7 @@ import WrittenSimulationPanel from '../practice/components/WrittenSimulationPane
 import QuizPracticePanel from '../practice/components/QuizPracticePanel';
 import { isPracticeEnabled } from '../practice/config';
 import useVocabDomain from '../hooks/useVocabDomain';
+import { pickLangText } from '../data/vocabs/vocabItemStructure';
 import { simulationUi } from '../practice/data/simulationUiCopy';
 import { getScenarioProfile } from '../practice/data/scenarioProfiles';
 import {
@@ -51,7 +52,7 @@ export default function PracticeSimulation() {
   ].filter(Boolean);
 
   const categories = domain?.organization?.categories || [];
-  const domainTitle = domain?.meta?.title || domainId;
+  const domainTitle = pickLangText(domain?.meta?.title, lang) || domainId;
 
   return (
     <PracticePageShell>

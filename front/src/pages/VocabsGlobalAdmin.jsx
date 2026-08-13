@@ -18,6 +18,7 @@ import {
   buildDefaultDomainMeta,
   I18N_LANGS
 } from '../data/vocabs/vocabDomainSchema';
+import { pickLangText } from '../data/vocabs/vocabItemStructure';
 
 const ICON_OPTIONS = [
   { id: 'BookOpen', Icon: BookOpen },
@@ -59,11 +60,7 @@ export default function VocabsGlobalAdmin() {
     setTimeout(() => setToast(null), 3200);
   };
 
-  const getLabel = (obj, fallback = '') => {
-    if (!obj) return fallback;
-    if (typeof obj === 'string') return obj;
-    return obj[lang] || obj.fr || fallback;
-  };
+  const getLabel = (obj, fallback = '') => pickLangText(obj, lang) || fallback;
 
   const handleLogout = async () => {
     if (supabase) {

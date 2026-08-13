@@ -1,6 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
+import { pickLangText } from '../data/vocabs/vocabItemStructure';
+
+function crumbLabel(value) {
+  return typeof value === 'string' || typeof value === 'number'
+    ? String(value)
+    : pickLangText(value);
+}
 
 const Breadcrumb = ({ items }) => {
   return (
@@ -21,18 +28,18 @@ const Breadcrumb = ({ items }) => {
               onClick={item.onClick}
               className="hover:text-lh-accent transition-colors truncate max-w-[200px] shrink-0 p-1 rounded-md hover:bg-lh-accent-soft text-left"
             >
-              {item.label}
+              {crumbLabel(item.label)}
             </button>
           ) : item.path ? (
             <Link
               to={item.path}
               className="hover:text-lh-accent transition-colors truncate max-w-[200px] shrink-0 p-1 rounded-md hover:bg-lh-accent-soft"
             >
-              {item.label}
+              {crumbLabel(item.label)}
             </Link>
           ) : (
             <span className="text-lh-text truncate max-w-[250px] shrink-0 p-1">
-              {item.label}
+              {crumbLabel(item.label)}
             </span>
           )}
         </React.Fragment>

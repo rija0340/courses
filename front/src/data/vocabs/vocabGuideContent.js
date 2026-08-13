@@ -1,3 +1,5 @@
+import { pickLangText } from './vocabItemStructure';
+
 export const VOCAB_GUIDE = {
   pageTitle: {
     fr: 'Guide d\'utilisation',
@@ -140,7 +142,5 @@ export const VOCAB_GUIDE = {
 };
 
 export function getGuideText(obj, lang) {
-  if (!obj) return '';
-  if (typeof obj === 'string') return obj;
-  return obj[lang] || obj.fr || '';
+  return pickLangText(obj, lang);
 }

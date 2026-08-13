@@ -5,7 +5,7 @@ import { AppContext } from '../App';
 import Breadcrumb from '../components/Breadcrumb';
 import { CompactMenu, MenuButton, MenuTrigger } from '../components/CompactMenu';
 import VocabCard from '../components/vocabs/VocabCard';
-import { resolveItemStructure } from '../data/vocabs/vocabItemStructure';
+import { resolveItemStructure, pickLangText, coerceDisplayText } from '../data/vocabs/vocabItemStructure';
 import ScenarioCard from '../components/vocabs/ScenarioCard';
 import { isScenarioItem } from '../utils/vocabDialogue';
 import CategoryTree from '../components/vocabs/CategoryTree';
@@ -154,11 +154,7 @@ export default function VocabsView() {
     search: ''
   }), [items, categories, activeCategory]);
 
-  const getLabel = (obj) => {
-    if (!obj) return '';
-    if (typeof obj === 'string') return obj;
-    return obj[lang] || obj.fr || '';
-  };
+  const getLabel = (obj) => pickLangText(obj, lang);
 
   const guideT = (obj) => getGuideText(obj, lang);
   const modeHint = guideT(VOCAB_GUIDE.microHints[viewMode]);
@@ -655,11 +651,17 @@ export default function VocabsView() {
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                     {activeCategoryItems.map(item => {
-                      const activeWord = lang === 'en' ? item.en : lang === 'mg' ? item.mg : item.fr;
+                      const textEn = coerceDisplayText(item.en);
+                      const textFr = coerceDisplayText(item.fr);
+                      const textMg = coerceDisplayText(item.mg);
+                      const activeWord = pickLangText({ en: textEn, fr: textFr, mg: textMg }, lang)
+                        || textEn
+                        || textFr
+                        || textMg;
                       const playAudio = (e) => {
                         e.stopPropagation();
-                        if (!item.en) return;
-                        const utterance = new SpeechSynthesisUtterance(item.en);
+                        if (!textEn) return;
+                        const utterance = new SpeechSynthesisUtterance(textEn);
                         utterance.lang = 'en-US';
                         speechSynthesis.speak(utterance);
                       };
@@ -683,7 +685,7 @@ export default function VocabsView() {
                               <img src={item.image} alt={activeWord} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 cursor-zoom-in" />
                             ) : (
                               <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[24px] font-bold text-[#9aa0a6] bg-[#f1f3f4] group-hover:scale-105 transition-transform duration-300">
-                                {activeWord.charAt(0).toUpperCase()}
+                                {(activeWord || '?').charAt(0).toUpperCase()}
                               </div>
                             )}
                             <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
@@ -692,7 +694,9 @@ export default function VocabsView() {
                           </div>
                           <div className="p-3">
                             <p className="text-[15px] font-semibold text-[#202124] truncate">{activeWord}</p>
-                            <p className="text-[12px] text-[#5f6368] mt-0.5">{item.en} · {item.mg}</p>
+                            <p className="text-[12px] text-[#5f6368] mt-0.5">
+                              {[textEn, textMg].filter(Boolean).join(' · ')}
+                            </p>
                           </div>
                         </div>
                       );

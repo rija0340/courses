@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { AppContext } from '../App';
 import useVocabDomainsList from '../hooks/useVocabDomainsList';
+import { pickLangText } from '../data/vocabs/vocabItemStructure';
 
 const ICONS = {
   Languages, Code, HeartPulse, Cpu, BookOpen, Scale, Briefcase,
@@ -19,8 +20,8 @@ const Home = () => {
 
   const lessonCourses = courses.filter(c => c.type !== 'vocabs');
 
-  const getTitle = (course) => course.title?.[lang] || course.title?.fr || course.id;
-  const getDesc = (course) => course.description?.[lang] || course.description?.fr || '';
+  const getTitle = (course) => pickLangText(course.title, lang) || course.id;
+  const getDesc = (course) => pickLangText(course.description, lang);
 
   return (
     <div className="max-w-4xl mx-auto px-6 pt-12 pb-20">

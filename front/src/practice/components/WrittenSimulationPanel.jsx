@@ -33,6 +33,7 @@ import {
   SecondaryButton,
   SoftBadge,
 } from './practiceUi';
+import { pickLangText } from '../../data/vocabs/vocabItemStructure';
 
 export default function WrittenSimulationPanel({
   defaultTheme = '',
@@ -219,7 +220,7 @@ export default function WrittenSimulationPanel({
   };
 
   const label = (preset) =>
-    preset.title?.[lang] || preset.title?.en || preset.theme;
+    pickLangText(preset.title, lang) || preset.theme;
 
   const canStart = !!theme.trim() && !(mode === 'topic' && !topicSelection.words.length);
 
