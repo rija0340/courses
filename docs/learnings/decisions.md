@@ -6,6 +6,7 @@ Tags : voir [`domains.md`](./domains.md).
 
 | Date | Feature | Tags | Décision | Options rejetées | Pourquoi rejetée | Piège | Pratique / principe nommé |
 |------|---------|------|----------|------------------|------------------|-------|---------------------------|
+| 2026-08-13 | Vercel build quiz unused var | `tooling` `error-handling` | Réutiliser `canStart` sur le bouton quiz | `CI=false` / disable ESLint | Cache le signal ; casse le garde-fou UX | Vercel `CI=true` = warning ESLint = fail | fail loudly in CI ; no dead assignments |
 | 2026-08-12 | Admin tab-focus refresh | `effects` `state` | Hook `useSupabaseAdminSession` + deps `userId` | Désactiver autoRefresh Supabase ; refetchOnWindowFocus | Casse le refresh token ; pas de React Query | `SIGNED_IN` ≠ vrai login au focus | distinguish side-effect triggers ; stable dependency keys |
 | 2026-08-12 | Vocab structure racine | `data-modeling` `ux` | itemStructure sur racine + héritage ; EN requis ; translate par colonne | Profils nommés ; table-only | Trop figé / mauvais mobile | Confondre tabs et structure | SSOT ; Open/Closed |
 | 2026-08-12 | Colonnes rename/add/delete | `data-modeling` `ux` | label override + presets + custom id + delete/reorder | Renommer l’id ; presets-only | Cassure données / trop rigide | id ≠ label | Open/Closed ; presentation ≠ identity |

@@ -33,6 +33,7 @@ Utilise ces domaines. Si un nouveau domaine est nécessaire, **ajoute-le ici** a
 | `caching` | Cache, stale data, invalidation |
 | `naming` | Noms clairs, intention révélée |
 | `readability` | Lisibilité, complexité cognitive |
+| `tooling` | CI, lint, build, scripts — ce qui casse avant le runtime |
 
 ## Bonnes pratiques nommées (références)
 

@@ -107,3 +107,11 @@ sequenceDiagram
 **Pourquoi :** `[object Object]` fuyait encore via `normalizeI18nValue` ; syn/ant empilés gaspillaient la largeur ; `medi-vocabs` forçait doctor/patient sur tout le vocab.
 **Pas choisi :** patch render-only ; CSS grid `1fr` ; supprimer le profil médical.
 **À retenir :** frontières = texte affichable ; colonnes courtes partagent une rangée ; A/B est le défaut, le cabinet est un preset.
+
+### 2026-08-13 - Vercel fail : unused `canStart`
+**Tags :** `tooling` `error-handling`
+**Bonne pratique :** fail loudly in CI ; no dead assignments
+**Concept :** Create React App traite les warnings ESLint comme des erreurs dès que `CI=true` (Vercel le pose tout seul).
+**Pourquoi :** `canStart` existait encore après le refactor UI mais n’était plus passé à `disabled` — le bouton Simulation écrit, lui, le branche encore.
+**Pas choisi :** désactiver ESLint / `CI=false` sur Vercel (ça masquerait les prochaines fuites).
+**À retenir :** un unused var suffit à faire rater le deploy prod ; vérifier avec `CI=true npm run build`.

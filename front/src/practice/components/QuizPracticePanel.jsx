@@ -292,7 +292,7 @@ export default function QuizPracticePanel({
               </div>
             </div>
 
-            <PrimaryButton onClick={handleStart} disabled={loading} className="w-full sm:w-auto">
+            <PrimaryButton onClick={handleStart} disabled={loading || !canStart} className="w-full sm:w-auto">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
               Commencer le quiz
             </PrimaryButton>
