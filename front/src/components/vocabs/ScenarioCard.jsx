@@ -45,8 +45,8 @@ export default function ScenarioCard({ item, lang = 'fr' }) {
   const textEn = coerceDisplayText(item.en);
   const textFr = coerceDisplayText(item.fr);
   const textMg = coerceDisplayText(item.mg);
-  const title = pickLangText({ en: textEn, fr: textFr, mg: textMg }, lang)
-    || textEn
+  const title = textEn
+    || pickLangText({ en: textEn, fr: textFr, mg: textMg }, lang)
     || textFr
     || textMg;
 
@@ -62,7 +62,7 @@ export default function ScenarioCard({ item, lang = 'fr' }) {
   };
 
   return (
-    <div className="rounded-2xl border border-[#dadce0] bg-white hover:shadow-md transition-all p-4 sm:p-5">
+    <div className="vocab-card rounded-2xl border border-[#dadce0] bg-white hover:shadow-md transition-all p-4 sm:p-5">
       <div className="flex items-start gap-2">
         <button
           type="button"
@@ -82,20 +82,13 @@ export default function ScenarioCard({ item, lang = 'fr' }) {
             <div className="text-[17px] sm:text-[18px] font-semibold text-[#202124] leading-snug">
               {title}
             </div>
-            {/* Title translations with lang cues when not the active lang */}
-            {lang !== 'en' && hasText(textEn) && (
-              <p className="text-[13px] text-[#5f6368] mt-1">
-                <span className="font-bold text-[#9aa0a6] mr-1">EN</span>
-                {textEn}
-              </p>
-            )}
-            {lang !== 'fr' && hasText(textFr) && (
+            {hasText(textFr) && (
               <p className="text-[13px] text-[#5f6368] mt-0.5">
                 <span className="font-bold text-[#9aa0a6] mr-1">FR</span>
                 {textFr}
               </p>
             )}
-            {hasText(textMg) && lang !== 'mg' && (
+            {hasText(textMg) && (
               <p className="text-[13px] text-[#3c4043] mt-0.5">
                 <span className="font-bold text-[#9aa0a6] mr-1">MG</span>
                 {textMg}

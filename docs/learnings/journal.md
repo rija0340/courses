@@ -24,6 +24,24 @@ Format :
 
 <!-- Les entrées commencent ci-dessous -->
 
+### 2026-08-18 - MediVocabs CSS : états sémantiques + dark hover
+**Tags :** `ux` `visibility` `naming`
+**Bonne pratique :** semantic class over utility coupling ; prefers-reduced-motion
+**Concept :** le refresh visuel overlay CSS reste, mais les états (tab/catégorie active) passent par `is-active` plutôt que par une classe Tailwind hex. Le hover catégories utilise `:not(.is-active)` + tokens `--vocabs-hover` redéfinis sous `html.dark .vocabs-page`.
+**Pourquoi :** `background: #f5f8ff !important` sans dark flashait en clair ; `flex-wrap` tuait le scroll horizontal des tabs ; les contrôles Révision n’avaient pas de cellule grid.
+**Pas choisi :** refactorer tout le JSX en tokens `--lh-*` (trop large) ; cibler `.bg-[#1a73e8]` (casse dès qu’on change la couleur).
+**À retenir :** un overlay CSS ne doit pas sélectionner une utility Tailwind ; il doit sélectionner un état nommé, scoped au layout.
+
+```mermaid
+flowchart TB
+  JSX["JSX: is-active + vocab-card"] --> Scope[".vocabs-page"]
+  Scope --> Light["tokens --vocabs-hover / border"]
+  Scope --> Dark["html.dark .vocabs-page redéfinit les tokens"]
+  Light --> UI["hover / tabs / cartes"]
+  Dark --> UI
+```
+
+
 ### 2026-08-12 - Admin refresh au retour d'onglet
 **Tags :** `effects` `state` `visibility`
 **Bonne pratique :** distinguish side-effect triggers ; stable dependency keys ; soft background refetch

@@ -30,7 +30,7 @@ export default function VocabTabBar({
               onClick={() => onTabChange(tab.id)}
               className={`vocab-tab flex-1 min-w-[100px] sm:min-w-[120px] h-10 px-3 rounded-lg text-[13px] font-semibold transition-all truncate ${
                 activeTab === tab.id
-                  ? 'bg-white text-[#202124] shadow-sm ring-1 ring-[#dadce0]'
+                  ? 'is-active bg-white text-[#202124] shadow-sm ring-1 ring-[#dadce0]'
                   : 'bg-[#f1f3f4] text-[#5f6368] hover:bg-[#e8eaed] hover:text-[#202124]'
               }`}
             >

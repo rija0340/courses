@@ -4,8 +4,7 @@ Tableau des choix techniques (relecture rapide : *quoi / tag / pratique / pourqu
 
 Tags : voir [`domains.md`](./domains.md).
 
-| Date | Feature | Tags | Décision | Options rejetées | Pourquoi rejetée | Piège | Pratique / principe nommé |
-|------|---------|------|----------|------------------|------------------|-------|---------------------------|
+| 2026-08-18 | MediVocabs CSS refresh | `ux` `visibility` `naming` | États sémantiques (`is-active`) + scope `.vocabs-page` ; toolbar revision en slot grid ; tabs `nowrap` | Overlay via classes Tailwind hex (`bg-[#1a73e8]`) ; hover global sur tous les boutons | Cassure si le JSX change de couleur ; lift sur drawer/search | Hover light `!important` sans dark = flash | semantic class over utility coupling ; prefers-reduced-motion |
 | 2026-08-13 | React #31 i18n child | `error-handling` `visibility` `data-modeling` | pickLangText / coerceDisplayText avant tout JSX (y compris `meta.title` pratique) | String(obj) ; try/catch ErrorBoundary seul | `[object Object]` ; l’UI crash quand même | `{fr,en,mg}` dans un `<p>` mixte = reconcileChildrenArray | coerce at boundaries
 | 2026-08-13 | Card utterance assessment | `ux` `learning` `api-design` | Juge phrase dédié (contexte 45%) ; oral = transcribe puis même juge | Réutiliser written-turn ; overlap pronunciation | Dialogue hors sujet ; pénalise les mots en trop | Répéter l’exemple ≠ seule réponse valide | SRP ; ports & adapters ; fail safely in prod |
 | 2026-08-13 | Vercel build quiz unused var | `tooling` `error-handling` | Réutiliser `canStart` sur le bouton quiz | `CI=false` / disable ESLint | Cache le signal ; casse le garde-fou UX | Vercel `CI=true` = warning ESLint = fail | fail loudly in CI ; no dead assignments |

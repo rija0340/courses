@@ -23,6 +23,7 @@
   --lh-warning-border: #fde293;
   --lh-danger-bg: #fce8e6;
   --lh-danger-text: #c5221f;
+  --lh-danger-border: #f5c6c2;
   --lh-nav: #ffffff;
   --lh-nav-border: #dadce0;
   --lh-shadow: 0 1px 3px rgba(60, 64, 67, 0.12);
@@ -48,6 +49,7 @@ html.dark {
   --lh-warning-border: #5c4b12;
   --lh-danger-bg: #2e1514;
   --lh-danger-text: #f6aea9;
+  --lh-danger-border: #5c2b28;
   --lh-nav: #12151c;
   --lh-nav-border: #2a3040;
   --lh-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
@@ -254,7 +256,7 @@ html.dark .text-red-700 {
   color: var(--lh-danger-text) !important;
 }
 html.dark .border-red-100 {
-  border-color: var(--lh-danger-border, #5c2b28) !important;
+  border-color: var(--lh-danger-border) !important;
 }
 html.dark .bg-green-50 {
   background-color: var(--lh-success-bg) !important;
@@ -287,7 +289,7 @@ html.dark body {
 
 
 /* ------------------------------------------------------------------ */
-/* MediVocabs visual refresh — CSS only, structure preserved           */
+/* MediVocabs visual refresh — scoped to .vocabs-page                  */
 /* ------------------------------------------------------------------ */
 
 .vocabs-page {
@@ -296,6 +298,8 @@ html.dark body {
   --vocabs-blue-soft: #edf4ff;
   --vocabs-mint: #35b89f;
   --vocabs-border: #e4eaf3;
+  --vocabs-hover: #f5f8ff;
+  --vocabs-hover-border: #dbe7fb;
   position: relative;
   min-height: calc(100vh - 4rem);
   padding-bottom: 3rem;
@@ -305,7 +309,7 @@ html.dark body {
   position: relative;
   overflow: hidden;
   padding: 1.25rem 1.35rem 1.35rem;
-  border: 1px solid #e4eaf3;
+  border: 1px solid var(--vocabs-border);
   border-radius: 1.35rem;
   background:
     radial-gradient(circle at 92% 12%, rgba(181, 220, 255, 0.55), transparent 29%),
@@ -361,13 +365,13 @@ html.dark body {
   box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.12);
 }
 
-.vocabs-page .vocabs-controls button,
-.vocabs-page .vocabs-controls a {
+.vocabs-page .vocabs-tool-button,
+.vocabs-page .vocabs-display-modes > button {
   transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
 }
 
-.vocabs-page .vocabs-controls button:hover,
-.vocabs-page .vocabs-controls a:hover {
+.vocabs-page .vocabs-tool-button:hover,
+.vocabs-page .vocabs-display-modes > button:hover {
   transform: translateY(-1px);
 }
 
@@ -378,23 +382,23 @@ html.dark body {
   box-shadow: 0 10px 26px rgba(30, 67, 122, 0.055);
 }
 
-.vocab-category-tree {
+.vocabs-page .vocab-category-tree {
   display: grid;
   gap: 0.28rem;
 }
 
-.vocab-category-node {
+.vocabs-page .vocab-category-node {
   min-height: 2.7rem;
   border: 1px solid transparent;
   border-radius: 0.85rem;
 }
 
-.vocab-category-node:hover {
-  border-color: #dbe7fb;
-  background: #f5f8ff !important;
+.vocabs-page .vocab-category-node:hover:not(.is-active) {
+  border-color: var(--vocabs-hover-border);
+  background: var(--vocabs-hover) !important;
 }
 
-.vocab-category-node.bg-\[\#1a73e8\] {
+.vocabs-page .vocab-category-node.is-active {
   border-color: transparent;
   background: linear-gradient(135deg, #2f6fed, #4b83ed) !important;
   box-shadow: 0 6px 14px rgba(47, 111, 237, 0.2);
@@ -404,14 +408,16 @@ html.dark body {
   gap: 1rem;
 }
 
-.vocabs-page .vocab-card {
+.vocabs-page .vocab-card,
+.vocabs-page .vocab-visual-card {
   border-color: var(--vocabs-border);
   border-radius: 1.2rem;
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 7px 20px rgba(30, 67, 122, 0.055);
 }
 
-.vocabs-page .vocab-card:hover {
+.vocabs-page .vocab-card:hover,
+.vocabs-page .vocab-visual-card:hover {
   border-color: #c8daf8;
   box-shadow: 0 14px 28px rgba(30, 67, 122, 0.12);
   transform: translateY(-2px);
@@ -455,14 +461,14 @@ html.dark body {
   border-radius: 0.75rem;
 }
 
-.vocabs-page .vocab-tab.bg-white {
+.vocabs-page .vocab-tab.is-active {
   border-color: #d8e5fb;
   background: linear-gradient(180deg, #ffffff, #f7fbff) !important;
   color: var(--vocabs-blue) !important;
   box-shadow: 0 4px 10px rgba(47, 111, 237, 0.1);
 }
 
-.vocabs-page .vocab-tab.bg-\[\#f1f3f4\] {
+.vocabs-page .vocab-tab:not(.is-active) {
   background: transparent !important;
 }
 
@@ -517,18 +523,26 @@ html.dark body {
     gap: 0.75rem;
   }
 
-  .vocabs-page .vocab-card {
-    padding: 0.9rem;
+  .vocabs-page .vocab-card,
+  .vocabs-page .vocab-visual-card {
     border-radius: 1.05rem;
   }
 
-  .vocabs-page .vocab-card:hover {
+  .vocabs-page .vocab-card {
+    padding: 0.9rem;
+  }
+
+  .vocabs-page .vocab-card:hover,
+  .vocabs-page .vocab-visual-card:hover {
     transform: none;
   }
 
   .vocabs-page .vocab-tabs-list {
+    display: flex;
+    flex-wrap: nowrap;
     gap: 0.45rem;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
 
@@ -542,8 +556,16 @@ html.dark body {
   }
 }
 
+html.dark .vocabs-page {
+  --vocabs-ink: #f1f6ff;
+  --vocabs-blue: #8ab4f8;
+  --vocabs-border: #2d405c;
+  --vocabs-hover: #233755;
+  --vocabs-hover-border: #3f669d;
+}
+
 html.dark .vocabs-page .vocabs-hero {
-  border-color: #2d405c;
+  border-color: var(--vocabs-border);
   background:
     radial-gradient(circle at 92% 12%, rgba(70, 130, 210, 0.2), transparent 29%),
     linear-gradient(135deg, #151d2d 0%, #17263c 100%);
@@ -551,7 +573,7 @@ html.dark .vocabs-page .vocabs-hero {
 }
 
 html.dark .vocabs-page .vocabs-hero h1 {
-  color: #f1f6ff !important;
+  color: var(--vocabs-ink) !important;
 }
 
 html.dark .vocabs-page .vocabs-hero p {
@@ -560,12 +582,14 @@ html.dark .vocabs-page .vocabs-hero p {
 
 html.dark .vocabs-page .vocabs-controls,
 html.dark .vocabs-page .vocab-sidebar > div,
-html.dark .vocabs-page .vocab-card {
-  border-color: #2d405c;
+html.dark .vocabs-page .vocab-card,
+html.dark .vocabs-page .vocab-visual-card {
+  border-color: var(--vocabs-border);
   background: rgba(23, 31, 46, 0.94);
 }
 
-html.dark .vocabs-page .vocab-card:hover {
+html.dark .vocabs-page .vocab-card:hover,
+html.dark .vocabs-page .vocab-visual-card:hover {
   border-color: #4b78b8;
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25);
 }
@@ -577,17 +601,20 @@ html.dark .vocabs-page .vocab-tabs-list {
 }
 
 html.dark .vocabs-page .vocab-language-row:hover {
-  background: #233755;
+  background: var(--vocabs-hover);
 }
 
-html.dark .vocabs-page .vocab-tab.bg-white {
+html.dark .vocabs-page .vocab-tab.is-active {
   border-color: #3f669d;
   background: #203657 !important;
   color: #b9d5ff !important;
 }
 
+html.dark .vocabs-page .vocab-tab:hover {
+  border-color: #3f669d;
+  color: #b9d5ff !important;
+}
 
-/* MediVocabs toolbar layout: search first, modes second, tools separate */
 .vocabs-page .vocabs-toolbar-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -600,7 +627,6 @@ html.dark .vocabs-page .vocab-tab.bg-white {
   grid-row: 1;
   width: 100%;
   max-width: none !important;
-  order: -1;
 }
 
 .vocabs-page .vocabs-display-modes {
@@ -613,6 +639,15 @@ html.dark .vocabs-page .vocab-tab.bg-white {
   grid-column: 2;
   grid-row: 2;
   justify-self: start;
+}
+
+.vocabs-page .vocabs-revision-controls {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.65rem;
 }
 
 .vocabs-page .vocabs-tool-button {
@@ -662,6 +697,11 @@ html.dark .vocabs-page .vocab-tab.bg-white {
     min-height: 2.7rem;
   }
 
+  .vocabs-page .vocabs-revision-controls {
+    order: 2;
+    flex: 1 1 100%;
+  }
+
   .vocabs-page .vocabs-tool-button {
     min-height: 2.7rem;
     padding-right: 0.9rem;
@@ -675,4 +715,20 @@ html.dark .vocabs-page .vocabs-controls {
 
 html.dark .vocabs-page .vocabs-display-modes {
   background: #1a2639;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vocabs-page .vocabs-tool-button,
+  .vocabs-page .vocabs-display-modes > button,
+  .vocabs-page .vocab-card,
+  .vocabs-page .vocab-visual-card {
+    transition: none;
+  }
+
+  .vocabs-page .vocabs-tool-button:hover,
+  .vocabs-page .vocabs-display-modes > button:hover,
+  .vocabs-page .vocab-card:hover,
+  .vocabs-page .vocab-visual-card:hover {
+    transform: none;
+  }
 }

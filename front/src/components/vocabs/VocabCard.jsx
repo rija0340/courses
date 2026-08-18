@@ -44,8 +44,8 @@ const FIELD_SOFT = {
 const DEFAULT_FIELD_SOFT = { bg: '#F8FAFC', text: '#334155', border: '#E2E8F0' };
 
 const LANG_ROWS = [
-  { code: 'FR', key: 'fr', field: 'fr' },
   { code: 'EN', key: 'en', field: 'en' },
+  { code: 'FR', key: 'fr', field: 'fr' },
   { code: 'MG', key: 'mg', field: 'mg' },
 ];
 

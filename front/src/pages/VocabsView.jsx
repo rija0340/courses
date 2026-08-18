@@ -372,7 +372,7 @@ export default function VocabsView() {
           </div>
 
           {viewMode === 'revision' && (
-            <>
+            <div className="vocabs-revision-controls">
               <CompactMenu
                 className="sm:hidden shrink-0"
                 trigger={(open) => (
@@ -418,7 +418,7 @@ export default function VocabsView() {
                 <span className="sm:hidden">{revealAll ? 'Masquer' : 'Révéler'}</span>
                 <span className="hidden sm:inline">{revealAll ? 'Masquer tout' : 'Tout révéler'}</span>
               </button>
-            </>
+            </div>
           )}
 
           {isTextMode && (
@@ -616,7 +616,7 @@ export default function VocabsView() {
                       <button
                         key={cat.id}
                         onClick={() => selectCategory(cat.id)}
-                        className="group relative rounded-2xl border border-[#dadce0] bg-white overflow-hidden hover:shadow-md transition-all text-left"
+                        className="vocab-visual-card group relative rounded-2xl border border-[#dadce0] bg-white overflow-hidden hover:shadow-md transition-all text-left"
                       >
                         <div
                           className="aspect-square relative bg-[#f8f9fa] flex items-center justify-center overflow-hidden"
@@ -656,8 +656,8 @@ export default function VocabsView() {
                       const textEn = coerceDisplayText(item.en);
                       const textFr = coerceDisplayText(item.fr);
                       const textMg = coerceDisplayText(item.mg);
-                      const activeWord = pickLangText({ en: textEn, fr: textFr, mg: textMg }, lang)
-                        || textEn
+                      const activeWord = textEn
+                        || pickLangText({ en: textEn, fr: textFr, mg: textMg }, lang)
                         || textFr
                         || textMg;
                       const playAudio = (e) => {
@@ -671,7 +671,7 @@ export default function VocabsView() {
                         <div
                           key={item.id}
                           onClick={playAudio}
-                          className="group relative rounded-2xl border border-[#dadce0] bg-white overflow-hidden hover:shadow-md transition-all cursor-pointer text-left flex flex-col justify-between"
+                          className="vocab-visual-card group relative rounded-2xl border border-[#dadce0] bg-white overflow-hidden hover:shadow-md transition-all cursor-pointer text-left flex flex-col justify-between"
                           title="Cliquez pour écouter la prononciation anglaise"
                         >
                           <div
@@ -696,9 +696,20 @@ export default function VocabsView() {
                           </div>
                           <div className="p-3">
                             <p className="text-[15px] font-semibold text-[#202124] truncate">{activeWord}</p>
-                            <p className="text-[12px] text-[#5f6368] mt-0.5">
-                              {[textEn, textMg].filter(Boolean).join(' · ')}
-                            </p>
+                            <div className="mt-0.5 space-y-0.5">
+                              {textFr && (
+                                <p className="text-[12px] text-[#5f6368] truncate">
+                                  <span className="font-bold text-[#9aa0a6] mr-1">FR</span>
+                                  {textFr}
+                                </p>
+                              )}
+                              {textMg && (
+                                <p className="text-[12px] text-[#5f6368] truncate">
+                                  <span className="font-bold text-[#9aa0a6] mr-1">MG</span>
+                                  {textMg}
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );

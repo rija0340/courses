@@ -54,7 +54,7 @@ function CategoryNode({ node, activeId, expandedIds, onToggle, onSelect, counts,
           depth === 0 ? 'py-2.5 text-[15px] font-medium' : 'py-2 text-[14px]'
         } ${
           isActive
-            ? 'bg-[#1a73e8] text-white'
+            ? 'is-active bg-[#1a73e8] text-white'
             : depth === 0
               ? 'hover:bg-[#f1f3f4] text-[#3c4043]'
               : 'hover:bg-[#f1f3f4] text-[#5f6368]'
