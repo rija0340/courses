@@ -144,7 +144,7 @@ export default function VocabCard({
   const canPractice = isPracticeEnabled() && !!titleEn;
 
   return (
-    <div className="group rounded-xl border border-[#dadce0] bg-white hover:shadow-sm transition-all p-3.5 sm:p-4 flex gap-3 items-start">
+    <div className="vocab-card group rounded-xl border border-[#dadce0] bg-white hover:shadow-sm transition-all p-3.5 sm:p-4 flex gap-3 items-start">
       {item.image && (
         <button
           type="button"
@@ -205,7 +205,7 @@ export default function VocabCard({
         </div>
 
         {otherLangRows.length > 0 && (
-          <div className="space-y-1 rounded-lg bg-[#f8f9fa]/80 px-1 py-0.5">
+          <div className="vocab-lang-panel space-y-1 rounded-lg bg-[#f8f9fa]/80 px-1 py-0.5">
             {otherLangRows.map(({ code, key, field }) =>
               isRevision ? (
                 <RevealableLangRow

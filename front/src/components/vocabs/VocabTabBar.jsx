@@ -12,7 +12,7 @@ export default function VocabTabBar({
   if (!tabs?.length) return null;
 
   return (
-    <div className="w-full mb-5">
+    <div className="vocab-tabs w-full mb-5">
       {sectionLabel && (
         <div className="mb-2 px-0.5">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-[#9aa0a6]">
@@ -20,7 +20,7 @@ export default function VocabTabBar({
           </p>
         </div>
       )}
-      <div className="flex flex-wrap gap-2 w-full">
+      <div className="vocab-tabs-list flex flex-wrap gap-2 w-full">
         {tabs.map(tab => {
           const itemCount = countItemsForTab(items, tab.id);
           return (
@@ -28,7 +28,7 @@ export default function VocabTabBar({
               key={tab.id}
               type="button"
               onClick={() => onTabChange(tab.id)}
-              className={`flex-1 min-w-[100px] sm:min-w-[120px] h-10 px-3 rounded-lg text-[13px] font-semibold transition-all truncate ${
+              className={`vocab-tab flex-1 min-w-[100px] sm:min-w-[120px] h-10 px-3 rounded-lg text-[13px] font-semibold transition-all truncate ${
                 activeTab === tab.id
                   ? 'bg-white text-[#202124] shadow-sm ring-1 ring-[#dadce0]'
                   : 'bg-[#f1f3f4] text-[#5f6368] hover:bg-[#e8eaed] hover:text-[#202124]'

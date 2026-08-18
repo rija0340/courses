@@ -23,7 +23,7 @@ export default function RevealableLangRow({
 
   return (
     <div
-      className={`relative flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors ${
+      className={`vocab-language-row relative flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors ${
         isTarget || isActive ? 'bg-[#f8f9fa]' : ''
       }`}
     >
@@ -58,7 +58,7 @@ export default function RevealableLangRow({
 export function LangRow({ code, text, isActive }) {
   const style = LANG_STYLES[code];
   return (
-    <div className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors ${isActive ? 'bg-[#f8f9fa]' : ''}`}>
+    <div className={`vocab-language-row flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors ${isActive ? 'bg-[#f8f9fa]' : ''}`}>
       <span
         className="w-8 h-8 rounded-lg text-[11px] font-bold flex items-center justify-center shrink-0"
         style={{ background: style.badgeBg, color: style.badgeText }}

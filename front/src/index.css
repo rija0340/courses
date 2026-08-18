@@ -284,3 +284,395 @@ html.dark body {
     linear-gradient(180deg, var(--lh-page) 0%, #0b0d12 100%);
   background-attachment: fixed;
 }
+
+
+/* ------------------------------------------------------------------ */
+/* MediVocabs visual refresh — CSS only, structure preserved           */
+/* ------------------------------------------------------------------ */
+
+.vocabs-page {
+  --vocabs-ink: #102a56;
+  --vocabs-blue: #2f6fed;
+  --vocabs-blue-soft: #edf4ff;
+  --vocabs-mint: #35b89f;
+  --vocabs-border: #e4eaf3;
+  position: relative;
+  min-height: calc(100vh - 4rem);
+  padding-bottom: 3rem;
+}
+
+.vocabs-page .vocabs-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 1.25rem 1.35rem 1.35rem;
+  border: 1px solid #e4eaf3;
+  border-radius: 1.35rem;
+  background:
+    radial-gradient(circle at 92% 12%, rgba(181, 220, 255, 0.55), transparent 29%),
+    linear-gradient(135deg, #ffffff 0%, #f7fbff 58%, #f1f8ff 100%);
+  box-shadow: 0 12px 32px rgba(30, 67, 122, 0.07);
+}
+
+.vocabs-page .vocabs-hero::after {
+  content: '';
+  position: absolute;
+  right: 1.4rem;
+  bottom: -2.4rem;
+  width: 8rem;
+  height: 8rem;
+  border-radius: 2rem;
+  background: rgba(53, 184, 159, 0.09);
+  transform: rotate(18deg);
+  pointer-events: none;
+}
+
+.vocabs-page .vocabs-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.vocabs-page .vocabs-hero h1 {
+  color: var(--vocabs-ink);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.vocabs-page .vocabs-hero p {
+  color: #66738a;
+}
+
+.vocabs-page .vocabs-controls {
+  margin-top: 1.25rem;
+  padding: 0.7rem;
+  border: 1px solid #e6ebf4;
+  border-radius: 1.15rem;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 8px 22px rgba(30, 67, 122, 0.045);
+}
+
+.vocabs-page .vocabs-controls form input {
+  border-color: #dfe6f0;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(30, 67, 122, 0.04);
+}
+
+.vocabs-page .vocabs-controls form input:focus {
+  border-color: var(--vocabs-blue);
+  box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.12);
+}
+
+.vocabs-page .vocabs-controls button,
+.vocabs-page .vocabs-controls a {
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.vocabs-page .vocabs-controls button:hover,
+.vocabs-page .vocabs-controls a:hover {
+  transform: translateY(-1px);
+}
+
+.vocabs-page .vocab-sidebar > div {
+  border-color: var(--vocabs-border);
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 26px rgba(30, 67, 122, 0.055);
+}
+
+.vocab-category-tree {
+  display: grid;
+  gap: 0.28rem;
+}
+
+.vocab-category-node {
+  min-height: 2.7rem;
+  border: 1px solid transparent;
+  border-radius: 0.85rem;
+}
+
+.vocab-category-node:hover {
+  border-color: #dbe7fb;
+  background: #f5f8ff !important;
+}
+
+.vocab-category-node.bg-\[\#1a73e8\] {
+  border-color: transparent;
+  background: linear-gradient(135deg, #2f6fed, #4b83ed) !important;
+  box-shadow: 0 6px 14px rgba(47, 111, 237, 0.2);
+}
+
+.vocabs-page .vocab-card-grid {
+  gap: 1rem;
+}
+
+.vocabs-page .vocab-card {
+  border-color: var(--vocabs-border);
+  border-radius: 1.2rem;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 7px 20px rgba(30, 67, 122, 0.055);
+}
+
+.vocabs-page .vocab-card:hover {
+  border-color: #c8daf8;
+  box-shadow: 0 14px 28px rgba(30, 67, 122, 0.12);
+  transform: translateY(-2px);
+}
+
+.vocabs-page .vocab-card > div {
+  min-width: 0;
+}
+
+.vocabs-page .vocab-lang-panel {
+  border: 1px solid #edf1f7;
+  border-radius: 0.85rem;
+  background: #f8fbff !important;
+  padding: 0.28rem;
+}
+
+.vocabs-page .vocab-language-row {
+  min-height: 2.45rem;
+  border-radius: 0.7rem;
+}
+
+.vocabs-page .vocab-language-row:hover {
+  background: #eef5ff;
+}
+
+.vocabs-page .vocab-language-row > span:first-child {
+  border-radius: 0.65rem;
+  box-shadow: 0 2px 5px rgba(30, 67, 122, 0.08);
+}
+
+.vocabs-page .vocab-tabs-list {
+  padding: 0.28rem;
+  border: 1px solid #e5ebf4;
+  border-radius: 0.95rem;
+  background: #f4f7fb;
+}
+
+.vocabs-page .vocab-tab {
+  min-height: 2.55rem;
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
+}
+
+.vocabs-page .vocab-tab.bg-white {
+  border-color: #d8e5fb;
+  background: linear-gradient(180deg, #ffffff, #f7fbff) !important;
+  color: var(--vocabs-blue) !important;
+  box-shadow: 0 4px 10px rgba(47, 111, 237, 0.1);
+}
+
+.vocabs-page .vocab-tab.bg-\[\#f1f3f4\] {
+  background: transparent !important;
+}
+
+.vocabs-page .vocab-tab:hover {
+  border-color: #cfe0fb;
+  color: var(--vocabs-blue) !important;
+}
+
+@media (max-width: 767px) {
+  .vocabs-page {
+    padding-right: 0.9rem;
+    padding-left: 0.9rem;
+    padding-bottom: 2rem;
+  }
+
+  .vocabs-page .vocabs-hero {
+    margin-top: 0.7rem;
+    padding: 1.05rem 1rem 1.1rem;
+    border-radius: 1.15rem;
+  }
+
+  .vocabs-page .vocabs-hero h1 {
+    font-size: 2rem;
+    line-height: 1.08;
+  }
+
+  .vocabs-page .vocabs-hero p {
+    font-size: 0.98rem;
+    line-height: 1.45;
+  }
+
+  .vocabs-page .vocabs-controls {
+    margin-top: 1rem;
+    padding: 0.55rem;
+    border-radius: 1rem;
+  }
+
+  .vocabs-page .vocabs-controls > div:first-child {
+    gap: 0.45rem;
+  }
+
+  .vocabs-page .vocabs-controls form input {
+    height: 2.8rem;
+    font-size: 0.9rem;
+  }
+
+  .vocabs-page .vocab-sidebar {
+    box-shadow: none;
+  }
+
+  .vocabs-page .vocab-card-grid {
+    gap: 0.75rem;
+  }
+
+  .vocabs-page .vocab-card {
+    padding: 0.9rem;
+    border-radius: 1.05rem;
+  }
+
+  .vocabs-page .vocab-card:hover {
+    transform: none;
+  }
+
+  .vocabs-page .vocab-tabs-list {
+    gap: 0.45rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .vocabs-page .vocab-tabs-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .vocabs-page .vocab-tab {
+    flex: 0 0 auto;
+    min-width: 7rem;
+  }
+}
+
+html.dark .vocabs-page .vocabs-hero {
+  border-color: #2d405c;
+  background:
+    radial-gradient(circle at 92% 12%, rgba(70, 130, 210, 0.2), transparent 29%),
+    linear-gradient(135deg, #151d2d 0%, #17263c 100%);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+html.dark .vocabs-page .vocabs-hero h1 {
+  color: #f1f6ff !important;
+}
+
+html.dark .vocabs-page .vocabs-hero p {
+  color: #b3c0d4 !important;
+}
+
+html.dark .vocabs-page .vocabs-controls,
+html.dark .vocabs-page .vocab-sidebar > div,
+html.dark .vocabs-page .vocab-card {
+  border-color: #2d405c;
+  background: rgba(23, 31, 46, 0.94);
+}
+
+html.dark .vocabs-page .vocab-card:hover {
+  border-color: #4b78b8;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25);
+}
+
+html.dark .vocabs-page .vocab-lang-panel,
+html.dark .vocabs-page .vocab-tabs-list {
+  border-color: #2b3e5b;
+  background: #1a2639 !important;
+}
+
+html.dark .vocabs-page .vocab-language-row:hover {
+  background: #233755;
+}
+
+html.dark .vocabs-page .vocab-tab.bg-white {
+  border-color: #3f669d;
+  background: #203657 !important;
+  color: #b9d5ff !important;
+}
+
+
+/* MediVocabs toolbar layout: search first, modes second, tools separate */
+.vocabs-page .vocabs-toolbar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem 1rem;
+}
+
+.vocabs-page .vocabs-desktop-search {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  width: 100%;
+  max-width: none !important;
+  order: -1;
+}
+
+.vocabs-page .vocabs-display-modes {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+}
+
+.vocabs-page .vocabs-tools {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: start;
+}
+
+.vocabs-page .vocabs-tool-button {
+  min-height: 2.35rem;
+}
+
+@media (max-width: 767px) {
+  .vocabs-page .vocabs-controls {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .vocabs-page .vocabs-mobile-search {
+    order: -3;
+    margin-bottom: 0.25rem;
+  }
+
+  .vocabs-page .vocabs-toolbar-row {
+    order: -2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
+  .vocabs-page .vocabs-display-modes {
+    order: 0;
+    flex: 1 1 100%;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .vocabs-page .vocabs-display-modes::-webkit-scrollbar {
+    display: none;
+  }
+
+  .vocabs-page .vocabs-display-modes > button {
+    flex: 1 0 6.7rem;
+    min-width: 6.7rem;
+    min-height: 2.7rem;
+  }
+
+  .vocabs-page .vocabs-tools {
+    order: 1;
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    min-height: 2.7rem;
+  }
+
+  .vocabs-page .vocabs-tool-button {
+    min-height: 2.7rem;
+    padding-right: 0.9rem;
+    padding-left: 0.9rem;
+  }
+}
+
+html.dark .vocabs-page .vocabs-controls {
+  background: rgba(23, 31, 46, 0.96);
+}
+
+html.dark .vocabs-page .vocabs-display-modes {
+  background: #1a2639;
+}

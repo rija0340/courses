@@ -13,7 +13,7 @@ export default function CategoryTree({
   lang
 }) {
   return (
-    <div className="space-y-0.5">
+    <div className="vocab-category-tree space-y-0.5">
       {nodes.map(node => (
         <CategoryNode
           key={node.id}
@@ -50,7 +50,7 @@ function CategoryNode({ node, activeId, expandedIds, onToggle, onSelect, counts,
     <div>
       <button
         onClick={handleClick}
-        className={`w-full flex items-center gap-2 pr-3 rounded-lg text-left transition-all ${
+        className={`vocab-category-node w-full flex items-center gap-2 pr-3 rounded-lg text-left transition-all ${
           depth === 0 ? 'py-2.5 text-[15px] font-medium' : 'py-2 text-[14px]'
         } ${
           isActive

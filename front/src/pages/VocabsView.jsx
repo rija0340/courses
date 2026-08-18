@@ -260,10 +260,10 @@ export default function VocabsView() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8">
+    <div className="vocabs-page max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8">
       <Breadcrumb items={breadcrumbItems} />
 
-      <div className="mb-6 sm:mb-8 mt-3 sm:mt-4">
+      <div className="vocabs-hero mb-6 sm:mb-8 mt-3 sm:mt-4">
         <div className="flex items-start justify-between gap-3 mb-3">
           <h1 className="text-3xl sm:text-4xl font-normal text-[#202124] dark:text-[#e8eaed] leading-tight min-w-0">
             {getLabel(meta?.title)}
@@ -308,9 +308,9 @@ export default function VocabsView() {
         <p className="text-lg sm:text-xl text-[#5f6368] leading-relaxed">{getLabel(meta?.description)}</p>
       </div>
 
-      <div className="flex flex-col gap-2 mb-5">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex gap-[2px] p-[2px] bg-[#f1f3f4] rounded-xl shrink-0">
+      <div className="vocabs-controls flex flex-col gap-2 mb-5">
+        <div className="vocabs-toolbar-row flex flex-wrap items-center gap-2">
+          <div className="vocabs-display-modes flex gap-[2px] p-[2px] bg-[#f1f3f4] rounded-xl shrink-0">
             <button
               type="button"
               onClick={() => setViewMode('lecture')}
@@ -349,25 +349,27 @@ export default function VocabsView() {
             </button>
           </div>
 
-          {domainId === 'medi-vocabs' && (
-            <Link
-              to={`/vocabs/${domainId}/chat`}
-              className="inline-flex items-center gap-1.5 px-2.5 h-9 rounded-xl border border-[#dadce0] bg-white text-[12px] sm:text-[13px] font-semibold text-[#1a73e8] hover:bg-[#e8f0fe] shrink-0"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span className="hidden xs:inline sm:inline">Chat</span>
-            </Link>
-          )}
+          <div className="vocabs-tools inline-flex items-center gap-2">
+            {domainId === 'medi-vocabs' && (
+              <Link
+                to={`/vocabs/${domainId}/chat`}
+                className="vocabs-tool-button inline-flex items-center gap-1.5 px-2.5 h-9 rounded-xl border border-[#dadce0] bg-white text-[12px] sm:text-[13px] font-semibold text-[#1a73e8] hover:bg-[#e8f0fe] shrink-0"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span className="hidden xs:inline sm:inline">Chat</span>
+              </Link>
+            )}
 
-          {isPracticeEnabled() && (
-            <Link
-              to={`/vocabs/${domainId}/practice/simulation`}
-              className="inline-flex items-center gap-1.5 px-2.5 h-9 rounded-xl border border-[#dadce0] bg-white text-[12px] sm:text-[13px] font-semibold text-[#1a73e8] hover:bg-[#e8f0fe] shrink-0"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Simulation</span>
-            </Link>
-          )}
+            {isPracticeEnabled() && (
+              <Link
+                to={`/vocabs/${domainId}/practice/simulation`}
+                className="vocabs-tool-button inline-flex items-center gap-1.5 px-2.5 h-9 rounded-xl border border-[#dadce0] bg-white text-[12px] sm:text-[13px] font-semibold text-[#1a73e8] hover:bg-[#e8f0fe] shrink-0"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Simulation</span>
+              </Link>
+            )}
+          </div>
 
           {viewMode === 'revision' && (
             <>
@@ -422,7 +424,7 @@ export default function VocabsView() {
           {isTextMode && (
             <form
               onSubmit={(e) => handleSearchSubmit(e, desktopSearchRef)}
-              className="hidden md:block relative flex-1 min-w-[12rem] max-w-md"
+              className="vocabs-desktop-search hidden md:block relative flex-1 min-w-[12rem] max-w-md"
             >
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aa0a6] pointer-events-none" />
               <input
@@ -498,7 +500,7 @@ export default function VocabsView() {
         {isTextMode && (
           <form
             onSubmit={(e) => handleSearchSubmit(e, mobileSearchRef)}
-            className="md:hidden relative w-full"
+            className="vocabs-mobile-search md:hidden relative w-full"
           >
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aa0a6] pointer-events-none" />
             <input
@@ -525,7 +527,7 @@ export default function VocabsView() {
 
       <div className="flex flex-col md:flex-row gap-6 md:gap-8">
         {hasSidebar && (
-          <div className="hidden md:block w-[240px] shrink-0">
+          <div className="vocab-sidebar hidden md:block w-[240px] shrink-0">
             <div className="sticky top-20 bg-white border border-[#dadce0] rounded-2xl p-4">
               <p className="text-[13px] font-bold text-[#9aa0a6] uppercase tracking-wider mb-4 px-1">
                 Catégories
@@ -549,7 +551,7 @@ export default function VocabsView() {
 
           {isTextMode && (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="vocab-card-grid grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredItems.map(item =>
                   isScenarioItem(item) ? (
                     <ScenarioCard key={item.id} item={item} lang={lang} />
