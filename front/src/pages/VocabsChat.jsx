@@ -55,8 +55,8 @@ export default function VocabsChat() {
     lang === 'en' ? 'MediVocabs Chat' : lang === 'mg' ? 'Chat MediVocabs' : 'Chat MediVocabs';
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 pb-28 flex flex-col min-h-[70vh]">
-      <header className="flex items-center gap-3 mb-5">
+    <div className="vocabs-chat-page max-w-3xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 pb-28 flex flex-col min-h-[70vh]">
+      <header className="vocabs-chat-header flex items-center gap-3 mb-5">
         <Link
           to={`/vocabs/${domainId}`}
           className="w-9 h-9 rounded-xl bg-white border border-[#dadce0] flex items-center justify-center text-[#5f6368] hover:bg-[#f1f3f4] shrink-0"
@@ -81,9 +81,9 @@ export default function VocabsChat() {
         </div>
       ) : (
         <>
-          <div className="flex-1 space-y-4 mb-4">
+          <div className="vocabs-chat-thread flex-1 space-y-4 mb-4">
             {messages.length === 0 && !loading && (
-              <div className="rounded-2xl border border-[#e8eaed] bg-white px-4 py-6 text-center">
+              <div className="vocabs-chat-empty rounded-2xl border border-[#e8eaed] bg-white px-4 py-6 text-center">
                 <BookOpen className="w-8 h-8 text-[#1a73e8] mx-auto mb-2 opacity-80" />
                 <p className="text-[14px] text-[#3c4043] font-medium mb-1">
                   Pose une question sur le vocabulaire médical
@@ -100,7 +100,7 @@ export default function VocabsChat() {
                 className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[90%] rounded-2xl px-3.5 py-2.5 text-[14px] leading-relaxed whitespace-pre-wrap ${
+                  className={`vocabs-chat-message max-w-[90%] rounded-2xl px-3.5 py-2.5 text-[14px] leading-relaxed whitespace-pre-wrap ${
                     m.role === 'user'
                       ? 'bg-[#1a73e8] text-white'
                       : 'bg-white border border-[#e8eaed] text-[#202124]'
@@ -119,14 +119,14 @@ export default function VocabsChat() {
             )}
 
             {error && (
-              <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-white px-3 py-2.5 text-[13px] text-red-700">
+              <div className="vocabs-chat-error flex items-start gap-2 rounded-xl border border-red-200 bg-white px-3 py-2.5 text-[13px] text-red-700">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
             {sources.length > 0 && !loading && (
-              <div className="rounded-2xl border border-[#e8eaed] bg-[#f8f9fa] px-3 py-3">
+              <div className="vocabs-chat-sources rounded-2xl border border-[#e8eaed] bg-[#f8f9fa] px-3 py-3">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9aa0a6] mb-2">
                   Sources (RAG)
                 </p>
@@ -148,7 +148,7 @@ export default function VocabsChat() {
 
           <form
             onSubmit={handleSend}
-            className="sticky bottom-20 sm:bottom-6 flex gap-2 items-end bg-[#f8f9fa]/95 backdrop-blur-sm pt-2"
+            className="vocabs-chat-composer sticky bottom-20 sm:bottom-6 flex gap-2 items-end bg-[#f8f9fa]/95 backdrop-blur-sm pt-2"
           >
             <textarea
               value={input}
@@ -161,13 +161,13 @@ export default function VocabsChat() {
               }}
               rows={2}
               placeholder="Ta question…"
-              className="flex-1 resize-none rounded-2xl border border-[#dadce0] bg-white px-3.5 py-2.5 text-[14px] text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/30"
+              className="vocabs-chat-input flex-1 resize-none rounded-2xl border border-[#dadce0] bg-white px-3.5 py-2.5 text-[14px] text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/30"
               disabled={loading}
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="h-11 w-11 rounded-xl bg-[#1a73e8] text-white flex items-center justify-center hover:bg-[#1b66c9] disabled:opacity-40 shrink-0"
+              className="vocabs-chat-send h-11 w-11 rounded-xl bg-[#1a73e8] text-white flex items-center justify-center hover:bg-[#1b66c9] disabled:opacity-40 shrink-0"
               aria-label="Envoyer"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

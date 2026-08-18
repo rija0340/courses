@@ -56,8 +56,9 @@ export default function PracticeSimulation() {
 
   return (
     <PracticePageShell>
-      <Breadcrumb items={crumbs} />
-      <div className="mb-6 mt-2">
+      <div className="practice-route-page">
+        <Breadcrumb items={crumbs} />
+      <div className="practice-route-hero mb-6 mt-2">
         <Link
           to={domainId ? `/vocabs/${domainId}` : '/'}
           className="inline-flex items-center gap-1.5 text-[13px] text-[#64748b] hover:text-teal-800 transition-colors"
@@ -65,7 +66,8 @@ export default function PracticeSimulation() {
           <ArrowLeft className="w-4 h-4" />
           {ui.back}
         </Link>
-        <h1 className="mt-3 text-[28px] sm:text-[32px] font-semibold tracking-tight text-[#0f172a]">
+        <span className="practice-route-eyebrow">Atelier de pratique</span>
+        <h1 className="mt-2 text-[28px] sm:text-[32px] font-semibold tracking-tight text-[#0f172a]">
           {ui.simulation}
         </h1>
         <p className="text-[14px] text-[#64748b] mt-1">
@@ -73,13 +75,26 @@ export default function PracticeSimulation() {
           <span className="text-[#cbd5e1]"> · </span>
           {scenarioKind === 'medical' ? 'Profil médical' : 'Vocabulaire · A / B'}
         </p>
+        <p className="practice-route-intro mt-3 text-[13px] leading-relaxed text-[#64748b]">
+          {lang === 'en'
+            ? 'Choose an activity, prepare your topic, and practise at your own pace.'
+            : lang === 'mg'
+              ? 'Misafidiana hetsika, amboary ny lohahevitrao, ary manaova fanazaran-tena tsikelikely.'
+              : 'Choisis une activité, prépare ton thème et entraîne-toi à ton rythme.'}
+        </p>
       </div>
 
       {loading ? (
         <p className="text-[14px] text-[#64748b]">{ui.loading}</p>
       ) : (
         <>
-          <div className="mb-5 overflow-x-auto">
+          <div className="practice-modality-section mb-5 overflow-x-auto">
+            <div className="practice-section-heading">
+              <div>
+                <span className="practice-section-kicker">1 · Choisir une activité</span>
+                <p className="practice-section-description">Commence par le format qui correspond le mieux à ton objectif.</p>
+              </div>
+            </div>
             <SegmentedControl
               className="w-full sm:w-auto min-w-[280px]"
               value={modality}
@@ -121,6 +136,7 @@ export default function PracticeSimulation() {
           )}
         </>
       )}
+      </div>
     </PracticePageShell>
   );
 }

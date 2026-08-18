@@ -192,7 +192,7 @@ export default function SimulationPanel({
 
   return (
     <div className="space-y-5">
-      <PracticeCard className="pb-5 sm:pb-6">
+      <PracticeCard className="practice-simulation-card pb-5 sm:pb-6">
         <PracticeCardHeader
           title={ui.simulation}
           hint={`${ui.simulationHint}${usesRemoteLlm() ? ' · Groq' : ' · mock'}`}
@@ -204,7 +204,11 @@ export default function SimulationPanel({
           }
         />
 
-        <div className="px-5 sm:px-6 mt-4 space-y-4">
+        <div className="practice-simulation-form px-5 sm:px-6 mt-4 space-y-4">
+          <div className="practice-config-intro">
+            <span className="practice-section-kicker">2 · Préparer ta simulation</span>
+            <p className="practice-section-description">Choisis un scénario, un thème et une durée. Tu pourras ensuite écouter et rejouer chaque tour.</p>
+          </div>
           <SegmentedControl
             className="w-full"
             value={mode}
@@ -218,7 +222,7 @@ export default function SimulationPanel({
 
           {mode === 'preset' && (
             <div className="space-y-2.5">
-              <div className="flex flex-wrap gap-2">
+              <div className="practice-scenario-pills flex flex-wrap gap-2">
                 {presets.map((p) => (
                   <ChoicePill
                     key={p.id}
@@ -230,7 +234,7 @@ export default function SimulationPanel({
                 ))}
               </div>
               {selected?.description && (
-                <p className="text-[13px] text-[#64748b] leading-relaxed rounded-xl bg-[#f8fafc] border border-[#e2e8f0] px-3.5 py-2.5">
+                <p className="practice-scenario-description text-[13px] text-[#64748b] leading-relaxed rounded-xl bg-[#f8fafc] border border-[#e2e8f0] px-3.5 py-2.5">
                   {pickLangText(selected.description, lang)}
                 </p>
               )}
@@ -315,11 +319,11 @@ export default function SimulationPanel({
             </label>
           )}
 
-          <div className="pt-1 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="practice-submit-row pt-1 flex flex-col sm:flex-row sm:items-center gap-3">
             <PrimaryButton
               onClick={handleGenerate}
               disabled={loading || !canGenerate}
-              className="w-full sm:w-auto"
+              className="practice-generate-button w-full sm:w-auto"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

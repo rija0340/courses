@@ -738,3 +738,589 @@ html.dark .vocabs-page .vocabs-display-modes {
     transform: none;
   }
 }
+/* ------------------------------------------------------------------ */
+/* MediVocabs practice + chat refresh                                 */
+/* ------------------------------------------------------------------ */
+
+.practice-page-shell {
+  --practice-ink: #102a56;
+  --practice-muted: #66738a;
+  --practice-border: #e4eaf3;
+  --practice-teal: #159b8a;
+  --practice-blue: #2f6fed;
+}
+
+.practice-page-content {
+  max-width: 58rem;
+}
+
+.practice-route-page {
+  position: relative;
+}
+
+.practice-route-page > .mb-6 {
+  position: relative;
+  margin-top: 0.9rem;
+  padding: 1.25rem 1.35rem 1.35rem;
+  border: 1px solid var(--practice-border);
+  border-radius: 1.3rem;
+  background:
+    radial-gradient(circle at 95% 12%, rgba(181, 220, 255, 0.48), transparent 30%),
+    linear-gradient(135deg, #ffffff 0%, #f6fbff 100%);
+  box-shadow: 0 10px 28px rgba(30, 67, 122, 0.06);
+}
+
+.practice-route-page > .mb-6 h1 {
+  color: var(--practice-ink) !important;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.practice-route-page > .mb-6 p {
+  color: var(--practice-muted) !important;
+}
+
+.practice-route-page > .mb-5 {
+  margin-top: 1.1rem;
+  padding: 0.5rem;
+  border: 1px solid var(--practice-border);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 7px 20px rgba(30, 67, 122, 0.04);
+}
+
+.practice-route-page > .mb-5 .practice-segmented-control {
+  width: 100%;
+  min-width: 0;
+  background: #f2f6fb;
+  border-color: #e0e8f2;
+}
+
+.practice-route-page > .mb-5 .practice-segmented-control button {
+  min-height: 2.75rem;
+  border-radius: 0.75rem;
+}
+
+.practice-route-page > .mb-5 .practice-segmented-control button[aria-selected="true"] {
+  color: var(--practice-blue);
+  border: 1px solid #d2e1fb;
+  background: linear-gradient(180deg, #ffffff, #f6faff);
+  box-shadow: 0 4px 10px rgba(47, 111, 237, 0.1);
+}
+
+.practice-card {
+  border-color: var(--practice-border) !important;
+  border-radius: 1.25rem !important;
+  box-shadow: 0 8px 24px rgba(30, 67, 122, 0.065) !important;
+}
+
+.practice-card-header h2 {
+  color: var(--practice-ink) !important;
+  font-weight: 800;
+}
+
+.practice-card-header .w-10 {
+  border-color: #cfeee8;
+  background: linear-gradient(135deg, #effcf9, #eef7ff);
+  color: var(--practice-teal);
+}
+
+.practice-segmented-control {
+  border-color: #dfe7f1;
+  background: #f4f7fb;
+}
+
+.practice-segmented-control button {
+  min-height: 2.6rem;
+}
+
+.practice-segmented-control button[aria-selected="true"] {
+  border: 1px solid #bfe9df;
+  color: #087f72;
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(21, 155, 138, 0.11);
+}
+
+.practice-choice-pill {
+  min-height: 2.55rem;
+}
+
+.practice-choice-pill:hover {
+  transform: translateY(-1px);
+  border-color: #b9d2f5;
+  box-shadow: 0 4px 10px rgba(30, 67, 122, 0.07);
+}
+
+.practice-input,
+.practice-select,
+.practice-textarea {
+  border-color: #dfe7f1;
+  background: #f8fbff;
+  box-shadow: inset 0 1px 2px rgba(30, 67, 122, 0.025);
+}
+
+.practice-input:focus,
+.practice-select:focus,
+.practice-textarea:focus {
+  border-color: #6aa0ef;
+  box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.12);
+}
+
+.practice-primary-button {
+  min-height: 2.85rem;
+  background: linear-gradient(135deg, #2f6fed, #159b8a) !important;
+  box-shadow: 0 9px 18px rgba(47, 111, 237, 0.18) !important;
+}
+
+.practice-primary-button:hover {
+  transform: translateY(-1px);
+  filter: saturate(1.08);
+}
+
+.practice-secondary-button:hover {
+  border-color: #b9d2f5;
+  color: var(--practice-blue);
+  background: #f6faff;
+}
+
+.vocabs-chat-page {
+  position: relative;
+  max-width: 58rem;
+}
+
+.vocabs-chat-header {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--practice-border);
+  border-radius: 1.15rem;
+  background: linear-gradient(135deg, #ffffff, #f6fbff);
+  box-shadow: 0 8px 22px rgba(30, 67, 122, 0.055);
+}
+
+.vocabs-chat-header h1 {
+  color: var(--practice-ink) !important;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.vocabs-chat-header a {
+  border-color: #dfe7f1;
+  background: #ffffff;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.vocabs-chat-header a:hover {
+  border-color: #b9d2f5;
+  box-shadow: 0 5px 12px rgba(30, 67, 122, 0.08);
+  transform: translateY(-1px);
+}
+
+.vocabs-chat-thread {
+  padding: 0.25rem 0.1rem 1rem;
+}
+
+.vocabs-chat-empty {
+  padding: 2.5rem 1.5rem;
+  border-color: #dce8f7;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(47, 111, 237, 0.1), transparent 44%),
+    linear-gradient(145deg, #ffffff, #f7fbff);
+  box-shadow: 0 10px 24px rgba(30, 67, 122, 0.055);
+}
+
+.vocabs-chat-empty svg {
+  width: 2.65rem;
+  height: 2.65rem;
+  padding: 0.58rem;
+  border-radius: 0.95rem;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2f6fed, #159b8a);
+  opacity: 1;
+  box-sizing: content-box;
+}
+
+.vocabs-chat-message {
+  border-radius: 1.1rem !important;
+  box-shadow: 0 5px 14px rgba(30, 67, 122, 0.06);
+}
+
+.vocabs-chat-message.bg-\[\#1a73e8\] {
+  background: linear-gradient(135deg, #2f6fed, #477fe7) !important;
+}
+
+.vocabs-chat-message.bg-white {
+  border-color: #dfe7f1 !important;
+  background: #ffffff !important;
+}
+
+.vocabs-chat-sources {
+  border-color: #cfeee8;
+  background: linear-gradient(135deg, #f0fcf9, #f3f8ff) !important;
+}
+
+.vocabs-chat-sources .text-\[\#1a73e8\] {
+  color: #1764c0 !important;
+}
+
+.vocabs-chat-error {
+  border-color: #f4c7c3;
+  background: #fff9f8;
+}
+
+.vocabs-chat-composer {
+  margin-top: 0.5rem;
+  padding: 0.65rem;
+  border: 1px solid #dfe7f1;
+  border-radius: 1.15rem;
+  background: rgba(248, 251, 255, 0.94) !important;
+  box-shadow: 0 10px 24px rgba(30, 67, 122, 0.08);
+}
+
+.vocabs-chat-input {
+  min-height: 2.9rem;
+  border-color: #d6e1ef !important;
+  background: #ffffff !important;
+}
+
+.vocabs-chat-input:focus {
+  border-color: #6aa0ef !important;
+  box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.12);
+}
+
+.vocabs-chat-send {
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 0.9rem;
+  background: linear-gradient(135deg, #2f6fed, #159b8a) !important;
+  box-shadow: 0 8px 16px rgba(47, 111, 237, 0.18);
+}
+
+.vocabs-chat-send:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 767px) {
+  .practice-page-content {
+    padding-top: 1rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .practice-route-page > .mb-6 {
+    padding: 1rem;
+    border-radius: 1.1rem;
+  }
+
+  .practice-route-page > .mb-6 h1 {
+    font-size: 1.85rem;
+  }
+
+  .practice-route-page > .mb-5 {
+    padding: 0.4rem;
+    border-radius: 0.95rem;
+  }
+
+  .practice-route-page > .mb-5 .practice-segmented-control {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .practice-route-page > .mb-5 .practice-segmented-control::-webkit-scrollbar {
+    display: none;
+  }
+
+  .practice-route-page > .mb-5 .practice-segmented-control button {
+    flex: 1 0 7rem;
+    min-width: 7rem;
+  }
+
+  .practice-card {
+    border-radius: 1.05rem !important;
+  }
+
+  .vocabs-chat-page {
+    padding-right: 0.9rem;
+    padding-left: 0.9rem;
+  }
+
+  .vocabs-chat-header {
+    padding: 0.75rem;
+    border-radius: 1rem;
+  }
+
+  .vocabs-chat-message {
+    max-width: 94% !important;
+  }
+
+  .vocabs-chat-composer {
+    bottom: 1rem;
+    padding: 0.5rem;
+    border-radius: 1rem;
+  }
+}
+
+html.dark .practice-route-page > .mb-6,
+html.dark .vocabs-chat-header,
+html.dark .vocabs-chat-empty,
+html.dark .vocabs-chat-composer,
+html.dark .practice-card {
+  border-color: #2d405c;
+  background: linear-gradient(135deg, #151d2d, #17263c);
+}
+
+html.dark .practice-route-page > .mb-6 h1,
+html.dark .practice-card-header h2,
+html.dark .vocabs-chat-header h1 {
+  color: #f1f6ff !important;
+}
+
+html.dark .practice-route-page > .mb-6 p,
+html.dark .vocabs-chat-header p {
+  color: #b3c0d4 !important;
+}
+
+html.dark .practice-route-page > .mb-5,
+html.dark .practice-route-page > .mb-5 .practice-segmented-control {
+  border-color: #2d405c;
+  background: #1a2639;
+}
+
+html.dark .practice-segmented-control button[aria-selected="true"] {
+  border-color: #3f669d;
+  background: #203657;
+  color: #b9d5ff;
+}
+
+html.dark .practice-input,
+html.dark .practice-select,
+html.dark .practice-textarea,
+html.dark .vocabs-chat-input {
+  border-color: #344c6d !important;
+  color: #eaf1ff !important;
+  background: #1a2639 !important;
+}
+
+html.dark .vocabs-chat-message.bg-white {
+  border-color: #344c6d !important;
+  color: #eaf1ff !important;
+  background: #1a2639 !important;
+}
+
+html.dark .vocabs-chat-composer {
+  background: rgba(14, 20, 32, 0.94) !important;
+}
+
+
+/* Simulation learning journey refresh */
+.practice-route-hero {
+  overflow: hidden;
+  padding: 1.35rem 1.45rem 1.45rem !important;
+  border-radius: 1.35rem !important;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(181, 220, 255, 0.58), transparent 28%),
+    radial-gradient(circle at 4% 100%, rgba(196, 244, 232, 0.52), transparent 32%),
+    linear-gradient(135deg, #ffffff 0%, #f7fbff 56%, #f2fffb 100%) !important;
+}
+
+.practice-route-hero::after {
+  content: '';
+  display: block;
+  width: 4.25rem;
+  height: 0.28rem;
+  margin-top: 1rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2f6fed, #159b8a);
+}
+
+.practice-route-eyebrow,
+.practice-section-kicker {
+  display: block;
+  color: #198b7e;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.practice-route-eyebrow {
+  margin-top: 1.2rem;
+}
+
+.practice-route-intro {
+  max-width: 38rem;
+  color: #5e6e84 !important;
+}
+
+.practice-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 0.65rem;
+  padding: 0 0.2rem;
+}
+
+.practice-section-description {
+  margin-top: 0.25rem;
+  color: #758399;
+  font-size: 0.77rem;
+  line-height: 1.45;
+}
+
+.practice-modality-section {
+  padding: 0.9rem 1rem 1rem;
+  border: 1px solid #dfe7f1;
+  border-radius: 1.15rem;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 8px 22px rgba(30, 67, 122, 0.045);
+}
+
+.practice-modality-section .practice-segmented-control {
+  gap: 0.35rem;
+  padding: 0.3rem;
+  background: #f3f7fc;
+  border-color: #e0e8f2;
+}
+
+.practice-modality-section .practice-segmented-control button {
+  min-height: 3rem;
+  border-radius: 0.8rem;
+  color: #65748a;
+}
+
+.practice-modality-section .practice-segmented-control button[aria-selected="true"] {
+  color: #135fc4;
+  border-color: #c7dcfb;
+  background: linear-gradient(180deg, #ffffff, #f1f7ff);
+  box-shadow: 0 5px 12px rgba(47, 111, 237, 0.12);
+}
+
+.practice-simulation-card {
+  position: relative;
+}
+
+.practice-simulation-card::before {
+  content: 'Étape 2';
+  position: absolute;
+  top: 1.25rem;
+  left: 1.35rem;
+  z-index: 1;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  color: #0f8174;
+  background: #e8fbf6;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.practice-simulation-card .practice-card-header {
+  padding-top: 3.2rem;
+}
+
+.practice-config-intro {
+  padding: 0.75rem 0.85rem;
+  border-left: 3px solid #70cdbd;
+  border-radius: 0.65rem;
+  background: linear-gradient(90deg, #f0fcf9, #f7fbff);
+}
+
+.practice-scenario-pills {
+  padding: 0.2rem 0;
+}
+
+.practice-scenario-pills .practice-choice-pill {
+  min-height: 2.75rem;
+  padding-right: 0.9rem;
+  padding-left: 0.9rem;
+  border-radius: 0.85rem;
+}
+
+.practice-scenario-description {
+  border-color: #dbe9f5 !important;
+  background: #f7fbff !important;
+}
+
+.practice-submit-row {
+  margin-top: 0.25rem;
+  padding: 0.8rem;
+  border: 1px solid #dcebe9;
+  border-radius: 1rem;
+  background: linear-gradient(90deg, #f2fcfa, #f5f9ff);
+}
+
+.practice-submit-row::after {
+  content: 'Tu pourras écouter, rejouer et pratiquer chaque tour.';
+  color: #758399;
+  font-size: 0.73rem;
+  line-height: 1.35;
+}
+
+.practice-generate-button {
+  min-height: 3rem;
+  padding-right: 1.2rem !important;
+  padding-left: 1.2rem !important;
+  font-size: 0.84rem !important;
+}
+
+@media (min-width: 640px) {
+  .practice-submit-row::after {
+    max-width: 15rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .practice-route-hero {
+    padding: 1rem !important;
+    border-radius: 1.05rem !important;
+  }
+
+  .practice-route-hero::after {
+    margin-top: 0.8rem;
+  }
+
+  .practice-modality-section {
+    padding: 0.7rem;
+  }
+
+  .practice-modality-section .practice-segmented-control button {
+    flex: 1 0 7.2rem;
+    min-width: 7.2rem;
+  }
+
+  .practice-simulation-card::before {
+    top: 1rem;
+    left: 1rem;
+  }
+
+  .practice-simulation-card .practice-card-header {
+    padding-top: 3rem;
+  }
+
+  .practice-submit-row::after {
+    display: block;
+    width: 100%;
+  }
+}
+
+html.dark .practice-route-hero,
+html.dark .practice-modality-section {
+  border-color: #2d405c;
+  background: linear-gradient(135deg, #151d2d, #17263c) !important;
+}
+
+html.dark .practice-route-intro,
+html.dark .practice-section-description {
+  color: #b3c0d4 !important;
+}
+
+html.dark .practice-config-intro,
+html.dark .practice-submit-row {
+  border-color: #2d5760;
+  background: linear-gradient(90deg, #172c34, #182b43);
+}
+
+html.dark .practice-scenario-description {
+  border-color: #344c6d !important;
+  background: #1a2639 !important;
+}
