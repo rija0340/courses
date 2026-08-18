@@ -380,15 +380,21 @@ html.dark body {
   border-radius: 1.25rem;
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 10px 26px rgba(30, 67, 122, 0.055);
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .vocabs-page .vocab-category-tree {
   display: grid;
   gap: 0.28rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .vocabs-page .vocab-category-node {
   min-height: 2.7rem;
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid transparent;
   border-radius: 0.85rem;
 }

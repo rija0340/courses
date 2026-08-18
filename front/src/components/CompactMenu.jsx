@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const panelClass =
-  'absolute top-full mt-1.5 min-w-[160px] py-1 bg-lh-card border border-lh-border rounded-xl shadow-lh z-[70] animate-fade-in';
+  'absolute top-full mt-1.5 min-w-[160px] w-max max-w-[min(18rem,calc(100vw-1.5rem))] overflow-hidden py-1 bg-lh-card border border-lh-border rounded-xl shadow-lh z-[70] animate-fade-in';
 
 export function CompactMenu({ trigger, children, align = 'right', className = '' }) {
   const [open, setOpen] = useState(false);
@@ -34,7 +34,7 @@ export function CompactMenu({ trigger, children, align = 'right', className = ''
 }
 
 const itemClass = (active) =>
-  `w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-[13px] font-medium transition-colors ${
+  `w-full min-w-0 flex items-center gap-2.5 px-3 py-2.5 text-left text-[13px] font-medium transition-colors ${
     active
       ? 'bg-lh-accent-soft text-lh-accent-text'
       : 'text-lh-text hover:bg-lh-muted'
@@ -43,7 +43,7 @@ const itemClass = (active) =>
 export function MenuButton({ children, onClick, active }) {
   return (
     <button type="button" className={itemClass(active)} onClick={onClick} role="menuitem">
-      {children}
+      <span className="min-w-0 flex-1 truncate flex items-center gap-2.5">{children}</span>
     </button>
   );
 }
@@ -51,7 +51,7 @@ export function MenuButton({ children, onClick, active }) {
 export function MenuLink({ to, children, active }) {
   return (
     <Link to={to} className={itemClass(active)} role="menuitem">
-      {children}
+      <span className="min-w-0 flex-1 truncate flex items-center gap-2.5">{children}</span>
     </Link>
   );
 }

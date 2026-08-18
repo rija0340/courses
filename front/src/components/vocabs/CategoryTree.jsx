@@ -13,7 +13,7 @@ export default function CategoryTree({
   lang
 }) {
   return (
-    <div className="vocab-category-tree space-y-0.5">
+    <div className="vocab-category-tree min-w-0 space-y-0.5">
       {nodes.map(node => (
         <CategoryNode
           key={node.id}
@@ -47,10 +47,10 @@ function CategoryNode({ node, activeId, expandedIds, onToggle, onSelect, counts,
   };
 
   return (
-    <div>
+    <div className="min-w-0">
       <button
         onClick={handleClick}
-        className={`vocab-category-node w-full flex items-center gap-2 pr-3 rounded-lg text-left transition-all ${
+        className={`vocab-category-node w-full min-w-0 max-w-full overflow-hidden flex items-center gap-2 pr-3 rounded-lg text-left transition-all ${
           depth === 0 ? 'py-2.5 text-[15px] font-medium' : 'py-2 text-[14px]'
         } ${
           isActive
@@ -88,7 +88,7 @@ function CategoryNode({ node, activeId, expandedIds, onToggle, onSelect, counts,
             <ImageIcon className={`w-3 h-3 ${isActive ? 'text-white/70' : 'text-[#dadce0]'}`} />
           </span>
         )}
-        <span className="flex-1 truncate">{getLabel(node.label)}</span>
+        <span className="flex-1 min-w-0 truncate">{getLabel(node.label)}</span>
         <span
           className={`text-[12px] px-2 py-0.5 rounded-full shrink-0 ${
             isActive

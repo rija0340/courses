@@ -488,8 +488,8 @@ export default function VocabsView() {
             </button>
 
             {mobileDrawerOpen && (
-              <div className="w-full bg-white border border-[#dadce0] border-t-0 rounded-b-xl overflow-hidden">
-                <div className="p-3 overflow-y-auto" style={{ maxHeight: '60vh' }}>
+              <div className="w-full min-w-0 bg-white border border-[#dadce0] border-t-0 rounded-b-xl overflow-hidden">
+                <div className="p-3 overflow-y-auto overflow-x-hidden min-w-0" style={{ maxHeight: '60vh' }}>
                   {sidebarContent}
                 </div>
               </div>
