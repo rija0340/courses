@@ -114,6 +114,32 @@ async function removeExistingVariants(prefixPathWithoutExt) {
   await removeFromBucket(exts.map(ext => `${prefixPathWithoutExt}.${ext}`));
 }
 
+const VOCAB_ITEMS_PAGE_SIZE = 1000;
+
+async function getAllVocabItems(domainId) {
+  const allItems = [];
+  let offset = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('vocab_items')
+      .select('*')
+      .eq('domain_id', domainId)
+      .order('created_at', { ascending: true })
+      .order('id', { ascending: true })
+      .range(offset, offset + VOCAB_ITEMS_PAGE_SIZE - 1);
+
+    if (error) throw error;
+
+    const page = data || [];
+    allItems.push(...page);
+    if (page.length < VOCAB_ITEMS_PAGE_SIZE) break;
+    offset += VOCAB_ITEMS_PAGE_SIZE;
+  }
+
+  return allItems;
+}
+
 const supabaseProvider = {
   async getDomain(domainId) {
     if (!supabase) return null;
@@ -130,13 +156,10 @@ const supabaseProvider = {
     }
     if (!domain) return null;
 
-    const { data: items, error: itemsErr } = await supabase
-      .from('vocab_items')
-      .select('*')
-      .eq('domain_id', domainId)
-      .order('created_at', { ascending: true });
-
-    if (itemsErr) {
+    let items;
+    try {
+      items = await getAllVocabItems(domainId);
+    } catch (itemsErr) {
       console.error('Error fetching items:', itemsErr);
       throw new Error(itemsErr.message);
     }
@@ -145,7 +168,7 @@ const supabaseProvider = {
       id: domain.id,
       meta: domain.meta,
       organization: domain.organization,
-      items: (items || []).map(mapItem),
+      items: items.map(mapItem),
     };
   },
 
@@ -301,14 +324,12 @@ const supabaseProvider = {
 
   async getItems(domainId) {
     if (!supabase) return [];
-    const { data, error } = await supabase
-      .from('vocab_items')
-      .select('*')
-      .eq('domain_id', domainId)
-      .order('created_at', { ascending: true });
-
-    if (error) throw new Error(error.message);
-    return (data || []).map(mapItem);
+    try {
+      const data = await getAllVocabItems(domainId);
+      return data.map(mapItem);
+    } catch (error) {
+      throw new Error(error.message);
+    }
   },
 
   async createItem(domainId, item) {
