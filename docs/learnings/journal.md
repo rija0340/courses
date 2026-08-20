@@ -168,3 +168,22 @@ flowchart LR
   Picker --> String["string"]
   String --> JSX["React child"]
 ```
+### 2026-08-20 - Partage mobile, suppression observable et explication contextuelle
+**Tags :** `visibility` `state` `async`
+**Bonne pratique :** single source of truth ; explicit loading/error states ; fail safely in prod
+**Concept :** le menu de partage mobile doit être visible hors du conteneur du bandeau, tandis que les opérations longues doivent exposer un état unique de chargement avec une durée écoulée. Le bouton d’explication réutilise l’adaptateur RAG existant au lieu de créer un second chemin Groq.
+**Pourquoi :** le problème de clic venait aussi du `overflow: hidden` du bandeau ; un simple `z-index` n’aurait pas suffi. Le provider de suppression n’offre pas de progression par fichier, donc le temps écoulé est le signal honnête disponible. La clé Groq reste côté Edge Function.
+**Pas choisi :** un portail React pour le menu ; une nouvelle API de progression ; un appel Groq direct depuis le navigateur.
+**À retenir :** rendre visibles les états réels de l’async améliore la confiance sans inventer une progression que le backend ne mesure pas.
+
+```mermaid
+sequenceDiagram
+  participant U as Utilisateur
+  participant UI as Interface
+  participant API as Supabase / Groq
+  U->>UI: Clique sur une action
+  UI->>UI: Affiche loading + statut
+  UI->>API: Exécute l’opération
+  API-->>UI: Succès ou erreur
+  UI-->>U: Résultat explicite
+```

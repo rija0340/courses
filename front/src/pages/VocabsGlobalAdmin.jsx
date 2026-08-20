@@ -1,8 +1,8 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import useSupabaseAdminSession from '../hooks/useSupabaseAdminSession';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Plus, ArrowLeft, AlertCircle, Check, Eye, Settings2, Trash2,
+  Plus, ArrowLeft, AlertCircle, Check, Eye, Settings2, Trash2, Loader2,
   BookOpen, HeartPulse, Cpu, Languages, Scale, Briefcase, GraduationCap, Globe, FlaskConical, LogOut
 } from 'lucide-react';
 import { AppContext } from '../App';
@@ -45,6 +45,8 @@ export default function VocabsGlobalAdmin() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [deleteStartedAt, setDeleteStartedAt] = useState(null);
+  const [deleteElapsedSeconds, setDeleteElapsedSeconds] = useState(0);
 
   const [form, setForm] = useState({
     id: '',
@@ -110,6 +112,8 @@ export default function VocabsGlobalAdmin() {
       return;
     }
     setDeletingId(domainId);
+    setDeleteStartedAt(Date.now());
+    setDeleteElapsedSeconds(0);
     try {
       await vocabStorage.deleteDomain(domainId);
       await refresh();
@@ -118,8 +122,21 @@ export default function VocabsGlobalAdmin() {
       showToastMsg(err.message || 'Échec suppression', 'error');
     } finally {
       setDeletingId(null);
+      setDeleteStartedAt(null);
+      setDeleteElapsedSeconds(0);
     }
   };
+
+  useEffect(() => {
+    if (!deletingId || !deleteStartedAt) return undefined;
+
+    const updateElapsed = () => {
+      setDeleteElapsedSeconds(Math.floor((Date.now() - deleteStartedAt) / 1000));
+    };
+    updateElapsed();
+    const timer = window.setInterval(updateElapsed, 1000);
+    return () => window.clearInterval(timer);
+  }, [deletingId, deleteStartedAt]);
 
   if (checkingAuth || loading) {
     return (
@@ -156,6 +173,25 @@ export default function VocabsGlobalAdmin() {
         >
           {toast.type === 'error' ? <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /> : <Check className="w-4 h-4 mt-0.5 shrink-0" />}
           <span>{toast.text}</span>
+        </div>
+      )}
+
+      {deletingId && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-4 flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-[13px] text-blue-900 shadow-sm"
+        >
+          <Loader2 className="w-4 h-4 mt-0.5 shrink-0 animate-spin text-[#1a73e8]" />
+          <div>
+            <p className="font-semibold">Suppression en cours…</p>
+            <p className="mt-0.5 text-blue-800">
+              {deleteElapsedSeconds < 5
+                ? 'Le domaine et ses données sont en cours de suppression.'
+                : 'La suppression prend plus de temps que prévu ; veuillez patienter.'}
+              {' '}Temps écoulé : {deleteElapsedSeconds}s.
+            </p>
+          </div>
         </div>
       )}
 
@@ -334,11 +370,20 @@ export default function VocabsGlobalAdmin() {
                 <button
                   type="button"
                   onClick={() => handleDelete(d.id)}
-                  disabled={deletingId === d.id}
+                  disabled={Boolean(deletingId)}
                   className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-red-200 text-[13px] font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  {deletingId === d.id ? '…' : 'Supprimer'}
+                  {deletingId === d.id ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Suppression…
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Supprimer
+                    </>
+                  )}
                 </button>
               </div>
             </div>

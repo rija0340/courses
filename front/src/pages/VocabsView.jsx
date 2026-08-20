@@ -123,12 +123,26 @@ export default function VocabsView() {
   };
 
   const handleShare = async () => {
+    const shareUrl = window.location.href;
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = shareUrl;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        const copied = document.execCommand('copy');
+        textarea.remove();
+        if (!copied) throw new Error('Copie indisponible');
+      }
       setShareCopied(true);
       setTimeout(() => setShareCopied(false), 2000);
     } catch {
-      /* clipboard unavailable */
+      setShareCopied(false);
     }
   };
 
@@ -565,6 +579,7 @@ export default function VocabsView() {
                       revealAll={revealAll}
                       onImageClick={openLightbox}
                       itemStructure={resolveItemStructure(categories, item.categoryId)}
+                      domainId={domainId}
                     />
                   )
                 )}

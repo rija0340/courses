@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const panelClass =
-  'absolute top-full mt-1.5 min-w-[160px] w-max max-w-[min(18rem,calc(100vw-1.5rem))] overflow-hidden py-1 bg-lh-card border border-lh-border rounded-xl shadow-lh z-[70] animate-fade-in';
+  'absolute top-full mt-1.5 min-w-[160px] w-max max-w-[min(18rem,calc(100vw-1.5rem))] overflow-hidden py-1 bg-lh-card border border-lh-border rounded-xl shadow-lh z-[100] animate-fade-in';
 
 export function CompactMenu({ trigger, children, align = 'right', className = '' }) {
   const [open, setOpen] = useState(false);
@@ -18,8 +18,8 @@ export function CompactMenu({ trigger, children, align = 'right', className = ''
   }, [open]);
 
   return (
-    <div className={`relative ${className}`} ref={ref}>
-      <div onClick={() => setOpen((v) => !v)}>{trigger(open)}</div>
+    <div className={`relative ${open ? 'z-[80]' : ''} ${className}`} ref={ref}>
+      <div onClick={() => setOpen((v) => !v)} className="relative z-[1]">{trigger(open)}</div>
       {open && (
         <div
           className={`${panelClass} ${align === 'right' ? 'right-0' : 'left-0'}`}

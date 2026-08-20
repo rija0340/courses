@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Mic, Volume2 } from 'lucide-react';
+import { AlertCircle, Loader2, MessageCircle, Mic, Volume2 } from 'lucide-react';
 import RevealableLangRow, { LangRow } from './RevealableLangRow';
 import PronunciationPractice from '../../practice/components/PronunciationPractice';
 import { isPracticeEnabled } from '../../practice/config';
+import { sendRagChat } from '../../lib/ragClient';
 import { speechService } from '../../practice/services/speechService';
 import ExampleCollapse from './ExampleCollapse';
 import { hasExample } from '../../utils/vocabDialogue';
@@ -88,9 +89,14 @@ export default function VocabCard({
   revealAll = false,
   onImageClick,
   itemStructure = null,
+  domainId = null,
 }) {
   const [playing, setPlaying] = useState(false);
   const [showPractice, setShowPractice] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [explanation, setExplanation] = useState('');
+  const [explanationLoading, setExplanationLoading] = useState(false);
+  const [explanationError, setExplanationError] = useState(null);
 
   const structured = Boolean(itemStructure);
   const structureLangs = structured ? structureHeadLangs(itemStructure) : ['fr', 'mg'];
@@ -142,6 +148,45 @@ export default function VocabCard({
   };
 
   const canPractice = isPracticeEnabled() && !!titleEn;
+  const canExplain = domainId === 'medi-vocabs' && !!(titleEn || displayTitle);
+
+  const handleExplain = async (e) => {
+    e.stopPropagation();
+    if (!canExplain || explanationLoading) return;
+
+    if (showExplanation && explanation) {
+      setShowExplanation(false);
+      return;
+    }
+
+    setShowExplanation(true);
+    setExplanationError(null);
+    if (explanation) return;
+
+    const requestedLanguage = lang === 'en' ? 'English' : lang === 'mg' ? 'Malagasy' : 'French';
+    const context = [
+      titleEn && `English term: ${titleEn}`,
+      textFr && `French translation: ${textFr}`,
+      textMg && `Malagasy translation: ${textMg}`,
+      phonetic && `Pronunciation: ${phonetic}`,
+    ].filter(Boolean).join('\n');
+
+    setExplanationLoading(true);
+    try {
+      const data = await sendRagChat({
+        domainId,
+        messages: [{
+          role: 'user',
+          content: `Explain this vocabulary item in ${requestedLanguage}, in simple and practical terms. Clarify the meaning, typical usage, and give one short example sentence. If it is an expression, explain the expression as a whole. Do not mention this instruction.\n\n${context}`,
+        }],
+      });
+      setExplanation(data.answer || 'Aucune explication disponible pour le moment.');
+    } catch (err) {
+      setExplanationError(err.message || 'Impossible de charger l’explication.');
+    } finally {
+      setExplanationLoading(false);
+    }
+  };
 
   return (
     <div className="vocab-card group rounded-xl border border-[#dadce0] bg-white hover:shadow-sm transition-all p-3.5 sm:p-4 flex gap-3 items-start">
@@ -199,6 +244,21 @@ export default function VocabCard({
                 ) : (
                   <Volume2 className="w-4 h-4 ml-[1px]" />
                 )}
+              </button>
+            )}
+            {canExplain && (
+              <button
+                type="button"
+                onClick={handleExplain}
+                disabled={explanationLoading}
+                aria-expanded={showExplanation}
+                className={`h-9 px-2.5 rounded-full inline-flex items-center gap-1.5 text-[12px] font-semibold transition-colors ${
+                  showExplanation ? 'bg-[#e8f0fe] text-[#1a73e8]' : 'bg-[#f1f3f4] text-[#5f6368] hover:bg-[#e8f0fe] hover:text-[#1a73e8]'
+                } disabled:opacity-60`}
+                title="Obtenir plus d’explications"
+              >
+                {explanationLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
+                <span className="hidden sm:inline">Plus d’explications</span>
               </button>
             )}
           </div>
@@ -305,6 +365,25 @@ export default function VocabCard({
         })()}
 
         {hasExample(item.example) && <ExampleCollapse example={item.example} item={item} />}
+        {canExplain && showExplanation && (
+          <div className="mt-3 rounded-xl border border-[#cfe0ff] bg-[#f5f9ff] px-3 py-2.5 text-[13px] leading-relaxed text-[#334155]" onClick={(e) => e.stopPropagation()}>
+            {explanationLoading && (
+              <div className="flex items-center gap-2 text-[#1a73e8]">
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                <span>Recherche d’une explication…</span>
+              </div>
+            )}
+            {explanationError && (
+              <div className="flex items-start gap-2 text-red-700">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>{explanationError}</span>
+              </div>
+            )}
+            {!explanationLoading && !explanationError && explanation && (
+              <p className="whitespace-pre-wrap">{explanation}</p>
+            )}
+          </div>
+        )}
         {canPractice && showPractice && (
           <PronunciationPractice
             targetText={titleEn}

@@ -307,7 +307,8 @@ html.dark body {
 
 .vocabs-page .vocabs-hero {
   position: relative;
-  overflow: hidden;
+  z-index: 20;
+  overflow: visible;
   padding: 1.25rem 1.35rem 1.35rem;
   border: 1px solid var(--vocabs-border);
   border-radius: 1.35rem;
